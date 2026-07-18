@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-from typing import Protocol
+from types import TracebackType
+from typing import Protocol, Self
 
-from backend.core.domain.repositories import KnowledgeObjectRepositoryContract
+from backend.core.domain.repositories import (
+    KnowledgeObjectRelationRepositoryContract,
+    KnowledgeObjectRepositoryContract,
+)
 
 
 class UnitOfWorkContract(Protocol):
@@ -12,8 +16,23 @@ class UnitOfWorkContract(Protocol):
     def knowledge_objects(self) -> KnowledgeObjectRepositoryContract:
         ...
 
+    @property
+    def relations(self) -> KnowledgeObjectRelationRepositoryContract:
+        ...
+
     def commit(self) -> None:
         ...
 
     def rollback(self) -> None:
+        ...
+
+    def __enter__(self) -> Self:
+        ...
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         ...

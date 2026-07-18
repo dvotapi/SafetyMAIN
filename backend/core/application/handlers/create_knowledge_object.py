@@ -32,7 +32,7 @@ class CreateKnowledgeObjectHandler:
             payload=command.payload,
         )
 
-        saved_object = self._unit_of_work.knowledge_objects.save(knowledge_object)
+        self._unit_of_work.knowledge_objects.add(knowledge_object)
         self._unit_of_work.commit()
 
-        return saved_object
+        return knowledge_object
