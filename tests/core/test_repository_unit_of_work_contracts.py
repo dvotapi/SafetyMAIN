@@ -124,7 +124,7 @@ def test_unit_of_work_context_manager_returns_self() -> None:
     with unit_of_work as active_unit_of_work:
         assert active_unit_of_work is unit_of_work
 
-    assert unit_of_work.rolled_back is False
+    assert unit_of_work.rolled_back is True
 
 
 def test_unit_of_work_context_manager_rolls_back_on_exception() -> None:

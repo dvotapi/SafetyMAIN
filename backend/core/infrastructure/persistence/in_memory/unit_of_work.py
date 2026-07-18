@@ -53,7 +53,7 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        if exc_type is not None:
+        if exc_type is not None or not self.committed:
             self.rollback()
 
     def _create_snapshots(self) -> None:

@@ -10,9 +10,10 @@ from backend.core.domain.entities.knowledge_object import (
 from backend.core.domain.exceptions import (
     DuplicateKnowledgeObject,
     KnowledgeObjectNotFound,
+    KnowledgeObjectVersionConflict,
 )
 from backend.core.domain.repositories import KnowledgeObjectRepositoryContract
-from backend.core.domain.value_objects import KnowledgeObjectId
+from backend.core.domain.value_objects import KnowledgeObjectId, KnowledgeObjectVersion
 from backend.core.domain.value_objects.knowledge_object_search_criteria import (
     JSONValue,
     KnowledgeObjectSearchCriteria,
@@ -45,6 +46,14 @@ class InMemoryKnowledgeObjectRepository(KnowledgeObjectRepositoryContract):
 
         if current_object is None:
             raise KnowledgeObjectNotFound(object_id)
+
+        expected_version = current_object.header.version.value + 1
+        if knowledge_object.header.version.value != expected_version:
+            raise KnowledgeObjectVersionConflict(
+                knowledge_object_id=object_id,
+                expected_version=KnowledgeObjectVersion(value=expected_version),
+                actual_version=knowledge_object.header.version,
+            )
 
         self._history.setdefault(object_id, []).append(current_object)
         self._objects[object_id] = knowledge_object
