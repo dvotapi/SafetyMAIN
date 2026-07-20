@@ -1,14 +1,9 @@
 from __future__ import annotations
 
-import os
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
-from alembic import command
-from alembic.config import Config
-from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from backend.core.domain.entities import KnowledgeObjectRelation
@@ -35,61 +30,32 @@ from backend.core.infrastructure.persistence.sqlalchemy.unit_of_work import (
 
 
 pytestmark = pytest.mark.db
+pytest_plugins = ("tests.infrastructure.db_fixtures",)
 
 
-@pytest.fixture(scope="module")
-def database_url() -> str:
-    if os.environ.get("SAFETYMAIN_RUN_DB_TESTS") != "1":
-        pytest.skip("Set SAFETYMAIN_RUN_DB_TESTS=1 to run SQLAlchemy UoW tests.")
-
-    value = os.environ.get("DATABASE_URL")
-    if not value:
-        pytest.skip("DATABASE_URL is required to run SQLAlchemy UoW tests.")
-
-    return value
-
-
-@pytest.fixture()
-def engine(database_url: str) -> Iterator[Engine]:
-    config = Config("alembic.ini")
-    config.set_main_option("sqlalchemy.url", database_url)
-    command.downgrade(config, "base")
-    command.upgrade(config, "head")
-
-    engine = create_engine(database_url)
-    try:
-        yield engine
-    finally:
-        engine.dispose()
-        command.downgrade(config, "base")
-
-
-@pytest.fixture()
-def session_factory(engine: Engine) -> sessionmaker[Session]:
-    return sessionmaker(bind=engine, expire_on_commit=False)
-
-
-def test_repositories_share_one_session(session_factory: sessionmaker[Session]) -> None:
-    with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+def test_repositories_share_one_session(
+    sqlalchemy_session_factory: sessionmaker[Session],
+) -> None:
+    with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
         assert unit_of_work.knowledge_objects._session is unit_of_work.session
         assert unit_of_work.relations._session is unit_of_work.session
         assert unit_of_work.knowledge_objects._session is unit_of_work.relations._session
 
 
 def test_commit_persists_objects_and_relations(
-    session_factory: sessionmaker[Session],
+    sqlalchemy_session_factory: sessionmaker[Session],
 ) -> None:
     source = _create_object()
     target = _create_object(organization_id=source.header.organization_id)
     relation = _create_relation(source=source, target=target)
 
-    with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+    with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
         unit_of_work.knowledge_objects.add(source)
         unit_of_work.knowledge_objects.add(target)
         unit_of_work.relations.add(relation)
         unit_of_work.commit()
 
-    verification_session = session_factory()
+    verification_session = sqlalchemy_session_factory()
     try:
         object_repository = SQLAlchemyKnowledgeObjectRepository(verification_session)
         relation_repository = SQLAlchemyKnowledgeObjectRelationRepository(
@@ -103,20 +69,20 @@ def test_commit_persists_objects_and_relations(
 
 
 def test_exception_rolls_back_objects_and_relations(
-    session_factory: sessionmaker[Session],
+    sqlalchemy_session_factory: sessionmaker[Session],
 ) -> None:
     source = _create_object()
     target = _create_object(organization_id=source.header.organization_id)
     relation = _create_relation(source=source, target=target)
 
     with pytest.raises(RuntimeError):
-        with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+        with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
             unit_of_work.knowledge_objects.add(source)
             unit_of_work.knowledge_objects.add(target)
             unit_of_work.relations.add(relation)
             raise RuntimeError("rollback")
 
-    verification_session = session_factory()
+    verification_session = sqlalchemy_session_factory()
     try:
         object_repository = SQLAlchemyKnowledgeObjectRepository(verification_session)
         relation_repository = SQLAlchemyKnowledgeObjectRelationRepository(
@@ -131,20 +97,20 @@ def test_exception_rolls_back_objects_and_relations(
 
 
 def test_update_history_rolls_back_on_exception(
-    session_factory: sessionmaker[Session],
+    sqlalchemy_session_factory: sessionmaker[Session],
 ) -> None:
     version_1 = _create_object()
     version_2 = _next_version(version_1)
-    with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+    with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
         unit_of_work.knowledge_objects.add(version_1)
         unit_of_work.commit()
 
     with pytest.raises(RuntimeError):
-        with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+        with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
             unit_of_work.knowledge_objects.update(version_2)
             raise RuntimeError("rollback")
 
-    verification_session = session_factory()
+    verification_session = sqlalchemy_session_factory()
     try:
         repository = SQLAlchemyKnowledgeObjectRepository(verification_session)
         assert repository.get(version_1.header.id) == version_1
@@ -154,23 +120,23 @@ def test_update_history_rolls_back_on_exception(
 
 
 def test_remove_relation_rolls_back_on_exception(
-    session_factory: sessionmaker[Session],
+    sqlalchemy_session_factory: sessionmaker[Session],
 ) -> None:
     source = _create_object()
     target = _create_object(organization_id=source.header.organization_id)
     relation = _create_relation(source=source, target=target)
-    with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+    with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
         unit_of_work.knowledge_objects.add(source)
         unit_of_work.knowledge_objects.add(target)
         unit_of_work.relations.add(relation)
         unit_of_work.commit()
 
     with pytest.raises(RuntimeError):
-        with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+        with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
             unit_of_work.relations.remove(relation.relation_id)
             raise RuntimeError("rollback")
 
-    verification_session = session_factory()
+    verification_session = sqlalchemy_session_factory()
     try:
         repository = SQLAlchemyKnowledgeObjectRelationRepository(verification_session)
         assert repository.get(relation.relation_id) == relation
@@ -178,13 +144,13 @@ def test_remove_relation_rolls_back_on_exception(
         verification_session.close()
 
 
-def test_exit_without_commit_rolls_back(session_factory: sessionmaker[Session]) -> None:
+def test_exit_without_commit_rolls_back(sqlalchemy_session_factory: sessionmaker[Session]) -> None:
     knowledge_object = _create_object()
 
-    with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+    with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
         unit_of_work.knowledge_objects.add(knowledge_object)
 
-    verification_session = session_factory()
+    verification_session = sqlalchemy_session_factory()
     try:
         repository = SQLAlchemyKnowledgeObjectRepository(verification_session)
         with pytest.raises(KnowledgeObjectNotFound):
@@ -194,29 +160,31 @@ def test_exit_without_commit_rolls_back(session_factory: sessionmaker[Session]) 
 
 
 def test_session_is_closed_after_context_exit(
-    session_factory: sessionmaker[Session],
+    sqlalchemy_session_factory: sessionmaker[Session],
 ) -> None:
-    with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
-        session = unit_of_work.session
+    unit_of_work = SQLAlchemyUnitOfWork(sqlalchemy_session_factory)
+    with unit_of_work:
+        _session = unit_of_work.session
 
-    assert not session.is_active
+    with pytest.raises(RuntimeError, match="not been entered"):
+        unit_of_work.session
 
 
-def test_double_rollback_does_not_fail(session_factory: sessionmaker[Session]) -> None:
-    with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+def test_double_rollback_does_not_fail(sqlalchemy_session_factory: sessionmaker[Session]) -> None:
+    with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
         unit_of_work.rollback()
         unit_of_work.rollback()
 
 
-def test_double_commit_is_noop(session_factory: sessionmaker[Session]) -> None:
+def test_double_commit_is_noop(sqlalchemy_session_factory: sessionmaker[Session]) -> None:
     knowledge_object = _create_object()
 
-    with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+    with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
         unit_of_work.knowledge_objects.add(knowledge_object)
         unit_of_work.commit()
         unit_of_work.commit()
 
-    verification_session = session_factory()
+    verification_session = sqlalchemy_session_factory()
     try:
         repository = SQLAlchemyKnowledgeObjectRepository(verification_session)
         assert repository.get(knowledge_object.header.id) == knowledge_object
@@ -225,16 +193,16 @@ def test_double_commit_is_noop(session_factory: sessionmaker[Session]) -> None:
 
 
 def test_repository_flushes_do_not_commit(
-    session_factory: sessionmaker[Session],
+    sqlalchemy_session_factory: sessionmaker[Session],
 ) -> None:
     knowledge_object = _create_object()
 
-    with SQLAlchemyUnitOfWork(session_factory) as unit_of_work:
+    with SQLAlchemyUnitOfWork(sqlalchemy_session_factory) as unit_of_work:
         unit_of_work.knowledge_objects.add(knowledge_object)
         unit_of_work.session.flush()
         unit_of_work.rollback()
 
-    verification_session = session_factory()
+    verification_session = sqlalchemy_session_factory()
     try:
         repository = SQLAlchemyKnowledgeObjectRepository(verification_session)
         with pytest.raises(KnowledgeObjectNotFound):

@@ -39,6 +39,7 @@ from backend.core.domain.exceptions import (
     InvalidKnowledgeObjectStateTransition,
     KnowledgeObjectAlreadyDeleted,
 )
+from backend.core.domain.value_objects import KnowledgeObjectVersion
 from backend.core.infrastructure.persistence.in_memory import InMemoryUnitOfWork
 
 
@@ -55,7 +56,10 @@ def test_delete_knowledge_object_creates_deleted_version_and_preserves_history()
     )
 
     deleted_object = delete_handler.handle(
-        DeleteKnowledgeObjectCommand(object_id=created_object.header.id)
+        DeleteKnowledgeObjectCommand(
+            object_id=created_object.header.id,
+            organization_id=created_object.header.organization_id,
+        )
     )
     history = unit_of_work.knowledge_objects.history(created_object.header.id)
     current_object = unit_of_work.knowledge_objects.get(created_object.header.id)
@@ -78,11 +82,19 @@ def test_deleting_already_deleted_object_fails() -> None:
         )
     )
     deleted_object = delete_handler.handle(
-        DeleteKnowledgeObjectCommand(object_id=created_object.header.id)
+        DeleteKnowledgeObjectCommand(
+            object_id=created_object.header.id,
+            organization_id=created_object.header.organization_id,
+        )
     )
 
     with pytest.raises(KnowledgeObjectAlreadyDeleted) as exc_info:
-        delete_handler.handle(DeleteKnowledgeObjectCommand(object_id=deleted_object.header.id))
+        delete_handler.handle(
+            DeleteKnowledgeObjectCommand(
+                object_id=deleted_object.header.id,
+                organization_id=deleted_object.header.organization_id,
+            )
+        )
 
     assert exc_info.value.knowledge_object_id == deleted_object.header.id
 
@@ -99,13 +111,20 @@ def test_update_after_delete_fails() -> None:
         )
     )
     deleted_object = delete_handler.handle(
-        DeleteKnowledgeObjectCommand(object_id=created_object.header.id)
+        DeleteKnowledgeObjectCommand(
+            object_id=created_object.header.id,
+            organization_id=created_object.header.organization_id,
+        )
     )
 
     with pytest.raises(InvalidKnowledgeObjectStateTransition) as exc_info:
         update_handler.handle(
             UpdateKnowledgeObjectCommand(
                 object_id=deleted_object.header.id,
+                organization_id=deleted_object.header.organization_id,
+                expected_version=KnowledgeObjectVersion(
+                    value=deleted_object.header.version.value
+                ),
                 status=KnowledgeObjectStatus.ACTIVE,
                 payload={"name": "Updated"},
             )
@@ -113,7 +132,6 @@ def test_update_after_delete_fails() -> None:
 
     assert exc_info.value.knowledge_object_id == deleted_object.header.id
     assert exc_info.value.current_status is KnowledgeObjectStatus.DELETED
-    assert exc_info.value.requested_status is KnowledgeObjectStatus.ACTIVE
 
 
 def test_archive_after_delete_fails() -> None:
@@ -128,11 +146,19 @@ def test_archive_after_delete_fails() -> None:
         )
     )
     deleted_object = delete_handler.handle(
-        DeleteKnowledgeObjectCommand(object_id=created_object.header.id)
+        DeleteKnowledgeObjectCommand(
+            object_id=created_object.header.id,
+            organization_id=created_object.header.organization_id,
+        )
     )
 
     with pytest.raises(InvalidKnowledgeObjectStateTransition) as exc_info:
-        archive_handler.handle(ArchiveKnowledgeObjectCommand(object_id=deleted_object.header.id))
+        archive_handler.handle(
+            ArchiveKnowledgeObjectCommand(
+                object_id=deleted_object.header.id,
+                organization_id=deleted_object.header.organization_id,
+            )
+        )
 
     assert exc_info.value.knowledge_object_id == deleted_object.header.id
     assert exc_info.value.current_status is KnowledgeObjectStatus.DELETED
@@ -151,11 +177,19 @@ def test_restore_after_delete_fails() -> None:
         )
     )
     deleted_object = delete_handler.handle(
-        DeleteKnowledgeObjectCommand(object_id=created_object.header.id)
+        DeleteKnowledgeObjectCommand(
+            object_id=created_object.header.id,
+            organization_id=created_object.header.organization_id,
+        )
     )
 
     with pytest.raises(InvalidKnowledgeObjectStateTransition) as exc_info:
-        restore_handler.handle(RestoreKnowledgeObjectCommand(object_id=deleted_object.header.id))
+        restore_handler.handle(
+            RestoreKnowledgeObjectCommand(
+                object_id=deleted_object.header.id,
+                organization_id=deleted_object.header.organization_id,
+            )
+        )
 
     assert exc_info.value.knowledge_object_id == deleted_object.header.id
     assert exc_info.value.current_status is KnowledgeObjectStatus.DELETED

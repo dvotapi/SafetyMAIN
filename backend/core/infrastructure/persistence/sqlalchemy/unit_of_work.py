@@ -81,5 +81,8 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         finally:
             if self._session is not None:
                 self._session.close()
+                self._session = None
+                self._knowledge_objects = None
+                self._relations = None
 
         return False

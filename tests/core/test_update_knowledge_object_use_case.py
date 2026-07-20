@@ -15,6 +15,7 @@ from backend.core.application.handlers.update_knowledge_object import (
     UpdateKnowledgeObjectHandler,
 )
 from backend.core.domain.entities.knowledge_object import KnowledgeObjectStatus
+from backend.core.domain.value_objects import KnowledgeObjectVersion
 from backend.core.infrastructure.persistence.in_memory import InMemoryUnitOfWork
 
 
@@ -34,6 +35,8 @@ def test_update_knowledge_object_creates_new_version_and_preserves_history() -> 
     updated_object = update_handler.handle(
         UpdateKnowledgeObjectCommand(
             object_id=created_object.header.id,
+            organization_id=created_object.header.organization_id,
+            expected_version=KnowledgeObjectVersion(value=1),
             status=KnowledgeObjectStatus.ACTIVE,
             payload={"name": "SafetyMAIN Updated"},
         )

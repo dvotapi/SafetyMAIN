@@ -369,6 +369,50 @@ def test_returned_items_cannot_mutate_repository_state() -> None:
     assert next_result.items == (expected_object,)
 
 
+def test_include_deleted_without_status_includes_deleted_objects() -> None:
+    unit_of_work = InMemoryUnitOfWork()
+    organization_id = OrganizationId(value=uuid4())
+    active_object = _add_object(unit_of_work, organization_id, status=KnowledgeObjectStatus.ACTIVE)
+    archived_object = _add_object(
+        unit_of_work,
+        organization_id,
+        status=KnowledgeObjectStatus.ARCHIVED,
+    )
+    deleted_object = _add_object(
+        unit_of_work,
+        organization_id,
+        status=KnowledgeObjectStatus.DELETED,
+    )
+    _add_object(unit_of_work, organization_id, status=KnowledgeObjectStatus.DRAFT)
+
+    result = SearchKnowledgeObjectsHandler(unit_of_work).handle(
+        SearchKnowledgeObjectsQuery(
+            organization_id=organization_id,
+            include_deleted=True,
+        )
+    )
+
+    assert result.items == (active_object, archived_object, deleted_object)
+    assert result.total == 3
+
+
+def test_include_deleted_false_excludes_deleted_even_when_status_omitted() -> None:
+    unit_of_work = InMemoryUnitOfWork()
+    organization_id = OrganizationId(value=uuid4())
+    active_object = _add_object(unit_of_work, organization_id, status=KnowledgeObjectStatus.ACTIVE)
+    _add_object(unit_of_work, organization_id, status=KnowledgeObjectStatus.DELETED)
+
+    result = SearchKnowledgeObjectsHandler(unit_of_work).handle(
+        SearchKnowledgeObjectsQuery(
+            organization_id=organization_id,
+            include_deleted=False,
+        )
+    )
+
+    assert result.items == (active_object,)
+    assert result.total == 1
+
+
 def _add_object(
     unit_of_work: InMemoryUnitOfWork,
     organization_id: OrganizationId,

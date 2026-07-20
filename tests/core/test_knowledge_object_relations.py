@@ -32,7 +32,6 @@ from backend.core.application.handlers.remove_knowledge_object_relation import (
 )
 from backend.core.domain.entities import KnowledgeObjectRelation
 from backend.core.domain.exceptions import (
-    CrossOrganizationKnowledgeObjectRelation,
     DuplicateKnowledgeObjectRelation,
     InvalidKnowledgeObjectStateTransition,
     KnowledgeObjectNotFound,
@@ -79,6 +78,7 @@ def test_valid_directed_relation_creation() -> None:
 
     relation = handler.handle(
         CreateKnowledgeObjectRelationCommand(
+            organization_id=source_object.header.organization_id,
             source_object_id=source_object.header.id,
             target_object_id=target_object.header.id,
             relation_type=KnowledgeObjectRelationType(value="addresses"),
@@ -98,7 +98,8 @@ def test_duplicate_directed_relation_is_rejected() -> None:
     source_object, target_object = _create_source_and_target(unit_of_work)
     handler = CreateKnowledgeObjectRelationHandler(unit_of_work)
     command = CreateKnowledgeObjectRelationCommand(
-        source_object_id=source_object.header.id,
+            organization_id=source_object.header.organization_id,
+            source_object_id=source_object.header.id,
         target_object_id=target_object.header.id,
         relation_type=KnowledgeObjectRelationType(value="addresses"),
     )
@@ -117,7 +118,8 @@ def test_self_referencing_relation_is_rejected() -> None:
     with pytest.raises(SelfReferencingKnowledgeObjectRelation):
         handler.handle(
             CreateKnowledgeObjectRelationCommand(
-                source_object_id=source_object.header.id,
+            organization_id=source_object.header.organization_id,
+            source_object_id=source_object.header.id,
                 target_object_id=source_object.header.id,
                 relation_type=KnowledgeObjectRelationType(value="addresses"),
             )
@@ -141,9 +143,10 @@ def test_cross_organization_relation_is_rejected() -> None:
     )
     handler = CreateKnowledgeObjectRelationHandler(unit_of_work)
 
-    with pytest.raises(CrossOrganizationKnowledgeObjectRelation):
+    with pytest.raises(KnowledgeObjectNotFound):
         handler.handle(
             CreateKnowledgeObjectRelationCommand(
+                organization_id=source_object.header.organization_id,
                 source_object_id=source_object.header.id,
                 target_object_id=target_object.header.id,
                 relation_type=KnowledgeObjectRelationType(value="addresses"),
@@ -159,6 +162,7 @@ def test_source_object_not_found_is_rejected() -> None:
     with pytest.raises(KnowledgeObjectNotFound):
         handler.handle(
             CreateKnowledgeObjectRelationCommand(
+                organization_id=target_object.header.organization_id,
                 source_object_id=KnowledgeObjectId(value=uuid4()),
                 target_object_id=target_object.header.id,
                 relation_type=KnowledgeObjectRelationType(value="addresses"),
@@ -174,7 +178,8 @@ def test_target_object_not_found_is_rejected() -> None:
     with pytest.raises(KnowledgeObjectNotFound):
         handler.handle(
             CreateKnowledgeObjectRelationCommand(
-                source_object_id=source_object.header.id,
+            organization_id=source_object.header.organization_id,
+            source_object_id=source_object.header.id,
                 target_object_id=KnowledgeObjectId(value=uuid4()),
                 relation_type=KnowledgeObjectRelationType(value="addresses"),
             )
@@ -185,14 +190,18 @@ def test_deleted_source_object_is_rejected() -> None:
     unit_of_work = InMemoryUnitOfWork()
     source_object, target_object = _create_source_and_target(unit_of_work)
     DeleteKnowledgeObjectHandler(unit_of_work).handle(
-        DeleteKnowledgeObjectCommand(object_id=source_object.header.id)
+        DeleteKnowledgeObjectCommand(
+            object_id=source_object.header.id,
+            organization_id=source_object.header.organization_id,
+        )
     )
     handler = CreateKnowledgeObjectRelationHandler(unit_of_work)
 
     with pytest.raises(InvalidKnowledgeObjectStateTransition):
         handler.handle(
             CreateKnowledgeObjectRelationCommand(
-                source_object_id=source_object.header.id,
+            organization_id=source_object.header.organization_id,
+            source_object_id=source_object.header.id,
                 target_object_id=target_object.header.id,
                 relation_type=KnowledgeObjectRelationType(value="addresses"),
             )
@@ -203,14 +212,18 @@ def test_deleted_target_object_is_rejected() -> None:
     unit_of_work = InMemoryUnitOfWork()
     source_object, target_object = _create_source_and_target(unit_of_work)
     DeleteKnowledgeObjectHandler(unit_of_work).handle(
-        DeleteKnowledgeObjectCommand(object_id=target_object.header.id)
+        DeleteKnowledgeObjectCommand(
+            object_id=target_object.header.id,
+            organization_id=target_object.header.organization_id,
+        )
     )
     handler = CreateKnowledgeObjectRelationHandler(unit_of_work)
 
     with pytest.raises(InvalidKnowledgeObjectStateTransition):
         handler.handle(
             CreateKnowledgeObjectRelationCommand(
-                source_object_id=source_object.header.id,
+            organization_id=source_object.header.organization_id,
+            source_object_id=source_object.header.id,
                 target_object_id=target_object.header.id,
                 relation_type=KnowledgeObjectRelationType(value="addresses"),
             )
@@ -224,13 +237,17 @@ def test_valid_relation_removal() -> None:
     remove_handler = RemoveKnowledgeObjectRelationHandler(unit_of_work)
     relation = create_handler.handle(
         CreateKnowledgeObjectRelationCommand(
+            organization_id=source_object.header.organization_id,
             source_object_id=source_object.header.id,
             target_object_id=target_object.header.id,
             relation_type=KnowledgeObjectRelationType(value="addresses"),
         )
     )
 
-    remove_handler.handle(RemoveKnowledgeObjectRelationCommand(relation.relation_id))
+    remove_handler.handle(RemoveKnowledgeObjectRelationCommand(
+        organization_id=relation.organization_id,
+        relation_id=relation.relation_id,
+    ))
 
     with pytest.raises(KnowledgeObjectRelationNotFound):
         unit_of_work.relations.get(relation.relation_id)
@@ -240,7 +257,10 @@ def test_missing_relation_removal_is_rejected() -> None:
     handler = RemoveKnowledgeObjectRelationHandler(InMemoryUnitOfWork())
 
     with pytest.raises(KnowledgeObjectRelationNotFound):
-        handler.handle(RemoveKnowledgeObjectRelationCommand(uuid4()))
+        handler.handle(RemoveKnowledgeObjectRelationCommand(
+            organization_id=OrganizationId(value=uuid4()),
+            relation_id=uuid4(),
+        ))
 
 
 def test_reverse_relation_is_allowed() -> None:
@@ -250,6 +270,7 @@ def test_reverse_relation_is_allowed() -> None:
 
     first_relation = handler.handle(
         CreateKnowledgeObjectRelationCommand(
+            organization_id=source_object.header.organization_id,
             source_object_id=source_object.header.id,
             target_object_id=target_object.header.id,
             relation_type=KnowledgeObjectRelationType(value="uses"),
@@ -257,6 +278,7 @@ def test_reverse_relation_is_allowed() -> None:
     )
     reverse_relation = handler.handle(
         CreateKnowledgeObjectRelationCommand(
+            organization_id=target_object.header.organization_id,
             source_object_id=target_object.header.id,
             target_object_id=source_object.header.id,
             relation_type=KnowledgeObjectRelationType(value="uses"),
@@ -275,7 +297,8 @@ def test_unit_of_work_rollback_restores_relation_state() -> None:
         with unit_of_work:
             relation = handler.handle(
                 CreateKnowledgeObjectRelationCommand(
-                    source_object_id=source_object.header.id,
+            organization_id=source_object.header.organization_id,
+            source_object_id=source_object.header.id,
                     target_object_id=target_object.header.id,
                     relation_type=KnowledgeObjectRelationType(value="addresses"),
                 )

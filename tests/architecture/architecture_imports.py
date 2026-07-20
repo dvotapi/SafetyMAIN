@@ -91,6 +91,63 @@ def assert_no_forbidden_imports(
     raise AssertionError(f"Architecture dependency violations found:\n{formatted_violations}")
 
 
+@dataclass(frozen=True, slots=True)
+class MethodCallViolation:
+    source_file: Path
+    method_name: str
+    rule: str
+
+
+def find_forbidden_method_calls(
+    root: Path,
+    *,
+    forbidden_methods: Sequence[str],
+    rule: str,
+) -> tuple[MethodCallViolation, ...]:
+    violations: list[MethodCallViolation] = []
+
+    for source_file in iter_python_files(root):
+        tree = ast.parse(source_file.read_text(encoding="utf-8"), filename=str(source_file))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            if not isinstance(node.func, ast.Attribute):
+                continue
+            if node.func.attr not in forbidden_methods:
+                continue
+            violations.append(
+                MethodCallViolation(
+                    source_file=source_file,
+                    method_name=node.func.attr,
+                    rule=rule,
+                )
+            )
+
+    return tuple(violations)
+
+
+def assert_no_forbidden_method_calls(
+    root: Path,
+    *,
+    forbidden_methods: Sequence[str],
+    rule: str,
+) -> None:
+    violations = find_forbidden_method_calls(
+        root,
+        forbidden_methods=forbidden_methods,
+        rule=rule,
+    )
+    if not violations:
+        return
+
+    formatted_violations = "\n".join(
+        f"- {violation.source_file}: forbidden call `{violation.method_name}()` "
+        f"violates {violation.rule}"
+        for violation in violations
+    )
+    raise AssertionError(f"Architecture dependency violations found:\n{formatted_violations}")
+
+
 def _matches_forbidden_prefix(
     imported_module: str,
     forbidden_prefixes: Sequence[str],

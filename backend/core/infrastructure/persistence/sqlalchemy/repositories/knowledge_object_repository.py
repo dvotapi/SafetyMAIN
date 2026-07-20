@@ -137,14 +137,17 @@ class SQLAlchemyKnowledgeObjectRepository(KnowledgeObjectRepositoryContract):
         ]
 
         if criteria.status is None:
-            filters.append(
-                KnowledgeObjectModel.status.in_(
-                    (
-                        KnowledgeObjectStatus.ACTIVE.value,
-                        KnowledgeObjectStatus.ARCHIVED.value,
-                    )
-                )
+            allowed_statuses = (
+                KnowledgeObjectStatus.ACTIVE.value,
+                KnowledgeObjectStatus.ARCHIVED.value,
             )
+            if criteria.include_deleted:
+                allowed_statuses = (
+                    KnowledgeObjectStatus.ACTIVE.value,
+                    KnowledgeObjectStatus.ARCHIVED.value,
+                    KnowledgeObjectStatus.DELETED.value,
+                )
+            filters.append(KnowledgeObjectModel.status.in_(allowed_statuses))
         else:
             filters.append(KnowledgeObjectModel.status == criteria.status.value)
 

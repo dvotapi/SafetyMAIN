@@ -14,5 +14,6 @@ class SearchKnowledgeObjectsQuery:
     object_type: KnowledgeObjectType | None = None
     status: KnowledgeObjectStatus | None = None
     metadata_equals: Mapping[str, JSONValue] = field(default_factory=dict)
-    limit: int = 100
+    include_deleted: bool = False
+    limit: int = 50
     offset: int = 0

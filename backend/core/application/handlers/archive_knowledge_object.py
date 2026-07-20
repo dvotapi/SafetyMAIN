@@ -3,6 +3,9 @@ from __future__ import annotations
 from backend.core.application.commands.archive_knowledge_object import (
     ArchiveKnowledgeObjectCommand,
 )
+from backend.core.application.handlers.knowledge_object_access import (
+    validate_knowledge_object_organization,
+)
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.entities.knowledge_object import KnowledgeObject
 from backend.core.domain.services import KnowledgeObjectService
@@ -19,6 +22,7 @@ class ArchiveKnowledgeObjectHandler:
 
     def handle(self, command: ArchiveKnowledgeObjectCommand) -> KnowledgeObject:
         current_object = self._unit_of_work.knowledge_objects.get(command.object_id)
+        validate_knowledge_object_organization(current_object, command.organization_id)
         archived_object, _event = self._service.archive(current_object)
         self._unit_of_work.knowledge_objects.update(archived_object)
         self._unit_of_work.commit()

@@ -23,7 +23,7 @@ def test_initial_alembic_migration_imports() -> None:
     migration = util.module_from_spec(spec)
     spec.loader.exec_module(migration)
 
-    assert migration.revision == "0001_create_core_persistence_tables"
+    assert migration.revision == "0001_core_persistence"
     assert callable(migration.upgrade)
     assert callable(migration.downgrade)
 

@@ -39,10 +39,16 @@ def test_archive_and_restore_knowledge_object_preserves_history() -> None:
     )
 
     archived_object = archive_handler.handle(
-        ArchiveKnowledgeObjectCommand(object_id=created_object.header.id)
+        ArchiveKnowledgeObjectCommand(
+            object_id=created_object.header.id,
+            organization_id=created_object.header.organization_id,
+        )
     )
     restored_object = restore_handler.handle(
-        RestoreKnowledgeObjectCommand(object_id=created_object.header.id)
+        RestoreKnowledgeObjectCommand(
+            object_id=created_object.header.id,
+            organization_id=created_object.header.organization_id,
+        )
     )
 
     history = tuple(unit_of_work.knowledge_objects.history(created_object.header.id))

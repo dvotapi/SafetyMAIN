@@ -14,7 +14,10 @@ class DatabaseConfigurationError(RuntimeError):
 def get_database_url(
     environment: Mapping[str, str] | None = None,
 ) -> str:
-    source = environment or os.environ
+    if environment is None:
+        source = os.environ
+    else:
+        source = environment
     database_url = source.get(DATABASE_URL_ENV_NAME)
 
     if not database_url:

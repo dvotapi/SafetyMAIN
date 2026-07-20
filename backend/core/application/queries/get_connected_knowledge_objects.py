@@ -14,5 +14,5 @@ from backend.core.domain.value_objects import (
 class GetConnectedKnowledgeObjectsQuery:
     organization_id: OrganizationId
     knowledge_object_id: KnowledgeObjectId
-    direction: RelationDirection
+    direction: RelationDirection = RelationDirection.OUTGOING
     relation_type: KnowledgeObjectRelationType | None = None

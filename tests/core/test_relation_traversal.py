@@ -239,7 +239,10 @@ def test_missing_root_object_is_rejected() -> None:
 def test_deleted_root_object_is_rejected() -> None:
     unit_of_work, source, _target = _create_relation_graph(create_relation=False)
     DeleteKnowledgeObjectHandler(unit_of_work).handle(
-        DeleteKnowledgeObjectCommand(object_id=source.header.id)
+        DeleteKnowledgeObjectCommand(
+            object_id=source.header.id,
+            organization_id=source.header.organization_id,
+        )
     )
 
     with pytest.raises(InvalidKnowledgeObjectStateTransition):
@@ -255,7 +258,10 @@ def test_deleted_connected_objects_are_excluded() -> None:
     unit_of_work, source, target = _create_relation_graph()
     _create_relation(unit_of_work, source, target, "uses")
     DeleteKnowledgeObjectHandler(unit_of_work).handle(
-        DeleteKnowledgeObjectCommand(object_id=target.header.id)
+        DeleteKnowledgeObjectCommand(
+            object_id=target.header.id,
+            organization_id=target.header.organization_id,
+        )
     )
 
     result = GetConnectedKnowledgeObjectsHandler(unit_of_work).handle(
@@ -341,6 +347,7 @@ def _create_relation(
 ) -> KnowledgeObjectRelation:
     return CreateKnowledgeObjectRelationHandler(unit_of_work).handle(
         CreateKnowledgeObjectRelationCommand(
+            organization_id=source.header.organization_id,
             source_object_id=source.header.id,
             target_object_id=target.header.id,
             relation_type=KnowledgeObjectRelationType(value=relation_type),

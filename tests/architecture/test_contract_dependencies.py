@@ -14,10 +14,13 @@ def test_contracts_do_not_depend_on_concrete_infrastructure() -> None:
         CONTRACTS_ROOT,
         forbidden_prefixes=(
             "backend.core.infrastructure",
+            "backend.api",
+            "backend.bootstrap",
             "fastapi",
+            "starlette",
             "sqlalchemy",
             "redis",
             "minio",
         ),
-        rule="Contracts and ports must not depend on concrete adapters.",
+        rule="Contracts and ports must not depend on concrete adapters or API modules.",
     )

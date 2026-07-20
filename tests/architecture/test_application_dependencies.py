@@ -14,10 +14,13 @@ def test_application_layer_does_not_depend_on_infrastructure() -> None:
         APPLICATION_ROOT,
         forbidden_prefixes=(
             "backend.core.infrastructure",
+            "backend.api",
+            "backend.bootstrap",
             "fastapi",
+            "starlette",
             "sqlalchemy",
             "redis",
             "minio",
         ),
-        rule="Application layer must depend on contracts, not concrete infrastructure.",
+        rule="Application layer must depend on contracts, not concrete infrastructure or API.",
     )

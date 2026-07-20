@@ -23,6 +23,7 @@ class KnowledgeObjectSearchCriteria(BaseModel):
     object_type: KnowledgeObjectType | None = None
     status: KnowledgeObjectStatus | None = None
     metadata_equals: Mapping[str, JSONValue] = Field(default_factory=dict)
+    include_deleted: bool = False
     limit: int = Field(ge=1, le=MAX_SEARCH_LIMIT)
     offset: int = Field(ge=0)
 

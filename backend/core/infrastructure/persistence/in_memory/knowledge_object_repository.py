@@ -135,6 +135,13 @@ class InMemoryKnowledgeObjectRepository(KnowledgeObjectRepositoryContract):
         if criteria.status is not None:
             return knowledge_object.header.status is criteria.status
 
+        if criteria.include_deleted:
+            return knowledge_object.header.status in (
+                KnowledgeObjectStatus.ACTIVE,
+                KnowledgeObjectStatus.ARCHIVED,
+                KnowledgeObjectStatus.DELETED,
+            )
+
         return knowledge_object.header.status in (
             KnowledgeObjectStatus.ACTIVE,
             KnowledgeObjectStatus.ARCHIVED,

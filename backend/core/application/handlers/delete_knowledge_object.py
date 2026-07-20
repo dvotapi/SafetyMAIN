@@ -3,6 +3,9 @@ from __future__ import annotations
 from backend.core.application.commands.delete_knowledge_object import (
     DeleteKnowledgeObjectCommand,
 )
+from backend.core.application.handlers.knowledge_object_access import (
+    validate_knowledge_object_organization,
+)
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.entities.knowledge_object import KnowledgeObject
 from backend.core.domain.services import KnowledgeObjectService
@@ -19,6 +22,7 @@ class DeleteKnowledgeObjectHandler:
 
     def handle(self, command: DeleteKnowledgeObjectCommand) -> KnowledgeObject:
         current_object = self._unit_of_work.knowledge_objects.get(command.object_id)
+        validate_knowledge_object_organization(current_object, command.organization_id)
         deleted_object, _event = self._service.delete(current_object)
         self._unit_of_work.knowledge_objects.update(deleted_object)
         self._unit_of_work.commit()

@@ -46,6 +46,7 @@ from backend.core.domain.exceptions import (
 from backend.core.domain.value_objects import (
     KnowledgeObjectId,
     KnowledgeObjectVersion,
+    OrganizationId,
 )
 from backend.core.infrastructure.persistence.in_memory import (
     InMemoryKnowledgeObjectRepository,
@@ -61,6 +62,8 @@ def test_missing_object_raises_typed_domain_exception() -> None:
         handler.handle(
             UpdateKnowledgeObjectCommand(
                 object_id=missing_id,
+                organization_id=OrganizationId(value=uuid4()),
+                expected_version=KnowledgeObjectVersion(value=1),
                 status=KnowledgeObjectStatus.ACTIVE,
                 payload={},
             )
@@ -83,12 +86,18 @@ def test_archive_already_archived_object_fails() -> None:
         )
     )
     archived_object = archive_handler.handle(
-        ArchiveKnowledgeObjectCommand(object_id=created_object.header.id)
+        ArchiveKnowledgeObjectCommand(
+            object_id=created_object.header.id,
+            organization_id=created_object.header.organization_id,
+        )
     )
 
     with pytest.raises(KnowledgeObjectAlreadyArchived) as exc_info:
         archive_handler.handle(
-            ArchiveKnowledgeObjectCommand(object_id=archived_object.header.id)
+            ArchiveKnowledgeObjectCommand(
+                object_id=archived_object.header.id,
+                organization_id=archived_object.header.organization_id,
+            )
         )
 
     assert exc_info.value.knowledge_object_id == archived_object.header.id
@@ -109,7 +118,12 @@ def test_restore_active_object_fails() -> None:
     )
 
     with pytest.raises(KnowledgeObjectAlreadyActive) as exc_info:
-        restore_handler.handle(RestoreKnowledgeObjectCommand(object_id=active_object.header.id))
+        restore_handler.handle(
+            RestoreKnowledgeObjectCommand(
+                object_id=active_object.header.id,
+                organization_id=active_object.header.organization_id,
+            )
+        )
 
     assert exc_info.value.knowledge_object_id == active_object.header.id
     assert "already active" in str(exc_info.value)

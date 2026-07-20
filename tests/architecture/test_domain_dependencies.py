@@ -15,10 +15,13 @@ def test_domain_layer_does_not_depend_on_outer_layers() -> None:
         forbidden_prefixes=(
             "backend.core.application",
             "backend.core.infrastructure",
+            "backend.api",
+            "backend.bootstrap",
             "fastapi",
+            "starlette",
             "sqlalchemy",
             "redis",
             "minio",
         ),
-        rule="Domain layer must not depend on application or infrastructure modules.",
+        rule="Domain layer must not depend on application, infrastructure, or API modules.",
     )

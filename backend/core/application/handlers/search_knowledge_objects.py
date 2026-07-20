@@ -22,6 +22,7 @@ class SearchKnowledgeObjectsHandler:
             object_type=query.object_type,
             status=query.status,
             metadata_equals=query.metadata_equals,
+            include_deleted=query.include_deleted,
             limit=query.limit,
             offset=query.offset,
         )

@@ -51,6 +51,7 @@ class SQLAlchemyKnowledgeObjectRelationRepository(
             )
 
         self._session.add(relation_to_model(relation))
+        self._session.flush()
 
     def get(self, relation_id: UUID) -> KnowledgeObjectRelation:
         model = self._get_model(relation_id)

@@ -7,7 +7,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 
-revision = "0001_create_core_persistence_tables"
+revision = "0001_core_persistence"
 down_revision = None
 branch_labels = None
 depends_on = None
