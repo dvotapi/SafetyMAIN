@@ -424,7 +424,10 @@ New authentication modules must be covered by architecture tests forbidding:
 
 ## 7. User Model (Future Domain Concepts)
 
-No entities are implemented in P3-001. The following concepts guide P3-002+.
+Implemented in **P3-002**. See [IdentityDomain.md](IdentityDomain.md) for the
+concrete domain model, repository contracts, and application ports.
+
+The following concepts guided P3-002 and remain the architectural baseline:
 
 ### 7.1 User
 
