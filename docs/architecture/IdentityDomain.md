@@ -154,9 +154,7 @@ Domain modules must not import Application, Infrastructure, API, or Bootstrap.
 
 | Task | Deliverable |
 |------|-------------|
-| **P3-003** | Authentication API and token validation wiring |
-| **P3-004** | Application membership services consuming ports |
-| **P3-006** | Persistence tables and repository adapters |
+| **P4-001** | Identity persistence — see [IdentityPersistence.md](IdentityPersistence.md) |
 
 See [AuthenticationArchitecture.md](AuthenticationArchitecture.md) for the full
 authentication roadmap.

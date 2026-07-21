@@ -17,6 +17,9 @@ def test_metadata_contains_required_tables() -> None:
         "knowledge_objects",
         "knowledge_object_versions",
         "knowledge_object_relations",
+        "users",
+        "organizations",
+        "memberships",
     }.issubset(Base.metadata.tables)
 
 
@@ -38,6 +41,26 @@ def test_knowledge_object_columns_and_types() -> None:
     assert isinstance(table.c.metadata.type, JSONB)
     assert table.c.created_at.type.timezone is True
     assert table.c.updated_at.type.timezone is True
+
+
+def test_identity_columns_exist() -> None:
+    users = Base.metadata.tables["users"].c
+    organizations = Base.metadata.tables["organizations"].c
+    memberships = Base.metadata.tables["memberships"].c
+
+    assert {"id", "email", "password_hash", "is_active", "created_at", "updated_at"}.issubset(
+        set(users.keys())
+    )
+    assert {"id", "name", "created_at", "updated_at"}.issubset(set(organizations.keys()))
+    assert {
+        "id",
+        "user_id",
+        "organization_id",
+        "role",
+        "is_active",
+        "created_at",
+        "updated_at",
+    }.issubset(set(memberships.keys()))
 
 
 def test_knowledge_object_version_columns_exist() -> None:
@@ -84,6 +107,10 @@ def test_expected_indexes_exist() -> None:
     }
 
     assert {
+        "ix_memberships_user_id_is_active",
+        "ix_memberships_user_id",
+        "ix_memberships_organization_id",
+        "ix_users_email",
         "ix_knowledge_objects_organization_id",
         "ix_knowledge_objects_object_type",
         "ix_knowledge_objects_status",

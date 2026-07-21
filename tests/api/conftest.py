@@ -42,6 +42,18 @@ class FakeUnitOfWork:
     def relations(self) -> KnowledgeObjectRelationRepositoryContract:
         raise RuntimeError("Not implemented in fake UoW.")
 
+    @property
+    def users(self):
+        raise RuntimeError("Not implemented in fake UoW.")
+
+    @property
+    def organizations(self):
+        raise RuntimeError("Not implemented in fake UoW.")
+
+    @property
+    def memberships(self):
+        raise RuntimeError("Not implemented in fake UoW.")
+
     def commit(self) -> None:
         self.commit_calls += 1
 

@@ -19,6 +19,10 @@ from backend.core.contracts.user_lookup import UserLookupPort
 from backend.core.infrastructure.auth.bcrypt_password_hasher import create_password_hasher
 from backend.core.infrastructure.auth.in_memory_identity_store import InMemoryIdentityStore
 from backend.core.infrastructure.auth.in_memory_membership_store import InMemoryMembershipStore
+from backend.core.infrastructure.auth.sqlalchemy_identity_adapter import SQLAlchemyIdentityAdapter
+from backend.core.infrastructure.auth.sqlalchemy_membership_adapter import (
+    SQLAlchemyMembershipAdapter,
+)
 from backend.core.infrastructure.auth.jwt_token_service import create_token_service
 from backend.core.infrastructure.persistence.sqlalchemy.engine import (
     create_engine,
@@ -49,10 +53,10 @@ class AppContainer:
     user_credentials: UserCredentialsPort
     password_hasher: PasswordHasherContract
     token_service: TokenServiceContract
-    identity_store: InMemoryIdentityStore
+    identity_store: InMemoryIdentityStore | SQLAlchemyIdentityAdapter
     membership_lookup: MembershipLookupPort
     membership_verification: MembershipVerificationPort
-    membership_store: InMemoryMembershipStore
+    membership_store: InMemoryMembershipStore | SQLAlchemyMembershipAdapter
     authorization_service: AuthorizationService
     tenant_context_resolver: TenantContextResolver
 
@@ -90,8 +94,21 @@ def create_container(
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
 
-    resolved_identity_store = identity_store or InMemoryIdentityStore()
-    resolved_membership_store = membership_store or InMemoryMembershipStore()
+    resolved_identity_store: InMemoryIdentityStore | SQLAlchemyIdentityAdapter
+    if identity_store is not None:
+        resolved_identity_store = identity_store
+    elif session_factory is not None:
+        resolved_identity_store = SQLAlchemyIdentityAdapter(session_factory)
+    else:
+        resolved_identity_store = InMemoryIdentityStore()
+
+    resolved_membership_store: InMemoryMembershipStore | SQLAlchemyMembershipAdapter
+    if membership_store is not None:
+        resolved_membership_store = membership_store
+    elif session_factory is not None:
+        resolved_membership_store = SQLAlchemyMembershipAdapter(session_factory)
+    else:
+        resolved_membership_store = InMemoryMembershipStore()
     password_hasher = create_password_hasher()
     token_service = create_token_service(
         secret_key=settings.jwt_secret_key,

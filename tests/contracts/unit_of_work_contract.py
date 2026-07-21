@@ -24,6 +24,9 @@ class UnitOfWorkContractSuite:
         with unit_of_work_factory() as unit_of_work:
             assert unit_of_work.knowledge_objects is not None
             assert unit_of_work.relations is not None
+            assert unit_of_work.users is not None
+            assert unit_of_work.organizations is not None
+            assert unit_of_work.memberships is not None
 
     def test_commit_preserves_changes(
         self,

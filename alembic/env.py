@@ -11,6 +11,9 @@ from backend.core.infrastructure.persistence.sqlalchemy.models import (
     KnowledgeObjectModel,
     KnowledgeObjectRelationModel,
     KnowledgeObjectVersionModel,
+    MembershipModel,
+    OrganizationModel,
+    UserModel,
 )
 from backend.core.infrastructure.persistence.sqlalchemy.settings import (
     DATABASE_URL_ENV_NAME,
@@ -78,5 +81,8 @@ __all__ = [
     "KnowledgeObjectModel",
     "KnowledgeObjectRelationModel",
     "KnowledgeObjectVersionModel",
+    "MembershipModel",
+    "OrganizationModel",
+    "UserModel",
     "target_metadata",
 ]

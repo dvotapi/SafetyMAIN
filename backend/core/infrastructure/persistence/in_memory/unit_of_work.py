@@ -6,12 +6,24 @@ from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.repositories import (
     KnowledgeObjectRelationRepositoryContract,
     KnowledgeObjectRepositoryContract,
+    MembershipRepositoryContract,
+    OrganizationRepositoryContract,
+    UserRepositoryContract,
 )
 from backend.core.infrastructure.persistence.in_memory.knowledge_object_repository import (
     InMemoryKnowledgeObjectRepository,
 )
 from backend.core.infrastructure.persistence.in_memory.knowledge_object_relation_repository import (
     InMemoryKnowledgeObjectRelationRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.membership_repository import (
+    InMemoryMembershipRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.organization_repository import (
+    InMemoryOrganizationRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.user_repository import (
+    InMemoryUserRepository,
 )
 
 
@@ -20,9 +32,15 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self,
         knowledge_objects: KnowledgeObjectRepositoryContract | None = None,
         relations: KnowledgeObjectRelationRepositoryContract | None = None,
+        users: UserRepositoryContract | None = None,
+        organizations: OrganizationRepositoryContract | None = None,
+        memberships: MembershipRepositoryContract | None = None,
     ) -> None:
         self._knowledge_objects = knowledge_objects or InMemoryKnowledgeObjectRepository()
         self._relations = relations or InMemoryKnowledgeObjectRelationRepository()
+        self._users = users or InMemoryUserRepository()
+        self._organizations = organizations or InMemoryOrganizationRepository()
+        self._memberships = memberships or InMemoryMembershipRepository()
         self._knowledge_objects_snapshot: object | None = None
         self._relations_snapshot: object | None = None
         self.committed = False
@@ -35,6 +53,18 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
     @property
     def relations(self) -> KnowledgeObjectRelationRepositoryContract:
         return self._relations
+
+    @property
+    def users(self) -> UserRepositoryContract:
+        return self._users
+
+    @property
+    def organizations(self) -> OrganizationRepositoryContract:
+        return self._organizations
+
+    @property
+    def memberships(self) -> MembershipRepositoryContract:
+        return self._memberships
 
     def commit(self) -> None:
         self.committed = True

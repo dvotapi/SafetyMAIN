@@ -28,6 +28,24 @@ def test_initial_alembic_migration_imports() -> None:
     assert callable(migration.downgrade)
 
 
+    migration_path = (
+        Path(__file__).resolve().parents[2]
+        / "alembic"
+        / "versions"
+        / "0002_create_identity_tables.py"
+    )
+    spec = util.spec_from_file_location("migration_0002", migration_path)
+    assert spec is not None
+    assert spec.loader is not None
+    migration = util.module_from_spec(spec)
+    spec.loader.exec_module(migration)
+
+    assert migration.revision == "0002_identity_persistence"
+    assert migration.down_revision == "0001_core_persistence"
+    assert callable(migration.upgrade)
+    assert callable(migration.downgrade)
+
+
 @pytest.mark.db
 def test_apply_and_downgrade_initial_migration_when_database_available() -> None:
     if os.environ.get("SAFETYMAIN_RUN_DB_TESTS") != "1":
@@ -47,6 +65,9 @@ def test_apply_and_downgrade_initial_migration_when_database_available() -> None
         "knowledge_objects",
         "knowledge_object_versions",
         "knowledge_object_relations",
+        "users",
+        "organizations",
+        "memberships",
     }.issubset(inspector.get_table_names())
 
     command.downgrade(config, "base")

@@ -6,6 +6,9 @@ from typing import Protocol, Self
 from backend.core.domain.repositories import (
     KnowledgeObjectRelationRepositoryContract,
     KnowledgeObjectRepositoryContract,
+    MembershipRepositoryContract,
+    OrganizationRepositoryContract,
+    UserRepositoryContract,
 )
 
 
@@ -18,6 +21,18 @@ class UnitOfWorkContract(Protocol):
 
     @property
     def relations(self) -> KnowledgeObjectRelationRepositoryContract:
+        ...
+
+    @property
+    def users(self) -> UserRepositoryContract:
+        ...
+
+    @property
+    def organizations(self) -> OrganizationRepositoryContract:
+        ...
+
+    @property
+    def memberships(self) -> MembershipRepositoryContract:
         ...
 
     def commit(self) -> None:
