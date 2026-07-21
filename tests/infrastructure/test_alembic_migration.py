@@ -69,6 +69,7 @@ def test_apply_and_downgrade_initial_migration_when_database_available() -> None
         "organizations",
         "memberships",
         "invitations",
+        "audit_events",
     }.issubset(inspector.get_table_names())
 
     command.downgrade(config, "base")

@@ -11,6 +11,7 @@ from backend.api.constants import API_V1_PREFIX
 from backend.api.exception_handlers import register_exception_handlers
 from backend.api.logging import configure_logging
 from backend.api.middleware import RequestIdMiddleware
+from backend.api.routers import admin_audit_events as admin_audit_events_router
 from backend.api.routers import admin_invitations as admin_invitations_router
 from backend.api.routers import admin_memberships as admin_memberships_router
 from backend.api.routers import admin_organizations as admin_organizations_router
@@ -110,6 +111,7 @@ def create_app(
     api_v1.include_router(admin_organizations_router.router)
     api_v1.include_router(admin_memberships_router.router)
     api_v1.include_router(admin_invitations_router.router)
+    api_v1.include_router(admin_audit_events_router.router)
     api_v1.include_router(invitations_router.router)
     application.include_router(api_v1)
 
@@ -134,6 +136,7 @@ def _apply_protected_business_route_security(schema: dict[str, object]) -> None:
         "/api/v1/admin/organizations",
         "/api/v1/admin/memberships",
         "/api/v1/admin/invitations",
+        "/api/v1/admin/audit-events",
         "/api/v1/invitations",
     )
     http_methods = frozenset({"get", "post", "put", "delete", "patch", "head", "options"})

@@ -147,3 +147,7 @@ List endpoint requires `organization_id` and supports:
 - No automatic user or organization provisioning
 
 See [AdminMembershipAPI.md](../api/AdminMembershipAPI.md) for request/response examples.
+
+Membership administrative mutations emit audit events (`membership.create`,
+`membership.role_change`, `membership.activate`, `membership.deactivate`).
+See [AdministrativeAuditLog.md](AdministrativeAuditLog.md).

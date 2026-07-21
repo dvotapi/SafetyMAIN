@@ -27,89 +27,97 @@ from backend.core.domain.exceptions import (
     OrganizationAlreadyInactive,
 )
 from backend.core.domain.value_objects import OrganizationId
-from backend.core.infrastructure.persistence.in_memory import InMemoryUnitOfWork
+from tests.core.audit_test_support import make_admin_audit_stack
 
 
 def test_create_organization_persists_organization() -> None:
-    uow = InMemoryUnitOfWork()
-    handler = CreateOrganizationHandler(uow)
+    stack = make_admin_audit_stack()
+    handler = CreateOrganizationHandler(stack.uow, stack.audit)
 
     organization = handler.handle(
-        CreateOrganizationCommand(name="SafetyMAIN Development Organization")
+        CreateOrganizationCommand(
+            name="SafetyMAIN Development Organization",
+            audit_context=stack.ctx,
+        )
     )
 
     assert organization.name == "SafetyMAIN Development Organization"
     assert organization.is_active() is True
-    assert uow.committed is True
-    assert uow.organizations.get(organization.id).name == organization.name
+    assert stack.uow.committed is True
+    assert stack.uow.organizations.get(organization.id).name == organization.name
 
 
 def test_create_organization_trims_name() -> None:
-    uow = InMemoryUnitOfWork()
-    organization = CreateOrganizationHandler(uow).handle(
-        CreateOrganizationCommand(name="  Acme Safety  ")
+    stack = make_admin_audit_stack()
+    organization = CreateOrganizationHandler(stack.uow, stack.audit).handle(
+        CreateOrganizationCommand(name="  Acme Safety  ", audit_context=stack.ctx)
     )
 
     assert organization.name == "Acme Safety"
 
 
 def test_create_organization_rejects_duplicate_normalized_name() -> None:
-    uow = InMemoryUnitOfWork()
-    handler = CreateOrganizationHandler(uow)
-    handler.handle(CreateOrganizationCommand(name="Acme Safety"))
+    stack = make_admin_audit_stack()
+    handler = CreateOrganizationHandler(stack.uow, stack.audit)
+    handler.handle(CreateOrganizationCommand(name="Acme Safety", audit_context=stack.ctx))
 
     with pytest.raises(DuplicateOrganizationName):
-        handler.handle(CreateOrganizationCommand(name=" acme safety "))
-
-    assert uow.committed is True
+        handler.handle(
+            CreateOrganizationCommand(name="  acme safety ", audit_context=stack.ctx)
+        )
 
 
 def test_update_organization_renames_organization() -> None:
-    uow = InMemoryUnitOfWork()
-    organization = CreateOrganizationHandler(uow).handle(
-        CreateOrganizationCommand(name="Acme Safety")
+    stack = make_admin_audit_stack()
+    organization = CreateOrganizationHandler(stack.uow, stack.audit).handle(
+        CreateOrganizationCommand(name="Acme Safety", audit_context=stack.ctx)
     )
 
-    updated = UpdateOrganizationHandler(uow).handle(
+    updated = UpdateOrganizationHandler(stack.uow, stack.audit).handle(
         UpdateOrganizationCommand(
             organization_id=organization.id,
-            name="Acme Safety International",
+            name="Updated Safety",
+            audit_context=stack.ctx,
         )
     )
 
-    assert updated.name == "Acme Safety International"
+    assert updated.name == "Updated Safety"
 
 
 def test_update_organization_rejects_duplicate_name() -> None:
-    uow = InMemoryUnitOfWork()
-    create_handler = CreateOrganizationHandler(uow)
-    first = create_handler.handle(CreateOrganizationCommand(name="Alpha Org"))
-    create_handler.handle(CreateOrganizationCommand(name="Beta Org"))
+    stack = make_admin_audit_stack()
+    CreateOrganizationHandler(stack.uow, stack.audit).handle(
+        CreateOrganizationCommand(name="Acme Safety", audit_context=stack.ctx)
+    )
+    other = CreateOrganizationHandler(stack.uow, stack.audit).handle(
+        CreateOrganizationCommand(name="Beta Safety", audit_context=stack.ctx)
+    )
 
     with pytest.raises(DuplicateOrganizationName):
-        UpdateOrganizationHandler(uow).handle(
+        UpdateOrganizationHandler(stack.uow, stack.audit).handle(
             UpdateOrganizationCommand(
-                organization_id=first.id,
-                name="beta org",
+                organization_id=other.id,
+                name="Acme Safety",
+                audit_context=stack.ctx,
             )
         )
 
 
 def test_activate_and_deactivate_organization() -> None:
-    uow = InMemoryUnitOfWork()
-    organization = CreateOrganizationHandler(uow).handle(
-        CreateOrganizationCommand(name="Acme Safety", is_active=False)
+    stack = make_admin_audit_stack()
+    organization = CreateOrganizationHandler(stack.uow, stack.audit).handle(
+        CreateOrganizationCommand(name="Acme Safety", is_active=False, audit_context=stack.ctx)
     )
     assert organization.status is OrganizationStatus.DEACTIVATED
 
-    activated = ActivateOrganizationHandler(uow).handle(
-        ActivateOrganizationCommand(organization_id=organization.id)
+    activated = ActivateOrganizationHandler(stack.uow, stack.audit).handle(
+        ActivateOrganizationCommand(organization_id=organization.id, audit_context=stack.ctx)
     )
     assert activated.status is OrganizationStatus.ACTIVE
 
     other_id = OrganizationId(value=uuid4())
     now = datetime.now(UTC)
-    uow.organizations.add(
+    stack.uow.organizations.add(
         Organization(
             id=other_id,
             name="Authorization Org",
@@ -118,67 +126,73 @@ def test_activate_and_deactivate_organization() -> None:
             updated_at=now,
         )
     )
-    deactivated = DeactivateOrganizationHandler(uow).handle(
+    deactivated = DeactivateOrganizationHandler(stack.uow, stack.audit).handle(
         DeactivateOrganizationCommand(
             organization_id=activated.id,
             authorization_organization_id=other_id,
+            audit_context=stack.ctx,
         )
     )
     assert deactivated.status is OrganizationStatus.DEACTIVATED
 
 
 def test_activate_already_active_organization_raises() -> None:
-    uow = InMemoryUnitOfWork()
-    organization = CreateOrganizationHandler(uow).handle(
-        CreateOrganizationCommand(name="Acme Safety")
+    stack = make_admin_audit_stack()
+    organization = CreateOrganizationHandler(stack.uow, stack.audit).handle(
+        CreateOrganizationCommand(name="Acme Safety", audit_context=stack.ctx)
     )
 
     with pytest.raises(OrganizationAlreadyActive):
-        ActivateOrganizationHandler(uow).handle(
-            ActivateOrganizationCommand(organization_id=organization.id)
+        ActivateOrganizationHandler(stack.uow, stack.audit).handle(
+            ActivateOrganizationCommand(
+                organization_id=organization.id,
+                audit_context=stack.ctx,
+            )
         )
 
 
 def test_deactivate_already_inactive_organization_raises() -> None:
-    uow = InMemoryUnitOfWork()
-    organization = CreateOrganizationHandler(uow).handle(
-        CreateOrganizationCommand(name="Acme Safety", is_active=False)
+    stack = make_admin_audit_stack()
+    organization = CreateOrganizationHandler(stack.uow, stack.audit).handle(
+        CreateOrganizationCommand(name="Acme Safety", is_active=False, audit_context=stack.ctx)
     )
     auth_org_id = OrganizationId(value=uuid4())
 
     with pytest.raises(OrganizationAlreadyInactive):
-        DeactivateOrganizationHandler(uow).handle(
+        DeactivateOrganizationHandler(stack.uow, stack.audit).handle(
             DeactivateOrganizationCommand(
                 organization_id=organization.id,
                 authorization_organization_id=auth_org_id,
+                audit_context=stack.ctx,
             )
         )
 
 
 def test_deactivate_current_authorization_organization_raises() -> None:
-    uow = InMemoryUnitOfWork()
-    organization = CreateOrganizationHandler(uow).handle(
-        CreateOrganizationCommand(name="Acme Safety")
+    stack = make_admin_audit_stack()
+    organization = CreateOrganizationHandler(stack.uow, stack.audit).handle(
+        CreateOrganizationCommand(name="Acme Safety", audit_context=stack.ctx)
     )
 
     with pytest.raises(CurrentOrganizationDeactivationError):
-        DeactivateOrganizationHandler(uow).handle(
+        DeactivateOrganizationHandler(stack.uow, stack.audit).handle(
             DeactivateOrganizationCommand(
                 organization_id=organization.id,
                 authorization_organization_id=organization.id,
+                audit_context=stack.ctx,
             )
         )
 
 
 def test_list_organizations_supports_filtering_and_sorting() -> None:
-    uow = InMemoryUnitOfWork()
-    create_handler = CreateOrganizationHandler(uow)
-    create_handler.handle(CreateOrganizationCommand(name="Alpha Org"))
+    stack = make_admin_audit_stack()
+    create_handler = CreateOrganizationHandler(stack.uow, stack.audit)
+    create_handler.handle(CreateOrganizationCommand(name="Alpha Org", audit_context=stack.ctx))
     create_handler.handle(
-        CreateOrganizationCommand(name="Beta Org", is_active=False)
+        CreateOrganizationCommand(name="Beta Org", is_active=False, audit_context=stack.ctx)
     )
 
-    result = ListOrganizationsHandler(uow).handle(
+    result = ListOrganizationsHandler(stack.uow).handle(
         ListOrganizationsQuery(
             offset=0,
             limit=10,

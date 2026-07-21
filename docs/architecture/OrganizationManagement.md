@@ -173,3 +173,7 @@ a unique normalized-name index.
 - Membership administration remains out of scope.
 - Organization settings, billing, ownership, and deletion are not supported.
 - Business-route lifecycle enforcement for inactive organizations is unchanged.
+
+Organization administrative mutations emit audit events (`organization.create`,
+`organization.update`, `organization.activate`, `organization.deactivate`).
+See [AdministrativeAuditLog.md](AdministrativeAuditLog.md).

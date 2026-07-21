@@ -213,3 +213,6 @@ unique index on `lower(name)`.
 
 See [OrganizationManagement.md](OrganizationManagement.md) and
 [AdminOrganizationAPI.md](../api/AdminOrganizationAPI.md).
+
+Append-only administrative audit events are persisted in `audit_events` (Alembic
+revision `0005_audit_events`). See [AdministrativeAuditLog.md](AdministrativeAuditLog.md).

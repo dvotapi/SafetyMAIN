@@ -20,33 +20,35 @@ from backend.core.domain.exceptions import (
     UserAlreadyActive,
     UserAlreadyDeactivated,
 )
-from backend.core.infrastructure.persistence.in_memory import InMemoryUnitOfWork
+from tests.core.audit_test_support import make_admin_audit_stack
 
 
 def test_create_user_persists_user() -> None:
-    uow = InMemoryUnitOfWork()
-    handler = CreateUserHandler(uow)
+    stack = make_admin_audit_stack()
+    handler = CreateUserHandler(stack.uow, stack.audit)
 
     user = handler.handle(
         CreateUserCommand(
             email="operator@example.com",
             display_name="Safety Operator",
+            audit_context=stack.ctx,
         )
     )
 
     assert user.email == "operator@example.com"
     assert user.is_active() is True
-    assert uow.committed is True
-    assert uow.users.get(user.id).display_name == "Safety Operator"
+    assert stack.uow.committed is True
+    assert stack.uow.users.get(user.id).display_name == "Safety Operator"
 
 
 def test_create_user_rejects_duplicate_email() -> None:
-    uow = InMemoryUnitOfWork()
-    handler = CreateUserHandler(uow)
+    stack = make_admin_audit_stack()
+    handler = CreateUserHandler(stack.uow, stack.audit)
     handler.handle(
         CreateUserCommand(
             email="operator@example.com",
             display_name="Safety Operator",
+            audit_context=stack.ctx,
         )
     )
 
@@ -55,27 +57,30 @@ def test_create_user_rejects_duplicate_email() -> None:
             CreateUserCommand(
                 email="operator@example.com",
                 display_name="Another Operator",
+                audit_context=stack.ctx,
             )
         )
 
-    assert uow.committed is True
+    assert stack.uow.users.get_by_email("operator@example.com") is not None
 
 
 def test_update_user_changes_profile_fields() -> None:
-    uow = InMemoryUnitOfWork()
-    create_handler = CreateUserHandler(uow)
+    stack = make_admin_audit_stack()
+    create_handler = CreateUserHandler(stack.uow, stack.audit)
     user = create_handler.handle(
         CreateUserCommand(
             email="operator@example.com",
             display_name="Safety Operator",
+            audit_context=stack.ctx,
         )
     )
 
-    updated = UpdateUserHandler(uow).handle(
+    updated = UpdateUserHandler(stack.uow, stack.audit).handle(
         UpdateUserCommand(
             user_id=user.id,
             display_name="Updated Operator",
             email="updated@example.com",
+            audit_context=stack.ctx,
         )
     )
 
@@ -84,48 +89,57 @@ def test_update_user_changes_profile_fields() -> None:
 
 
 def test_activate_and_deactivate_user() -> None:
-    uow = InMemoryUnitOfWork()
-    create_handler = CreateUserHandler(uow)
+    stack = make_admin_audit_stack()
+    create_handler = CreateUserHandler(stack.uow, stack.audit)
     user = create_handler.handle(
         CreateUserCommand(
             email="operator@example.com",
             display_name="Safety Operator",
             is_active=False,
+            audit_context=stack.ctx,
         )
     )
     assert user.status is UserStatus.DEACTIVATED
 
-    activated = ActivateUserHandler(uow).handle(ActivateUserCommand(user_id=user.id))
+    activated = ActivateUserHandler(stack.uow, stack.audit).handle(
+        ActivateUserCommand(user_id=user.id, audit_context=stack.ctx)
+    )
     assert activated.status is UserStatus.ACTIVE
 
-    deactivated = DeactivateUserHandler(uow).handle(
-        DeactivateUserCommand(user_id=user.id)
+    deactivated = DeactivateUserHandler(stack.uow, stack.audit).handle(
+        DeactivateUserCommand(user_id=user.id, audit_context=stack.ctx)
     )
     assert deactivated.status is UserStatus.DEACTIVATED
 
 
 def test_activate_already_active_user_raises() -> None:
-    uow = InMemoryUnitOfWork()
-    user = CreateUserHandler(uow).handle(
+    stack = make_admin_audit_stack()
+    user = CreateUserHandler(stack.uow, stack.audit).handle(
         CreateUserCommand(
             email="operator@example.com",
             display_name="Safety Operator",
+            audit_context=stack.ctx,
         )
     )
 
     with pytest.raises(UserAlreadyActive):
-        ActivateUserHandler(uow).handle(ActivateUserCommand(user_id=user.id))
+        ActivateUserHandler(stack.uow, stack.audit).handle(
+            ActivateUserCommand(user_id=user.id, audit_context=stack.ctx)
+        )
 
 
 def test_deactivate_already_deactivated_user_raises() -> None:
-    uow = InMemoryUnitOfWork()
-    user = CreateUserHandler(uow).handle(
+    stack = make_admin_audit_stack()
+    user = CreateUserHandler(stack.uow, stack.audit).handle(
         CreateUserCommand(
             email="operator@example.com",
             display_name="Safety Operator",
             is_active=False,
+            audit_context=stack.ctx,
         )
     )
 
     with pytest.raises(UserAlreadyDeactivated):
-        DeactivateUserHandler(uow).handle(DeactivateUserCommand(user_id=user.id))
+        DeactivateUserHandler(stack.uow, stack.audit).handle(
+            DeactivateUserCommand(user_id=user.id, audit_context=stack.ctx)
+        )

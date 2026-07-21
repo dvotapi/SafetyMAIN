@@ -77,3 +77,16 @@ class InMemoryOrganizationRepository(OrganizationRepositoryContract):
             offset=criteria.offset,
             limit=criteria.limit,
         )
+
+    def snapshot(
+        self,
+    ) -> tuple[dict[OrganizationId, Organization], dict[str, OrganizationId]]:
+        return (dict(self._organizations_by_id), dict(self._organizations_by_normalized_name))
+
+    def restore(
+        self,
+        snapshot: tuple[dict[OrganizationId, Organization], dict[str, OrganizationId]],
+    ) -> None:
+        organizations_by_id, organizations_by_normalized_name = snapshot
+        self._organizations_by_id = dict(organizations_by_id)
+        self._organizations_by_normalized_name = dict(organizations_by_normalized_name)

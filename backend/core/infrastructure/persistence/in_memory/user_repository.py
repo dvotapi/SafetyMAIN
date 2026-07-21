@@ -65,3 +65,11 @@ class InMemoryUserRepository(UserRepositoryContract):
             offset=criteria.offset,
             limit=criteria.limit,
         )
+
+    def snapshot(self) -> tuple[dict[UserId, User], dict[str, UserId]]:
+        return (dict(self._users_by_id), dict(self._users_by_email))
+
+    def restore(self, snapshot: tuple[dict[UserId, User], dict[str, UserId]]) -> None:
+        users_by_id, users_by_email = snapshot
+        self._users_by_id = dict(users_by_id)
+        self._users_by_email = dict(users_by_email)

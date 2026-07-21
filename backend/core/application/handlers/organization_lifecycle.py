@@ -2,6 +2,14 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from backend.core.application.audit.administrative_audit_recorder import (
+    AdministrativeAuditRecorder,
+    AuditRecordSpec,
+)
+from backend.core.application.audit.handler_support import (
+    require_audit_context,
+    run_audited_admin_operation,
+)
 from backend.core.application.commands.organization_lifecycle import (
     ActivateOrganizationCommand,
     DeactivateOrganizationCommand,
@@ -13,46 +21,105 @@ from backend.core.domain.exceptions import (
     OrganizationAlreadyActive,
     OrganizationAlreadyInactive,
 )
+from backend.core.domain.value_objects.audit_action import AuditAction
+from backend.core.domain.value_objects.audit_resource_type import AuditResourceType
 
 
 class ActivateOrganizationHandler:
-    def __init__(self, unit_of_work: UnitOfWorkContract) -> None:
+    def __init__(
+        self,
+        unit_of_work: UnitOfWorkContract,
+        audit: AdministrativeAuditRecorder,
+    ) -> None:
         self._unit_of_work = unit_of_work
+        self._audit = audit
 
     def handle(self, command: ActivateOrganizationCommand) -> Organization:
-        organization = self._unit_of_work.organizations.get(command.organization_id)
-        if organization.status is OrganizationStatus.ACTIVE:
-            raise OrganizationAlreadyActive(organization.id)
-
-        updated_organization = organization.model_copy(
-            update={
-                "status": OrganizationStatus.ACTIVE,
-                "updated_at": datetime.now(UTC),
-            }
+        audit_context = require_audit_context(command.audit_context)
+        failure_spec = AuditRecordSpec(
+            action=AuditAction.ORGANIZATION_ACTIVATE,
+            context=audit_context,
+            resource_type=AuditResourceType.ORGANIZATION,
+            resource_id=command.organization_id.value,
+            target_organization_id=command.organization_id,
         )
-        self._unit_of_work.organizations.save(updated_organization)
-        self._unit_of_work.commit()
-        return updated_organization
+
+        def operation() -> Organization:
+            organization = self._unit_of_work.organizations.get(command.organization_id)
+            if organization.status is OrganizationStatus.ACTIVE:
+                raise OrganizationAlreadyActive(organization.id)
+            return organization.model_copy(
+                update={
+                    "status": OrganizationStatus.ACTIVE,
+                    "updated_at": datetime.now(UTC),
+                }
+            )
+
+        def success_spec(organization: Organization) -> AuditRecordSpec:
+            self._unit_of_work.organizations.save(organization)
+            return AuditRecordSpec(
+                action=AuditAction.ORGANIZATION_ACTIVATE,
+                context=audit_context,
+                resource_type=AuditResourceType.ORGANIZATION,
+                resource_id=organization.id.value,
+                target_organization_id=organization.id,
+            )
+
+        return run_audited_admin_operation(
+            self._audit,
+            self._unit_of_work,
+            failure_spec=failure_spec,
+            operation=operation,
+            success_spec=success_spec,
+        )
 
 
 class DeactivateOrganizationHandler:
-    def __init__(self, unit_of_work: UnitOfWorkContract) -> None:
+    def __init__(
+        self,
+        unit_of_work: UnitOfWorkContract,
+        audit: AdministrativeAuditRecorder,
+    ) -> None:
         self._unit_of_work = unit_of_work
+        self._audit = audit
 
     def handle(self, command: DeactivateOrganizationCommand) -> Organization:
-        if command.organization_id == command.authorization_organization_id:
-            raise CurrentOrganizationDeactivationError(command.organization_id)
-
-        organization = self._unit_of_work.organizations.get(command.organization_id)
-        if organization.status is OrganizationStatus.DEACTIVATED:
-            raise OrganizationAlreadyInactive(organization.id)
-
-        updated_organization = organization.model_copy(
-            update={
-                "status": OrganizationStatus.DEACTIVATED,
-                "updated_at": datetime.now(UTC),
-            }
+        audit_context = require_audit_context(command.audit_context)
+        failure_spec = AuditRecordSpec(
+            action=AuditAction.ORGANIZATION_DEACTIVATE,
+            context=audit_context,
+            resource_type=AuditResourceType.ORGANIZATION,
+            resource_id=command.organization_id.value,
+            target_organization_id=command.organization_id,
         )
-        self._unit_of_work.organizations.save(updated_organization)
-        self._unit_of_work.commit()
-        return updated_organization
+
+        def operation() -> Organization:
+            if command.organization_id == command.authorization_organization_id:
+                raise CurrentOrganizationDeactivationError(command.organization_id)
+            organization = self._unit_of_work.organizations.get(command.organization_id)
+            if organization.status is OrganizationStatus.DEACTIVATED:
+                raise OrganizationAlreadyInactive(organization.id)
+            return organization.model_copy(
+                update={
+                    "status": OrganizationStatus.DEACTIVATED,
+                    "updated_at": datetime.now(UTC),
+                }
+            )
+
+        def success_spec(organization: Organization) -> AuditRecordSpec:
+            self._unit_of_work.organizations.save(organization)
+            return AuditRecordSpec(
+                action=AuditAction.ORGANIZATION_DEACTIVATE,
+                context=audit_context,
+                resource_type=AuditResourceType.ORGANIZATION,
+                resource_id=organization.id.value,
+                target_organization_id=organization.id,
+            )
+
+        return run_audited_admin_operation(
+            self._audit,
+            self._unit_of_work,
+            failure_spec=failure_spec,
+            operation=operation,
+            success_spec=success_spec,
+        )

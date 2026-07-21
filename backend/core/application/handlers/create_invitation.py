@@ -2,6 +2,14 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+from backend.core.application.audit.administrative_audit_recorder import (
+    AdministrativeAuditRecorder,
+    AuditRecordSpec,
+)
+from backend.core.application.audit.handler_support import (
+    require_audit_context,
+    run_audited_admin_operation,
+)
 from backend.core.application.commands.invitation_lifecycle import CreateInvitationCommand
 from backend.core.application.policies.membership_administration import validate_membership_role
 from backend.core.application.results.invitation_results import InvitationWithTokenResult
@@ -21,6 +29,8 @@ from backend.core.domain.exceptions.invitation import (
     ExistingActiveMembership,
 )
 from backend.core.domain.value_objects import InvitationId
+from backend.core.domain.value_objects.audit_action import AuditAction
+from backend.core.domain.value_objects.audit_resource_type import AuditResourceType
 from backend.core.domain.value_objects.invitation_token import generate_invitation_token
 
 
@@ -29,63 +39,91 @@ class CreateInvitationHandler:
         self,
         unit_of_work: UnitOfWorkContract,
         clock: ClockContract,
+        audit: AdministrativeAuditRecorder,
     ) -> None:
         self._unit_of_work = unit_of_work
         self._clock = clock
+        self._audit = audit
 
     def handle(self, command: CreateInvitationCommand) -> InvitationWithTokenResult:
-        validate_membership_role(command.role)
-
-        organization = self._unit_of_work.organizations.get(command.organization_id)
-        if not organization.is_active():
-            raise OrganizationAlreadyInactive(organization.id)
-
-        normalized_email = command.email.strip().lower()
-        now = self._clock.now()
-        expires_at = command.expires_at or default_invitation_expiration(
-            now=now,
-            ttl_days=DEFAULT_INVITATION_TTL_DAYS,
+        audit_context = require_audit_context(command.audit_context)
+        failure_spec = AuditRecordSpec(
+            action=AuditAction.INVITATION_CREATE,
+            context=audit_context,
+            resource_type=AuditResourceType.INVITATION,
+            target_organization_id=command.organization_id,
         )
-        if expires_at <= now:
-            raise ValueError("Invitation expiration must be in the future.")
 
-        existing_invitation = (
-            self._unit_of_work.invitations.get_active_pending_by_organization_and_email(
-                command.organization_id,
-                normalized_email,
-            )
-        )
-        if existing_invitation is not None and existing_invitation.is_acceptable(now=now):
-            raise DuplicateActiveInvitation(
-                organization_id=command.organization_id,
-                email=normalized_email,
-            )
+        def operation() -> tuple[Invitation, str]:
+            validate_membership_role(command.role)
+            organization = self._unit_of_work.organizations.get(command.organization_id)
+            if not organization.is_active():
+                raise OrganizationAlreadyInactive(organization.id)
 
-        existing_user = self._unit_of_work.users.get_by_email(normalized_email)
-        if existing_user is not None:
-            existing_membership = self._unit_of_work.memberships.get_by_user_and_organization(
-                existing_user.id,
-                command.organization_id,
+            normalized_email = command.email.strip().lower()
+            now = self._clock.now()
+            expires_at = command.expires_at or default_invitation_expiration(
+                now=now,
+                ttl_days=DEFAULT_INVITATION_TTL_DAYS,
             )
-            if existing_membership is not None and existing_membership.is_active():
-                raise ExistingActiveMembership(
-                    user_id=existing_user.id,
+            if expires_at <= now:
+                raise ValueError("Invitation expiration must be in the future.")
+
+            existing_invitation = (
+                self._unit_of_work.invitations.get_active_pending_by_organization_and_email(
+                    command.organization_id,
+                    normalized_email,
+                )
+            )
+            if existing_invitation is not None and existing_invitation.is_acceptable(now=now):
+                raise DuplicateActiveInvitation(
                     organization_id=command.organization_id,
+                    email=normalized_email,
                 )
 
-        token, token_hash = generate_invitation_token()
-        invitation = Invitation(
-            id=InvitationId(value=uuid4()),
-            organization_id=command.organization_id,
-            email=normalized_email,
-            role=command.role,
-            status=InvitationStatus.PENDING,
-            token_hash=token_hash,
-            expires_at=expires_at,
-            created_by=command.created_by,
-            created_at=now,
-            updated_at=now,
+            existing_user = self._unit_of_work.users.get_by_email(normalized_email)
+            if existing_user is not None:
+                existing_membership = self._unit_of_work.memberships.get_by_user_and_organization(
+                    existing_user.id,
+                    command.organization_id,
+                )
+                if existing_membership is not None and existing_membership.is_active():
+                    raise ExistingActiveMembership(
+                        user_id=existing_user.id,
+                        organization_id=command.organization_id,
+                    )
+
+            token, token_hash = generate_invitation_token()
+            invitation = Invitation(
+                id=InvitationId(value=uuid4()),
+                organization_id=command.organization_id,
+                email=normalized_email,
+                role=command.role,
+                status=InvitationStatus.PENDING,
+                token_hash=token_hash,
+                expires_at=expires_at,
+                created_by=command.created_by,
+                created_at=now,
+                updated_at=now,
+            )
+            return invitation, token
+
+        def success_spec(result: tuple[Invitation, str]) -> AuditRecordSpec:
+            invitation, _token = result
+            self._unit_of_work.invitations.add(invitation)
+            return AuditRecordSpec(
+                action=AuditAction.INVITATION_CREATE,
+                context=audit_context,
+                resource_type=AuditResourceType.INVITATION,
+                resource_id=invitation.id.value,
+                target_organization_id=invitation.organization_id,
+            )
+
+        invitation, token = run_audited_admin_operation(
+            self._audit,
+            self._unit_of_work,
+            failure_spec=failure_spec,
+            operation=operation,
+            success_spec=success_spec,
         )
-        self._unit_of_work.invitations.add(invitation)
-        self._unit_of_work.commit()
         return InvitationWithTokenResult(invitation=invitation, token=token)

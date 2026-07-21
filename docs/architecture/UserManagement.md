@@ -149,3 +149,7 @@ Unit of Work.
 
 Authentication behavior, tenant isolation for business APIs, and existing JWT
 format remain unchanged.
+
+Administrative user mutations emit append-only audit events (`user.create`,
+`user.update`, `user.activate`, `user.deactivate`) through the shared audit recorder.
+See [AdministrativeAuditLog.md](AdministrativeAuditLog.md).

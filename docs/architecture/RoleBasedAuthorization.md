@@ -115,6 +115,7 @@ defines reusable policy constants:
 | `ORGANIZATION_WRITE` | `organization:write` |
 | `MEMBERSHIP_READ` | `membership:read` |
 | `MEMBERSHIP_WRITE` | `membership:write` |
+| `AUDIT_READ` | `audit:read` |
 
 Admin user API permissions (P5-001):
 
@@ -139,6 +140,16 @@ Admin membership API permissions (P5-003):
 | admin | yes | yes |
 | member | no | no |
 | auditor | yes | no |
+
+Admin audit API permissions (P5-005):
+
+| Role | `audit:read` |
+|------|--------------|
+| admin | yes |
+| auditor | yes |
+| member | no |
+
+There is no public `audit:write` permission. Audit writes are internal application behavior.
 
 Relation and delete policies map to existing domain capabilities because P3-002
 defines `relation:manage` and does not split relation or delete permissions.
@@ -221,8 +232,9 @@ This milestone does not:
 - change the domain role or permission model;
 - modify tenant resolution;
 - add attribute-based access control;
-- add audit logging;
 - enforce permissions on existing handlers automatically.
+
+Administrative audit read access (`audit:read`) is implemented in P5-005. Internal audit writes are not RBAC-granted permissions.
 
 ---
 

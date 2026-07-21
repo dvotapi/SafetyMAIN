@@ -29,6 +29,7 @@ from backend.core.domain.exceptions.user import (
     UserError,
     UserNotFound,
 )
+from backend.core.domain.exceptions.audit_event import AuditEventError, AuditEventNotFound
 from backend.core.domain.exceptions.invitation import (
     DuplicateActiveInvitation,
     ExistingActiveMembership,
@@ -66,6 +67,8 @@ __all__ = [
     "DuplicateKnowledgeObjectRelation",
     "DuplicateUserEmail",
     "DuplicateMembership",
+    "AuditEventError",
+    "AuditEventNotFound",
     "DuplicateActiveInvitation",
     "ExistingActiveMembership",
     "InactiveMembership",

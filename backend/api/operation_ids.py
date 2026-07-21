@@ -51,6 +51,8 @@ GET_INVITATION = "get_invitation"
 REVOKE_INVITATION = "revoke_invitation"
 REISSUE_INVITATION = "reissue_invitation"
 ACCEPT_INVITATION = "accept_invitation"
+LIST_AUDIT_EVENTS = "list_audit_events"
+GET_AUDIT_EVENT = "get_audit_event"
 
 STABLE_OPERATION_IDS: frozenset[str] = frozenset(
     {
@@ -82,6 +84,8 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         REVOKE_INVITATION,
         REISSUE_INVITATION,
         ACCEPT_INVITATION,
+        LIST_AUDIT_EVENTS,
+        GET_AUDIT_EVENT,
         CREATE_KNOWLEDGE_OBJECT,
         SEARCH_KNOWLEDGE_OBJECTS,
         GET_KNOWLEDGE_OBJECT,

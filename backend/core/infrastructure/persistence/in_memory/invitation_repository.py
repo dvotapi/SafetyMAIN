@@ -98,3 +98,16 @@ class InMemoryInvitationRepository(InvitationRepositoryContract):
             self._invitations_by_token_hash[invitation.token_hash] = invitation.id
 
         self._invitations_by_id[invitation.id] = invitation
+
+    def snapshot(
+        self,
+    ) -> tuple[dict[InvitationId, Invitation], dict[str, InvitationId]]:
+        return (dict(self._invitations_by_id), dict(self._invitations_by_token_hash))
+
+    def restore(
+        self,
+        snapshot: tuple[dict[InvitationId, Invitation], dict[str, InvitationId]],
+    ) -> None:
+        invitations_by_id, invitations_by_token_hash = snapshot
+        self._invitations_by_id = dict(invitations_by_id)
+        self._invitations_by_token_hash = dict(invitations_by_token_hash)

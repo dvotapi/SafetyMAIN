@@ -27,3 +27,7 @@ Admin routes use `invitation:read` and `invitation:write`. Authorization organiz
 - No email delivery
 - No invitation for users without existing accounts
 - No background expiration job
+
+Invitation administrative and acceptance workflows emit audit events
+(`invitation.create`, `invitation.revoke`, `invitation.reissue`, `invitation.accept`)
+without storing token material. See [AdministrativeAuditLog.md](AdministrativeAuditLog.md).

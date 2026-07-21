@@ -38,6 +38,8 @@ EXPECTED_PATHS: dict[str, set[str]] = {
     "/api/v1/admin/invitations/{invitation_id}": {"get"},
     "/api/v1/admin/invitations/{invitation_id}/revoke": {"post"},
     "/api/v1/admin/invitations/{invitation_id}/reissue": {"post"},
+    "/api/v1/admin/audit-events": {"get"},
+    "/api/v1/admin/audit-events/{audit_event_id}": {"get"},
     "/api/v1/invitations/accept": {"post"},
 }
 

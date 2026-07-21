@@ -40,6 +40,7 @@ from backend.api.schemas.admin_organizations import (
     UpdateOrganizationRequest,
 )
 from backend.api.security import TenantContext
+from backend.core.application.audit.administrative_audit_recorder import AuditContext
 from backend.core.application.authorization.policies.resource_permissions import (
     ORGANIZATION_READ,
     ORGANIZATION_WRITE,
@@ -78,7 +79,7 @@ router = APIRouter(prefix="/admin/organizations", tags=["Admin Organizations"])
 )
 def create_organization(
     request_body: CreateOrganizationRequest,
-    _tenant_context: Annotated[
+    tenant_context: Annotated[
         TenantContext,
         Depends(require_permission(ORGANIZATION_WRITE)),
     ],
@@ -88,6 +89,7 @@ def create_organization(
         CreateOrganizationCommand(
             name=request_body.name,
             is_active=request_body.is_active,
+            audit_context=AuditContext.from_tenant(tenant_context),
         )
     )
     response_body = to_organization_response(organization)
@@ -97,7 +99,6 @@ def create_organization(
         content=response_body.model_dump(mode="json"),
         headers={"Location": location},
     )
-
 
 @router.get(
     "",
@@ -173,7 +174,7 @@ def get_organization(
 def update_organization(
     request_body: UpdateOrganizationRequest,
     organization_id: Annotated[OrganizationId, Depends(get_target_organization_id)],
-    _tenant_context: Annotated[
+    tenant_context: Annotated[
         TenantContext,
         Depends(require_permission(ORGANIZATION_WRITE)),
     ],
@@ -183,10 +184,10 @@ def update_organization(
         UpdateOrganizationCommand(
             organization_id=organization_id,
             name=request_body.name,
+            audit_context=AuditContext.from_tenant(tenant_context),
         )
     )
     return to_organization_response(organization)
-
 
 @router.post(
     "/{organization_id}/activate",
@@ -200,7 +201,7 @@ def update_organization(
 )
 def activate_organization(
     organization_id: Annotated[OrganizationId, Depends(get_target_organization_id)],
-    _tenant_context: Annotated[
+    tenant_context: Annotated[
         TenantContext,
         Depends(require_permission(ORGANIZATION_WRITE)),
     ],
@@ -210,10 +211,12 @@ def activate_organization(
     ],
 ) -> OrganizationResponse:
     organization = handler.handle(
-        ActivateOrganizationCommand(organization_id=organization_id)
+        ActivateOrganizationCommand(
+            organization_id=organization_id,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
     )
     return to_organization_response(organization)
-
 
 @router.post(
     "/{organization_id}/deactivate",
@@ -243,6 +246,7 @@ def deactivate_organization(
         DeactivateOrganizationCommand(
             organization_id=organization_id,
             authorization_organization_id=tenant_context.organization_id,
+            audit_context=AuditContext.from_tenant(tenant_context),
         )
     )
     return to_organization_response(organization)

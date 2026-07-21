@@ -42,6 +42,7 @@ from backend.api.schemas.admin_memberships import (
     UpdateMembershipRoleRequest,
 )
 from backend.api.security import TenantContext
+from backend.core.application.audit.administrative_audit_recorder import AuditContext
 from backend.core.application.authorization.policies.resource_permissions import (
     MEMBERSHIP_READ,
     MEMBERSHIP_WRITE,
@@ -83,7 +84,7 @@ router = APIRouter(prefix="/admin/memberships", tags=["Admin Memberships"])
 )
 def create_membership(
     request_body: CreateMembershipRequest,
-    _tenant_context: Annotated[TenantContext, Depends(require_permission(MEMBERSHIP_WRITE))],
+    tenant_context: Annotated[TenantContext, Depends(require_permission(MEMBERSHIP_WRITE))],
     handler: Annotated[CreateMembershipHandler, Depends(get_create_membership_handler)],
 ) -> JSONResponse:
     membership = handler.handle(
@@ -92,6 +93,7 @@ def create_membership(
             organization_id=OrganizationId(value=request_body.organization_id),
             role=Role(value=request_body.role),
             is_active=request_body.is_active,
+            audit_context=AuditContext.from_tenant(tenant_context),
         )
     )
     response_body = to_membership_response(membership)
@@ -186,6 +188,7 @@ def update_membership_role(
             membership_id=membership_id,
             role=Role(value=request_body.role),
             authorization=authorization,
+            audit_context=AuditContext.from_tenant(tenant_context),
         )
     )
     return to_membership_response(membership)
@@ -203,10 +206,15 @@ def update_membership_role(
 )
 def activate_membership(
     membership_id: Annotated[MembershipId, Depends(get_membership_id)],
-    _tenant_context: Annotated[TenantContext, Depends(require_permission(MEMBERSHIP_WRITE))],
+    tenant_context: Annotated[TenantContext, Depends(require_permission(MEMBERSHIP_WRITE))],
     handler: Annotated[ActivateMembershipHandler, Depends(get_activate_membership_handler)],
 ) -> MembershipResponse:
-    membership = handler.handle(ActivateMembershipCommand(membership_id=membership_id))
+    membership = handler.handle(
+        ActivateMembershipCommand(
+            membership_id=membership_id,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
     return to_membership_response(membership)
 
 
@@ -222,7 +230,7 @@ def activate_membership(
 )
 def deactivate_membership(
     membership_id: Annotated[MembershipId, Depends(get_membership_id)],
-    _tenant_context: Annotated[TenantContext, Depends(require_permission(MEMBERSHIP_WRITE))],
+    tenant_context: Annotated[TenantContext, Depends(require_permission(MEMBERSHIP_WRITE))],
     authorization: Annotated[
         MembershipAuthorizationContext,
         Depends(get_membership_authorization_context),
@@ -236,6 +244,7 @@ def deactivate_membership(
         DeactivateMembershipCommand(
             membership_id=membership_id,
             authorization=authorization,
+            audit_context=AuditContext.from_tenant(tenant_context),
         )
     )
     return to_membership_response(membership)

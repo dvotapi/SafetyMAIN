@@ -43,6 +43,7 @@ from backend.api.schemas.admin_invitations import (
     ReissueInvitationResponse,
 )
 from backend.api.security import TenantContext
+from backend.core.application.audit.administrative_audit_recorder import AuditContext
 from backend.core.application.authorization.policies.resource_permissions import (
     INVITATION_READ,
     INVITATION_WRITE,
@@ -92,6 +93,7 @@ def create_invitation(
             role=Role(value=request_body.role),
             created_by=tenant_context.actor_user_id,
             expires_at=request_body.expires_at,
+            audit_context=AuditContext.from_tenant(tenant_context),
         )
     )
     response_body = to_create_invitation_response(
@@ -174,12 +176,17 @@ def get_invitation(
     },
 )
 def revoke_invitation(
-    _tenant_context: Annotated[TenantContext, Depends(require_permission(INVITATION_WRITE))],
+    tenant_context: Annotated[TenantContext, Depends(require_permission(INVITATION_WRITE))],
     invitation_id: Annotated[InvitationId, Depends(get_invitation_id)],
     handler: Annotated[RevokeInvitationHandler, Depends(get_revoke_invitation_handler)],
     clock: Annotated[ClockContract, Depends(get_clock)],
 ) -> InvitationResponse:
-    invitation = handler.handle(RevokeInvitationCommand(invitation_id=invitation_id))
+    invitation = handler.handle(
+        RevokeInvitationCommand(
+            invitation_id=invitation_id,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
     return to_invitation_response(invitation, now=clock.now())
 
 
@@ -197,12 +204,17 @@ def revoke_invitation(
     },
 )
 def reissue_invitation(
-    _tenant_context: Annotated[TenantContext, Depends(require_permission(INVITATION_WRITE))],
+    tenant_context: Annotated[TenantContext, Depends(require_permission(INVITATION_WRITE))],
     invitation_id: Annotated[InvitationId, Depends(get_invitation_id)],
     handler: Annotated[ReissueInvitationHandler, Depends(get_reissue_invitation_handler)],
     clock: Annotated[ClockContract, Depends(get_clock)],
 ) -> ReissueInvitationResponse:
-    result = handler.handle(ReissueInvitationCommand(invitation_id=invitation_id))
+    result = handler.handle(
+        ReissueInvitationCommand(
+            invitation_id=invitation_id,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
     return to_reissue_invitation_response(
         result.invitation,
         token=result.token,

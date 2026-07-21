@@ -13,6 +13,7 @@ from backend.api.mappers.admin_invitations import to_invitation_response
 from backend.api.openapi import PROTECTED_BUSINESS_ERROR_RESPONSES, success_response
 from backend.api.operation_ids import ACCEPT_INVITATION
 from backend.api.schemas.admin_invitations import AcceptInvitationRequest, InvitationResponse
+from backend.core.application.audit.administrative_audit_recorder import AuditContext
 from backend.core.application.commands.invitation_lifecycle import AcceptInvitationCommand
 from backend.core.application.handlers.invitation_lifecycle import AcceptInvitationHandler
 from backend.core.contracts.clock import ClockContract
@@ -42,6 +43,7 @@ def accept_invitation(
         AcceptInvitationCommand(
             token=request_body.token,
             accepting_user_id=accepting_user_id,
+            audit_context=AuditContext.for_authenticated_user(accepting_user_id),
         )
     )
     return to_invitation_response(invitation, now=clock.now())

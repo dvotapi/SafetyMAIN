@@ -101,3 +101,25 @@ class InMemoryMembershipRepository(MembershipRepositoryContract):
                 organization_id=membership.organization_id,
             )
         self._memberships_by_id[membership.id] = membership
+
+    def snapshot(
+        self,
+    ) -> tuple[
+        dict[MembershipId, Membership],
+        dict[tuple[UserId, OrganizationId], MembershipId],
+    ]:
+        return (
+            dict(self._memberships_by_id),
+            dict(self._memberships_by_user_and_org),
+        )
+
+    def restore(
+        self,
+        snapshot: tuple[
+            dict[MembershipId, Membership],
+            dict[tuple[UserId, OrganizationId], MembershipId],
+        ],
+    ) -> None:
+        memberships_by_id, memberships_by_user_and_org = snapshot
+        self._memberships_by_id = dict(memberships_by_id)
+        self._memberships_by_user_and_org = dict(memberships_by_user_and_org)

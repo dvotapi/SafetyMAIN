@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.repositories import (
+    AuditEventRepositoryContract,
     InvitationRepositoryContract,
     KnowledgeObjectRelationRepositoryContract,
     KnowledgeObjectRepositoryContract,
@@ -14,6 +15,7 @@ from backend.core.domain.repositories import (
     UserRepositoryContract,
 )
 from backend.core.infrastructure.persistence.sqlalchemy.repositories import (
+    SQLAlchemyAuditEventRepository,
     SQLAlchemyInvitationRepository,
     SQLAlchemyKnowledgeObjectRelationRepository,
     SQLAlchemyKnowledgeObjectRepository,
@@ -33,6 +35,7 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._organizations: SQLAlchemyOrganizationRepository | None = None
         self._memberships: SQLAlchemyMembershipRepository | None = None
         self._invitations: SQLAlchemyInvitationRepository | None = None
+        self._audit_events: SQLAlchemyAuditEventRepository | None = None
         self._committed = False
         self._rolled_back = False
 
@@ -85,6 +88,13 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
 
         return self._invitations
 
+    @property
+    def audit_events(self) -> AuditEventRepositoryContract:
+        if self._audit_events is None:
+            raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
+
+        return self._audit_events
+
     def commit(self) -> None:
         if self._committed:
             return
@@ -109,6 +119,7 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._organizations = SQLAlchemyOrganizationRepository(self._session)
         self._memberships = SQLAlchemyMembershipRepository(self._session)
         self._invitations = SQLAlchemyInvitationRepository(self._session)
+        self._audit_events = SQLAlchemyAuditEventRepository(self._session)
         self._committed = False
         self._rolled_back = False
         return self
@@ -132,5 +143,6 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
                 self._organizations = None
                 self._memberships = None
                 self._invitations = None
+                self._audit_events = None
 
         return False

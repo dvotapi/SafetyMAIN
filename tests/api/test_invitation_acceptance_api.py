@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from backend.api.app import create_app
 from backend.bootstrap.container import create_container
 from backend.bootstrap.settings import AppSettings
+from backend.core.application.audit.administrative_audit_recorder import AuditContext
 from backend.core.application.commands.authenticate_user import AuthenticateUserCommand
 from backend.core.application.commands.invitation_lifecycle import CreateInvitationCommand
 from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
@@ -30,6 +31,7 @@ from backend.core.infrastructure.persistence.in_memory import (
 )
 from backend.core.infrastructure.time.utc_clock import UtcClock
 from tests.api.contracts.assertions import assert_error_envelope
+from tests.core.audit_test_support import make_admin_audit_stack
 
 
 @pytest.fixture
@@ -120,6 +122,13 @@ def _build_acceptance_client(
         )
     )
 
+    stack = make_admin_audit_stack(
+        users=users,
+        organizations=organizations,
+        memberships=memberships,
+        invitations=invitations,
+    )
+
     def uow_factory() -> InMemoryUnitOfWork:
         return InMemoryUnitOfWork(
             knowledge_objects=InMemoryKnowledgeObjectRepository(),
@@ -128,17 +137,26 @@ def _build_acceptance_client(
             organizations=organizations,
             memberships=memberships,
             invitations=invitations,
+            audit_events=stack.audit_events,
         )
 
     container.uow_factory = uow_factory
     client = TestClient(create_app(settings=settings, container=container))
 
-    create_result = CreateInvitationHandler(uow_factory(), UtcClock()).handle(
+    create_result = CreateInvitationHandler(
+        stack.uow,
+        UtcClock(),
+        stack.audit,
+    ).handle(
         CreateInvitationCommand(
             organization_id=target_org,
             email=invitee.email,
             role=Role.member(),
             created_by=admin.id,
+            audit_context=AuditContext(
+                actor_user_id=admin.id,
+                authorization_organization_id=auth_org,
+            ),
         )
     )
 

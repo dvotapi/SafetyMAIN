@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from backend.core.application.audit.administrative_audit_recorder import AuditContext
 from backend.core.domain.value_objects import UserId
 
 
@@ -11,3 +12,4 @@ class UpdateUserCommand:
     display_name: str | None = None
     email: str | None = None
     is_active: bool | None = None
+    audit_context: AuditContext | None = None

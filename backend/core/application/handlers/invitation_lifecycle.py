@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+from backend.core.application.audit.administrative_audit_recorder import (
+    AdministrativeAuditRecorder,
+    AuditRecordSpec,
+)
+from backend.core.application.audit.handler_support import (
+    require_audit_context,
+    run_audited_admin_operation,
+)
 from backend.core.application.commands.invitation_lifecycle import (
     AcceptInvitationCommand,
     ReissueInvitationCommand,
@@ -25,6 +33,8 @@ from backend.core.domain.exceptions.invitation import (
     InvitationExpired,
     InvitationTokenInvalid,
 )
+from backend.core.domain.value_objects.audit_action import AuditAction
+from backend.core.domain.value_objects.audit_resource_type import AuditResourceType
 from backend.core.domain.value_objects.invitation_token import (
     generate_invitation_token,
     hash_invitation_token,
@@ -37,51 +47,79 @@ class AcceptInvitationHandler:
         self,
         unit_of_work: UnitOfWorkContract,
         clock: ClockContract,
+        audit: AdministrativeAuditRecorder,
     ) -> None:
         self._unit_of_work = unit_of_work
         self._clock = clock
+        self._audit = audit
 
     def handle(self, command: AcceptInvitationCommand) -> Invitation:
-        token_hash = hash_invitation_token(command.token)
-        invitation = self._unit_of_work.invitations.get_by_token_hash(token_hash)
-        if invitation is None or not verify_invitation_token(
-            command.token,
-            invitation.token_hash,
-        ):
-            raise InvitationTokenInvalid()
+        audit_context = require_audit_context(command.audit_context)
+        failure_spec = AuditRecordSpec(
+            action=AuditAction.INVITATION_ACCEPT,
+            context=audit_context,
+            resource_type=AuditResourceType.INVITATION,
+        )
 
-        now = self._clock.now()
-        if invitation.status is InvitationStatus.ACCEPTED:
-            raise InvitationAlreadyAccepted(invitation.id)
-        if invitation.status is InvitationStatus.REVOKED:
-            raise InvitationAlreadyRevoked(invitation.id)
-        if not invitation.is_acceptable(now=now):
-            raise InvitationExpired(invitation.id)
+        def operation() -> tuple[Invitation, dict[str, object]]:
+            token_hash = hash_invitation_token(command.token)
+            invitation = self._unit_of_work.invitations.get_by_token_hash(token_hash)
+            if invitation is None or not verify_invitation_token(
+                command.token,
+                invitation.token_hash,
+            ):
+                raise InvitationTokenInvalid()
 
-        user = self._unit_of_work.users.get(command.accepting_user_id)
-        if not user.can_authenticate():
-            raise UserAlreadyDeactivated(user.id)
-        if user.email != invitation.email:
-            raise InvitationEmailMismatch()
+            now = self._clock.now()
+            if invitation.status is InvitationStatus.ACCEPTED:
+                raise InvitationAlreadyAccepted(invitation.id)
+            if invitation.status is InvitationStatus.REVOKED:
+                raise InvitationAlreadyRevoked(invitation.id)
+            if not invitation.is_acceptable(now=now):
+                raise InvitationExpired(invitation.id)
 
-        provision_membership_for_invitation(
+            user = self._unit_of_work.users.get(command.accepting_user_id)
+            if not user.can_authenticate():
+                raise UserAlreadyDeactivated(user.id)
+            if user.email != invitation.email:
+                raise InvitationEmailMismatch()
+
+            membership = provision_membership_for_invitation(
+                self._unit_of_work,
+                user_id=user.id,
+                organization_id=invitation.organization_id,
+                role=invitation.role,
+                now=now,
+            )
+            accepted_invitation = invitation.model_copy(
+                update={
+                    "status": InvitationStatus.ACCEPTED,
+                    "accepted_at": now,
+                    "updated_at": now,
+                }
+            )
+            return accepted_invitation, {"membership_id": str(membership.id.value)}
+
+        def success_spec(result: tuple[Invitation, dict[str, object]]) -> AuditRecordSpec:
+            invitation, metadata = result
+            self._unit_of_work.invitations.save(invitation)
+            return AuditRecordSpec(
+                action=AuditAction.INVITATION_ACCEPT,
+                context=audit_context,
+                resource_type=AuditResourceType.INVITATION,
+                resource_id=invitation.id.value,
+                target_organization_id=invitation.organization_id,
+                metadata=metadata,
+            )
+
+        invitation, _ = run_audited_admin_operation(
+            self._audit,
             self._unit_of_work,
-            user_id=user.id,
-            organization_id=invitation.organization_id,
-            role=invitation.role,
-            now=now,
+            failure_spec=failure_spec,
+            operation=operation,
+            success_spec=success_spec,
         )
-
-        accepted_invitation = invitation.model_copy(
-            update={
-                "status": InvitationStatus.ACCEPTED,
-                "accepted_at": now,
-                "updated_at": now,
-            }
-        )
-        self._unit_of_work.invitations.save(accepted_invitation)
-        self._unit_of_work.commit()
-        return accepted_invitation
+        return invitation
 
 
 class RevokeInvitationHandler:
@@ -89,28 +127,53 @@ class RevokeInvitationHandler:
         self,
         unit_of_work: UnitOfWorkContract,
         clock: ClockContract,
+        audit: AdministrativeAuditRecorder,
     ) -> None:
         self._unit_of_work = unit_of_work
         self._clock = clock
+        self._audit = audit
 
     def handle(self, command: RevokeInvitationCommand) -> Invitation:
-        invitation = self._unit_of_work.invitations.get(command.invitation_id)
-        if invitation.status is InvitationStatus.ACCEPTED:
-            raise InvitationAlreadyAccepted(invitation.id)
-        if invitation.status is InvitationStatus.REVOKED:
-            raise InvitationAlreadyRevoked(invitation.id)
-
-        now = self._clock.now()
-        revoked_invitation = invitation.model_copy(
-            update={
-                "status": InvitationStatus.REVOKED,
-                "revoked_at": now,
-                "updated_at": now,
-            }
+        audit_context = require_audit_context(command.audit_context)
+        failure_spec = AuditRecordSpec(
+            action=AuditAction.INVITATION_REVOKE,
+            context=audit_context,
+            resource_type=AuditResourceType.INVITATION,
+            resource_id=command.invitation_id.value,
         )
-        self._unit_of_work.invitations.save(revoked_invitation)
-        self._unit_of_work.commit()
-        return revoked_invitation
+
+        def operation() -> Invitation:
+            invitation = self._unit_of_work.invitations.get(command.invitation_id)
+            if invitation.status is InvitationStatus.ACCEPTED:
+                raise InvitationAlreadyAccepted(invitation.id)
+            if invitation.status is InvitationStatus.REVOKED:
+                raise InvitationAlreadyRevoked(invitation.id)
+            now = self._clock.now()
+            return invitation.model_copy(
+                update={
+                    "status": InvitationStatus.REVOKED,
+                    "revoked_at": now,
+                    "updated_at": now,
+                }
+            )
+
+        def success_spec(invitation: Invitation) -> AuditRecordSpec:
+            self._unit_of_work.invitations.save(invitation)
+            return AuditRecordSpec(
+                action=AuditAction.INVITATION_REVOKE,
+                context=audit_context,
+                resource_type=AuditResourceType.INVITATION,
+                resource_id=invitation.id.value,
+                target_organization_id=invitation.organization_id,
+            )
+
+        return run_audited_admin_operation(
+            self._audit,
+            self._unit_of_work,
+            failure_spec=failure_spec,
+            operation=operation,
+            success_spec=success_spec,
+        )
 
 
 class ReissueInvitationHandler:
@@ -118,33 +181,63 @@ class ReissueInvitationHandler:
         self,
         unit_of_work: UnitOfWorkContract,
         clock: ClockContract,
+        audit: AdministrativeAuditRecorder,
     ) -> None:
         self._unit_of_work = unit_of_work
         self._clock = clock
+        self._audit = audit
 
     def handle(self, command: ReissueInvitationCommand) -> InvitationWithTokenResult:
-        invitation = self._unit_of_work.invitations.get(command.invitation_id)
-        if invitation.status is InvitationStatus.ACCEPTED:
-            raise InvitationAlreadyAccepted(invitation.id)
-        if invitation.status is InvitationStatus.REVOKED:
-            raise InvitationAlreadyRevoked(invitation.id)
+        audit_context = require_audit_context(command.audit_context)
+        failure_spec = AuditRecordSpec(
+            action=AuditAction.INVITATION_REISSUE,
+            context=audit_context,
+            resource_type=AuditResourceType.INVITATION,
+            resource_id=command.invitation_id.value,
+        )
 
-        now = self._clock.now()
-        token, token_hash = generate_invitation_token()
-        expires_at = default_invitation_expiration(
-            now=now,
-            ttl_days=DEFAULT_INVITATION_TTL_DAYS,
+        def operation() -> tuple[Invitation, str]:
+            invitation = self._unit_of_work.invitations.get(command.invitation_id)
+            if invitation.status is InvitationStatus.ACCEPTED:
+                raise InvitationAlreadyAccepted(invitation.id)
+            if invitation.status is InvitationStatus.REVOKED:
+                raise InvitationAlreadyRevoked(invitation.id)
+
+            now = self._clock.now()
+            token, token_hash = generate_invitation_token()
+            expires_at = default_invitation_expiration(
+                now=now,
+                ttl_days=DEFAULT_INVITATION_TTL_DAYS,
+            )
+            reissued_invitation = invitation.model_copy(
+                update={
+                    "status": InvitationStatus.PENDING,
+                    "token_hash": token_hash,
+                    "expires_at": expires_at,
+                    "updated_at": now,
+                    "accepted_at": None,
+                    "revoked_at": None,
+                }
+            )
+            return reissued_invitation, token
+
+        def success_spec(result: tuple[Invitation, str]) -> AuditRecordSpec:
+            invitation, _token = result
+            self._unit_of_work.invitations.save(invitation)
+            return AuditRecordSpec(
+                action=AuditAction.INVITATION_REISSUE,
+                context=audit_context,
+                resource_type=AuditResourceType.INVITATION,
+                resource_id=invitation.id.value,
+                target_organization_id=invitation.organization_id,
+                metadata={"expiration_refreshed": True},
+            )
+
+        invitation, token = run_audited_admin_operation(
+            self._audit,
+            self._unit_of_work,
+            failure_spec=failure_spec,
+            operation=operation,
+            success_spec=success_spec,
         )
-        reissued_invitation = invitation.model_copy(
-            update={
-                "status": InvitationStatus.PENDING,
-                "token_hash": token_hash,
-                "expires_at": expires_at,
-                "updated_at": now,
-                "accepted_at": None,
-                "revoked_at": None,
-            }
-        )
-        self._unit_of_work.invitations.save(reissued_invitation)
-        self._unit_of_work.commit()
-        return InvitationWithTokenResult(invitation=reissued_invitation, token=token)
+        return InvitationWithTokenResult(invitation=invitation, token=token)

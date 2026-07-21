@@ -5,6 +5,8 @@ from uuid import uuid4
 
 import pytest
 
+from backend.core.application.audit.administrative_audit_recorder import AuditContext
+from backend.core.application.commands.create_membership import CreateMembershipCommand
 from backend.core.application.commands.invitation_lifecycle import (
     AcceptInvitationCommand,
     CreateInvitationCommand,
@@ -12,13 +14,12 @@ from backend.core.application.commands.invitation_lifecycle import (
     RevokeInvitationCommand,
 )
 from backend.core.application.handlers.create_invitation import CreateInvitationHandler
+from backend.core.application.handlers.create_membership import CreateMembershipHandler
 from backend.core.application.handlers.invitation_lifecycle import (
     AcceptInvitationHandler,
     ReissueInvitationHandler,
     RevokeInvitationHandler,
 )
-from backend.core.application.handlers.create_membership import CreateMembershipHandler
-from backend.core.application.commands.create_membership import CreateMembershipCommand
 from backend.core.domain.entities.invitation import InvitationStatus
 from backend.core.domain.entities.membership import MembershipStatus
 from backend.core.domain.entities.organization import Organization, OrganizationStatus
@@ -35,6 +36,7 @@ from backend.core.domain.exceptions.invitation import (
 from backend.core.domain.value_objects import OrganizationId, Role, UserId
 from backend.core.domain.value_objects.invitation_token import hash_invitation_token
 from backend.core.infrastructure.persistence.in_memory import InMemoryUnitOfWork
+from tests.core.audit_test_support import authenticated_audit_context, make_admin_audit_stack
 
 
 class FixedClock:
@@ -75,39 +77,54 @@ def _seed_organization(uow: InMemoryUnitOfWork) -> Organization:
     return organization
 
 
-def test_create_invitation_returns_token_and_normalizes_email() -> None:
-    uow = InMemoryUnitOfWork()
-    creator = _seed_user(uow)
-    organization = _seed_organization(uow)
-    clock = FixedClock(datetime.now(UTC))
+def _admin_context(*, actor: UserId, organization: OrganizationId) -> AuditContext:
+    return AuditContext(
+        actor_user_id=actor,
+        authorization_organization_id=organization,
+    )
 
-    result = CreateInvitationHandler(uow, clock).handle(
+
+def _invitation_stack(clock: FixedClock | None = None):
+    resolved_clock = clock or FixedClock(datetime.now(UTC))
+    stack = make_admin_audit_stack(clock=resolved_clock)
+    return stack, resolved_clock
+
+
+def test_create_invitation_returns_token_and_normalizes_email() -> None:
+    stack, clock = _invitation_stack()
+    creator = _seed_user(stack.uow)
+    organization = _seed_organization(stack.uow)
+    ctx = _admin_context(actor=creator.id, organization=organization.id)
+
+    result = CreateInvitationHandler(stack.uow, clock, stack.audit).handle(
         CreateInvitationCommand(
             organization_id=organization.id,
             email="  Invitee@Example.com ",
             role=Role.member(),
             created_by=creator.id,
+            audit_context=ctx,
         )
     )
 
     assert result.token
     assert result.invitation.email == "invitee@example.com"
     assert result.invitation.token_hash == hash_invitation_token(result.token)
-    assert uow.committed is True
+    assert stack.uow.committed is True
 
 
 def test_create_invitation_rejects_duplicate_active_invitation() -> None:
-    uow = InMemoryUnitOfWork()
-    creator = _seed_user(uow)
-    organization = _seed_organization(uow)
-    clock = FixedClock(datetime.now(UTC))
-    handler = CreateInvitationHandler(uow, clock)
+    stack, clock = _invitation_stack()
+    creator = _seed_user(stack.uow)
+    organization = _seed_organization(stack.uow)
+    ctx = _admin_context(actor=creator.id, organization=organization.id)
+    handler = CreateInvitationHandler(stack.uow, clock, stack.audit)
     handler.handle(
         CreateInvitationCommand(
             organization_id=organization.id,
             email="invitee@example.com",
             role=Role.member(),
             created_by=creator.id,
+            audit_context=ctx,
         )
     )
 
@@ -118,57 +135,63 @@ def test_create_invitation_rejects_duplicate_active_invitation() -> None:
                 email="invitee@example.com",
                 role=Role.auditor(),
                 created_by=creator.id,
+                audit_context=ctx,
             )
         )
 
 
 def test_create_invitation_rejects_existing_active_membership() -> None:
-    uow = InMemoryUnitOfWork()
-    creator = _seed_user(uow)
-    invitee = _seed_user(uow, email="invitee@example.com")
-    organization = _seed_organization(uow)
-    CreateMembershipHandler(uow).handle(
+    stack, clock = _invitation_stack()
+    creator = _seed_user(stack.uow)
+    invitee = _seed_user(stack.uow, email="invitee@example.com")
+    organization = _seed_organization(stack.uow)
+    ctx = _admin_context(actor=creator.id, organization=organization.id)
+    CreateMembershipHandler(stack.uow, stack.audit).handle(
         CreateMembershipCommand(
             user_id=invitee.id,
             organization_id=organization.id,
             role=Role.member(),
+            audit_context=ctx,
         )
     )
 
     with pytest.raises(ExistingActiveMembership):
-        CreateInvitationHandler(uow, FixedClock(datetime.now(UTC))).handle(
+        CreateInvitationHandler(stack.uow, clock, stack.audit).handle(
             CreateInvitationCommand(
                 organization_id=organization.id,
                 email=invitee.email,
                 role=Role.member(),
                 created_by=creator.id,
+                audit_context=ctx,
             )
         )
 
 
 def test_accept_invitation_creates_membership() -> None:
-    uow = InMemoryUnitOfWork()
-    creator = _seed_user(uow)
-    invitee = _seed_user(uow, email="invitee@example.com")
-    organization = _seed_organization(uow)
-    clock = FixedClock(datetime.now(UTC))
-    create_result = CreateInvitationHandler(uow, clock).handle(
+    stack, clock = _invitation_stack()
+    creator = _seed_user(stack.uow)
+    invitee = _seed_user(stack.uow, email="invitee@example.com")
+    organization = _seed_organization(stack.uow)
+    ctx = _admin_context(actor=creator.id, organization=organization.id)
+    create_result = CreateInvitationHandler(stack.uow, clock, stack.audit).handle(
         CreateInvitationCommand(
             organization_id=organization.id,
             email=invitee.email,
             role=Role.auditor(),
             created_by=creator.id,
+            audit_context=ctx,
         )
     )
 
-    accepted = AcceptInvitationHandler(uow, clock).handle(
+    accepted = AcceptInvitationHandler(stack.uow, clock, stack.audit).handle(
         AcceptInvitationCommand(
             token=create_result.token,
             accepting_user_id=invitee.id,
+            audit_context=authenticated_audit_context(invitee.id),
         )
     )
 
-    membership = uow.memberships.get_by_user_and_organization(invitee.id, organization.id)
+    membership = stack.uow.memberships.get_by_user_and_organization(invitee.id, organization.id)
     assert accepted.status is InvitationStatus.ACCEPTED
     assert membership is not None
     assert membership.is_active() is True
@@ -176,179 +199,200 @@ def test_accept_invitation_creates_membership() -> None:
 
 
 def test_accept_invitation_reactivates_inactive_membership() -> None:
-    uow = InMemoryUnitOfWork()
-    creator = _seed_user(uow)
-    invitee = _seed_user(uow, email="invitee@example.com")
-    organization = _seed_organization(uow)
-    clock = FixedClock(datetime.now(UTC))
-    membership = CreateMembershipHandler(uow).handle(
+    stack, clock = _invitation_stack()
+    creator = _seed_user(stack.uow)
+    invitee = _seed_user(stack.uow, email="invitee@example.com")
+    organization = _seed_organization(stack.uow)
+    ctx = _admin_context(actor=creator.id, organization=organization.id)
+    membership = CreateMembershipHandler(stack.uow, stack.audit).handle(
         CreateMembershipCommand(
             user_id=invitee.id,
             organization_id=organization.id,
             role=Role.member(),
             is_active=False,
+            audit_context=ctx,
         )
     )
     assert membership.status is MembershipStatus.REVOKED
 
-    create_result = CreateInvitationHandler(uow, clock).handle(
+    create_result = CreateInvitationHandler(stack.uow, clock, stack.audit).handle(
         CreateInvitationCommand(
             organization_id=organization.id,
             email=invitee.email,
             role=Role.admin(),
             created_by=creator.id,
+            audit_context=ctx,
         )
     )
-    AcceptInvitationHandler(uow, clock).handle(
+    AcceptInvitationHandler(stack.uow, clock, stack.audit).handle(
         AcceptInvitationCommand(
             token=create_result.token,
             accepting_user_id=invitee.id,
+            audit_context=authenticated_audit_context(invitee.id),
         )
     )
 
-    updated = uow.memberships.get_by_user_and_organization(invitee.id, organization.id)
+    updated = stack.uow.memberships.get_by_user_and_organization(invitee.id, organization.id)
     assert updated is not None
     assert updated.is_active() is True
     assert updated.role.value == "admin"
 
 
 def test_accept_invitation_rejects_email_mismatch() -> None:
-    uow = InMemoryUnitOfWork()
-    creator = _seed_user(uow)
-    invitee = _seed_user(uow, email="invitee@example.com")
-    other_user = _seed_user(uow, email="other@example.com")
-    organization = _seed_organization(uow)
-    clock = FixedClock(datetime.now(UTC))
-    create_result = CreateInvitationHandler(uow, clock).handle(
+    stack, clock = _invitation_stack()
+    creator = _seed_user(stack.uow)
+    invitee = _seed_user(stack.uow, email="invitee@example.com")
+    other_user = _seed_user(stack.uow, email="other@example.com")
+    organization = _seed_organization(stack.uow)
+    ctx = _admin_context(actor=creator.id, organization=organization.id)
+    create_result = CreateInvitationHandler(stack.uow, clock, stack.audit).handle(
         CreateInvitationCommand(
             organization_id=organization.id,
             email=invitee.email,
             role=Role.member(),
             created_by=creator.id,
+            audit_context=ctx,
         )
     )
 
     with pytest.raises(InvitationEmailMismatch):
-        AcceptInvitationHandler(uow, clock).handle(
+        AcceptInvitationHandler(stack.uow, clock, stack.audit).handle(
             AcceptInvitationCommand(
                 token=create_result.token,
                 accepting_user_id=other_user.id,
+                audit_context=authenticated_audit_context(other_user.id),
             )
         )
 
 
 def test_accept_invitation_rejects_expired_invitation() -> None:
-    uow = InMemoryUnitOfWork()
-    creator = _seed_user(uow)
-    invitee = _seed_user(uow, email="invitee@example.com")
-    organization = _seed_organization(uow)
-    clock = FixedClock(datetime.now(UTC))
-    create_result = CreateInvitationHandler(uow, clock).handle(
+    stack, clock = _invitation_stack()
+    creator = _seed_user(stack.uow)
+    invitee = _seed_user(stack.uow, email="invitee@example.com")
+    organization = _seed_organization(stack.uow)
+    ctx = _admin_context(actor=creator.id, organization=organization.id)
+    create_result = CreateInvitationHandler(stack.uow, clock, stack.audit).handle(
         CreateInvitationCommand(
             organization_id=organization.id,
             email=invitee.email,
             role=Role.member(),
             created_by=creator.id,
+            audit_context=ctx,
         )
     )
     clock.advance(timedelta(days=8))
 
     with pytest.raises(InvitationExpired):
-        AcceptInvitationHandler(uow, clock).handle(
+        AcceptInvitationHandler(stack.uow, clock, stack.audit).handle(
             AcceptInvitationCommand(
                 token=create_result.token,
                 accepting_user_id=invitee.id,
+                audit_context=authenticated_audit_context(invitee.id),
             )
         )
 
 
 def test_reissue_invalidates_old_token() -> None:
-    uow = InMemoryUnitOfWork()
-    creator = _seed_user(uow)
-    invitee = _seed_user(uow, email="invitee@example.com")
-    organization = _seed_organization(uow)
-    clock = FixedClock(datetime.now(UTC))
-    create_result = CreateInvitationHandler(uow, clock).handle(
+    stack, clock = _invitation_stack()
+    creator = _seed_user(stack.uow)
+    invitee = _seed_user(stack.uow, email="invitee@example.com")
+    organization = _seed_organization(stack.uow)
+    ctx = _admin_context(actor=creator.id, organization=organization.id)
+    create_result = CreateInvitationHandler(stack.uow, clock, stack.audit).handle(
         CreateInvitationCommand(
             organization_id=organization.id,
             email=invitee.email,
             role=Role.member(),
             created_by=creator.id,
+            audit_context=ctx,
         )
     )
-    reissue_result = ReissueInvitationHandler(uow, clock).handle(
-        ReissueInvitationCommand(invitation_id=create_result.invitation.id)
+    reissue_result = ReissueInvitationHandler(stack.uow, clock, stack.audit).handle(
+        ReissueInvitationCommand(
+            invitation_id=create_result.invitation.id,
+            audit_context=ctx,
+        )
     )
 
     with pytest.raises(InvitationTokenInvalid):
-        AcceptInvitationHandler(uow, clock).handle(
+        AcceptInvitationHandler(stack.uow, clock, stack.audit).handle(
             AcceptInvitationCommand(
                 token=create_result.token,
                 accepting_user_id=invitee.id,
+                audit_context=authenticated_audit_context(invitee.id),
             )
         )
 
-    accepted = AcceptInvitationHandler(uow, clock).handle(
+    accepted = AcceptInvitationHandler(stack.uow, clock, stack.audit).handle(
         AcceptInvitationCommand(
             token=reissue_result.token,
             accepting_user_id=invitee.id,
+            audit_context=authenticated_audit_context(invitee.id),
         )
     )
     assert accepted.status is InvitationStatus.ACCEPTED
 
 
 def test_accept_invitation_is_single_use() -> None:
-    uow = InMemoryUnitOfWork()
-    creator = _seed_user(uow)
-    invitee = _seed_user(uow, email="invitee@example.com")
-    organization = _seed_organization(uow)
-    clock = FixedClock(datetime.now(UTC))
-    create_result = CreateInvitationHandler(uow, clock).handle(
+    stack, clock = _invitation_stack()
+    creator = _seed_user(stack.uow)
+    invitee = _seed_user(stack.uow, email="invitee@example.com")
+    organization = _seed_organization(stack.uow)
+    ctx = _admin_context(actor=creator.id, organization=organization.id)
+    create_result = CreateInvitationHandler(stack.uow, clock, stack.audit).handle(
         CreateInvitationCommand(
             organization_id=organization.id,
             email=invitee.email,
             role=Role.member(),
             created_by=creator.id,
+            audit_context=ctx,
         )
     )
-    AcceptInvitationHandler(uow, clock).handle(
+    AcceptInvitationHandler(stack.uow, clock, stack.audit).handle(
         AcceptInvitationCommand(
             token=create_result.token,
             accepting_user_id=invitee.id,
+            audit_context=authenticated_audit_context(invitee.id),
         )
     )
 
     with pytest.raises(InvitationAlreadyAccepted):
-        AcceptInvitationHandler(uow, clock).handle(
+        AcceptInvitationHandler(stack.uow, clock, stack.audit).handle(
             AcceptInvitationCommand(
                 token=create_result.token,
                 accepting_user_id=invitee.id,
+                audit_context=authenticated_audit_context(invitee.id),
             )
         )
 
 
 def test_revoke_invitation_blocks_acceptance() -> None:
-    uow = InMemoryUnitOfWork()
-    creator = _seed_user(uow)
-    invitee = _seed_user(uow, email="invitee@example.com")
-    organization = _seed_organization(uow)
-    clock = FixedClock(datetime.now(UTC))
-    create_result = CreateInvitationHandler(uow, clock).handle(
+    stack, clock = _invitation_stack()
+    creator = _seed_user(stack.uow)
+    invitee = _seed_user(stack.uow, email="invitee@example.com")
+    organization = _seed_organization(stack.uow)
+    ctx = _admin_context(actor=creator.id, organization=organization.id)
+    create_result = CreateInvitationHandler(stack.uow, clock, stack.audit).handle(
         CreateInvitationCommand(
             organization_id=organization.id,
             email=invitee.email,
             role=Role.member(),
             created_by=creator.id,
+            audit_context=ctx,
         )
     )
-    RevokeInvitationHandler(uow, clock).handle(
-        RevokeInvitationCommand(invitation_id=create_result.invitation.id)
+    RevokeInvitationHandler(stack.uow, clock, stack.audit).handle(
+        RevokeInvitationCommand(
+            invitation_id=create_result.invitation.id,
+            audit_context=ctx,
+        )
     )
 
     with pytest.raises(InvitationAlreadyRevoked):
-        AcceptInvitationHandler(uow, clock).handle(
+        AcceptInvitationHandler(stack.uow, clock, stack.audit).handle(
             AcceptInvitationCommand(
                 token=create_result.token,
                 accepting_user_id=invitee.id,
+                audit_context=authenticated_audit_context(invitee.id),
             )
         )

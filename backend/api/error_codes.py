@@ -29,6 +29,7 @@ from backend.core.domain.exceptions import (
     InvitationExpired,
     InvitationNotFound,
     InvitationTokenInvalid,
+    AuditEventNotFound,
     LastOrganizationAdministratorError,
     MembershipAlreadyActive,
     MembershipAlreadyInactive,
@@ -104,6 +105,7 @@ INVITATION_ALREADY_REVOKED = "invitation_already_revoked"
 INVITATION_EXPIRED = "invitation_expired"
 INVITATION_TOKEN_INVALID = "invitation_token_invalid"
 INVITATION_EMAIL_MISMATCH = "invitation_email_mismatch"
+AUDIT_EVENT_NOT_FOUND = "audit_event_not_found"
 
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
@@ -155,6 +157,7 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         INVITATION_EXPIRED,
         INVITATION_TOKEN_INVALID,
         INVITATION_EMAIL_MISMATCH,
+        AUDIT_EVENT_NOT_FOUND,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -198,6 +201,7 @@ DOMAIN_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
     InvitationExpired: 409,
     InvitationTokenInvalid: 400,
     InvitationEmailMismatch: 403,
+    AuditEventNotFound: 404,
 }
 
 DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
@@ -237,6 +241,7 @@ DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
     InvitationExpired: INVITATION_EXPIRED,
     InvitationTokenInvalid: INVITATION_TOKEN_INVALID,
     InvitationEmailMismatch: INVITATION_EMAIL_MISMATCH,
+    AuditEventNotFound: AUDIT_EVENT_NOT_FOUND,
 }
 
 DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
@@ -288,6 +293,7 @@ DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     InvitationExpired: "Invitation has expired.",
     InvitationTokenInvalid: "Invitation token is invalid.",
     InvitationEmailMismatch: "Authenticated user email does not match the invitation.",
+    AuditEventNotFound: "Audit event was not found.",
 }
 
 APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {

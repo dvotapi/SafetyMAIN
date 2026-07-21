@@ -82,7 +82,12 @@ from backend.core.application.handlers.membership_lifecycle import (
     ActivateMembershipHandler,
     DeactivateMembershipHandler,
 )
+from backend.core.application.audit.administrative_audit_recorder import (
+    AdministrativeAuditRecorder,
+)
+from backend.core.application.handlers.get_audit_event import GetAuditEventHandler
 from backend.core.application.handlers.create_invitation import CreateInvitationHandler
+from backend.core.application.handlers.list_audit_events import ListAuditEventsHandler
 from backend.core.application.handlers.get_invitation import GetInvitationHandler
 from backend.core.application.handlers.list_invitations import ListInvitationsHandler
 from backend.core.application.handlers.invitation_lifecycle import (
@@ -98,6 +103,7 @@ from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.contracts.token_service import TokenValidationError
 from backend.core.application.exceptions.authentication import UnauthenticatedError
 from backend.core.application.context.tenant_context import TenantContext
+from backend.core.domain.value_objects.audit_event_id import AuditEventId
 from backend.core.domain.value_objects import (
     InvitationId,
     KnowledgeObjectId,
@@ -292,10 +298,22 @@ def get_target_organization_id(
         raise RequestValidationError(exc.errors()) from exc
 
 
+def get_clock() -> ClockContract:
+    return UtcClock()
+
+
+def get_administrative_audit_recorder(
+    container: AppContainer = Depends(get_container),
+    clock: ClockContract = Depends(get_clock),
+) -> AdministrativeAuditRecorder:
+    return AdministrativeAuditRecorder(clock, container.uow_factory)
+
+
 def get_create_user_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> CreateUserHandler:
-    return CreateUserHandler(uow)
+    return CreateUserHandler(uow, audit)
 
 
 def get_get_user_handler(
@@ -312,26 +330,30 @@ def get_list_users_handler(
 
 def get_update_user_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> UpdateUserHandler:
-    return UpdateUserHandler(uow)
+    return UpdateUserHandler(uow, audit)
 
 
 def get_activate_user_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> ActivateUserHandler:
-    return ActivateUserHandler(uow)
+    return ActivateUserHandler(uow, audit)
 
 
 def get_deactivate_user_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> DeactivateUserHandler:
-    return DeactivateUserHandler(uow)
+    return DeactivateUserHandler(uow, audit)
 
 
 def get_create_organization_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> CreateOrganizationHandler:
-    return CreateOrganizationHandler(uow)
+    return CreateOrganizationHandler(uow, audit)
 
 
 def get_get_organization_handler(
@@ -348,20 +370,23 @@ def get_list_organizations_handler(
 
 def get_update_organization_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> UpdateOrganizationHandler:
-    return UpdateOrganizationHandler(uow)
+    return UpdateOrganizationHandler(uow, audit)
 
 
 def get_activate_organization_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> ActivateOrganizationHandler:
-    return ActivateOrganizationHandler(uow)
+    return ActivateOrganizationHandler(uow, audit)
 
 
 def get_deactivate_organization_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> DeactivateOrganizationHandler:
-    return DeactivateOrganizationHandler(uow)
+    return DeactivateOrganizationHandler(uow, audit)
 
 
 def get_membership_id(
@@ -399,8 +424,9 @@ def get_membership_authorization_context(
 
 def get_create_membership_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> CreateMembershipHandler:
-    return CreateMembershipHandler(uow)
+    return CreateMembershipHandler(uow, audit)
 
 
 def get_get_membership_handler(
@@ -417,24 +443,23 @@ def get_list_memberships_handler(
 
 def get_update_membership_role_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> UpdateMembershipRoleHandler:
-    return UpdateMembershipRoleHandler(uow)
+    return UpdateMembershipRoleHandler(uow, audit)
 
 
 def get_activate_membership_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> ActivateMembershipHandler:
-    return ActivateMembershipHandler(uow)
+    return ActivateMembershipHandler(uow, audit)
 
 
 def get_deactivate_membership_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> DeactivateMembershipHandler:
-    return DeactivateMembershipHandler(uow)
-
-
-def get_clock() -> ClockContract:
-    return UtcClock()
+    return DeactivateMembershipHandler(uow, audit)
 
 
 def get_invitation_id(
@@ -446,11 +471,21 @@ def get_invitation_id(
         raise RequestValidationError(exc.errors()) from exc
 
 
+def get_audit_event_id(
+    audit_event_id: Annotated[UUID, Path()],
+) -> AuditEventId:
+    try:
+        return AuditEventId(value=audit_event_id)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
 def get_create_invitation_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
     clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> CreateInvitationHandler:
-    return CreateInvitationHandler(uow, clock)
+    return CreateInvitationHandler(uow, clock, audit)
 
 
 def get_get_invitation_handler(
@@ -470,22 +505,37 @@ def get_list_invitations_handler(
 def get_revoke_invitation_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
     clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> RevokeInvitationHandler:
-    return RevokeInvitationHandler(uow, clock)
+    return RevokeInvitationHandler(uow, clock, audit)
 
 
 def get_reissue_invitation_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
     clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> ReissueInvitationHandler:
-    return ReissueInvitationHandler(uow, clock)
+    return ReissueInvitationHandler(uow, clock, audit)
 
 
 def get_accept_invitation_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
     clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> AcceptInvitationHandler:
-    return AcceptInvitationHandler(uow, clock)
+    return AcceptInvitationHandler(uow, clock, audit)
+
+
+def get_get_audit_event_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> GetAuditEventHandler:
+    return GetAuditEventHandler(uow)
+
+
+def get_list_audit_events_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ListAuditEventsHandler:
+    return ListAuditEventsHandler(uow)
 
 
 def get_create_knowledge_object_handler(

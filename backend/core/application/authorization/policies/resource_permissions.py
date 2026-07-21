@@ -27,3 +27,4 @@ MEMBERSHIP_READ = Permission.from_system_permission(SystemPermission.MEMBERSHIP_
 MEMBERSHIP_WRITE = Permission.from_system_permission(SystemPermission.MEMBERSHIP_WRITE)
 INVITATION_READ = Permission.from_system_permission(SystemPermission.INVITATION_READ)
 INVITATION_WRITE = Permission.from_system_permission(SystemPermission.INVITATION_WRITE)
+AUDIT_READ = Permission.from_system_permission(SystemPermission.AUDIT_READ)

@@ -37,6 +37,7 @@ from backend.api.schemas.admin_users import (
     UserResponse,
 )
 from backend.api.security import TenantContext
+from backend.core.application.audit.administrative_audit_recorder import AuditContext
 from backend.core.application.authorization.policies.resource_permissions import (
     USER_READ,
     USER_WRITE,
@@ -75,7 +76,7 @@ router = APIRouter(prefix="/admin/users", tags=["Admin Users"])
 )
 def create_user(
     request_body: CreateUserRequest,
-    _tenant_context: Annotated[TenantContext, Depends(require_permission(USER_WRITE))],
+    tenant_context: Annotated[TenantContext, Depends(require_permission(USER_WRITE))],
     handler: Annotated[CreateUserHandler, Depends(get_create_user_handler)],
 ) -> JSONResponse:
     user = handler.handle(
@@ -83,6 +84,7 @@ def create_user(
             email=request_body.email,
             display_name=request_body.display_name,
             is_active=request_body.is_active,
+            audit_context=AuditContext.from_tenant(tenant_context),
         )
     )
     response_body = to_user_response(user)
@@ -159,7 +161,7 @@ def get_user(
 def update_user(
     request_body: UpdateUserRequest,
     user_id: Annotated[UserId, Depends(get_user_id)],
-    _tenant_context: Annotated[TenantContext, Depends(require_permission(USER_WRITE))],
+    tenant_context: Annotated[TenantContext, Depends(require_permission(USER_WRITE))],
     handler: Annotated[UpdateUserHandler, Depends(get_update_user_handler)],
 ) -> UserResponse:
     user = handler.handle(
@@ -168,6 +170,7 @@ def update_user(
             display_name=request_body.display_name,
             email=request_body.email,
             is_active=request_body.is_active,
+            audit_context=AuditContext.from_tenant(tenant_context),
         )
     )
     return to_user_response(user)
@@ -185,10 +188,15 @@ def update_user(
 )
 def activate_user(
     user_id: Annotated[UserId, Depends(get_user_id)],
-    _tenant_context: Annotated[TenantContext, Depends(require_permission(USER_WRITE))],
+    tenant_context: Annotated[TenantContext, Depends(require_permission(USER_WRITE))],
     handler: Annotated[ActivateUserHandler, Depends(get_activate_user_handler)],
 ) -> UserResponse:
-    user = handler.handle(ActivateUserCommand(user_id=user_id))
+    user = handler.handle(
+        ActivateUserCommand(
+            user_id=user_id,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
     return to_user_response(user)
 
 
@@ -204,8 +212,13 @@ def activate_user(
 )
 def deactivate_user(
     user_id: Annotated[UserId, Depends(get_user_id)],
-    _tenant_context: Annotated[TenantContext, Depends(require_permission(USER_WRITE))],
+    tenant_context: Annotated[TenantContext, Depends(require_permission(USER_WRITE))],
     handler: Annotated[DeactivateUserHandler, Depends(get_deactivate_user_handler)],
 ) -> UserResponse:
-    user = handler.handle(DeactivateUserCommand(user_id=user_id))
+    user = handler.handle(
+        DeactivateUserCommand(
+            user_id=user_id,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
     return to_user_response(user)

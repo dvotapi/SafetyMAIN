@@ -625,4 +625,7 @@ SafetyMAIN adopts a **fail-closed, organization-scoped** authentication model:
 - authorization grows from membership outward to roles and permissions;
 - migration is phased to protect Application use cases and HTTP contracts.
 
+Administrative identity mutations record append-only audit events through trusted
+application workflows. See [AdministrativeAuditLog.md](AdministrativeAuditLog.md).
+
 The project is ready to begin **P3-002 — User and Organization Domain**.

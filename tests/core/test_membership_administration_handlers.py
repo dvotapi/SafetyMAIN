@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import pytest
 
+from backend.core.application.audit.administrative_audit_recorder import AuditContext
 from backend.core.application.commands.create_membership import CreateMembershipCommand
 from backend.core.application.commands.membership_lifecycle import (
     ActivateMembershipCommand,
@@ -32,6 +33,7 @@ from backend.core.domain.exceptions import (
 )
 from backend.core.domain.value_objects import OrganizationId, Role, UserId
 from backend.core.infrastructure.persistence.in_memory import InMemoryUnitOfWork
+from tests.core.audit_test_support import make_admin_audit_stack
 
 
 def _seed_user(uow: InMemoryUnitOfWork) -> User:
@@ -76,34 +78,45 @@ def _authorization_for(
     )
 
 
-def test_create_membership_persists_membership() -> None:
-    uow = InMemoryUnitOfWork()
-    user = _seed_user(uow)
-    organization = _seed_organization(uow)
+def _audit_context(user: User, organization: Organization) -> AuditContext:
+    return AuditContext(
+        actor_user_id=user.id,
+        authorization_organization_id=organization.id,
+    )
 
-    membership = CreateMembershipHandler(uow).handle(
+
+def test_create_membership_persists_membership() -> None:
+    stack = make_admin_audit_stack()
+    user = _seed_user(stack.uow)
+    organization = _seed_organization(stack.uow)
+    ctx = _audit_context(user, organization)
+
+    membership = CreateMembershipHandler(stack.uow, stack.audit).handle(
         CreateMembershipCommand(
             user_id=user.id,
             organization_id=organization.id,
             role=Role.member(),
+            audit_context=ctx,
         )
     )
 
     assert membership.role.value == "member"
     assert membership.is_active() is True
-    assert uow.committed is True
+    assert stack.uow.committed is True
 
 
 def test_create_membership_rejects_duplicate() -> None:
-    uow = InMemoryUnitOfWork()
-    user = _seed_user(uow)
-    organization = _seed_organization(uow)
-    handler = CreateMembershipHandler(uow)
+    stack = make_admin_audit_stack()
+    user = _seed_user(stack.uow)
+    organization = _seed_organization(stack.uow)
+    ctx = _audit_context(user, organization)
+    handler = CreateMembershipHandler(stack.uow, stack.audit)
     handler.handle(
         CreateMembershipCommand(
             user_id=user.id,
             organization_id=organization.id,
             role=Role.member(),
+            audit_context=ctx,
         )
     )
 
@@ -113,128 +126,145 @@ def test_create_membership_rejects_duplicate() -> None:
                 user_id=user.id,
                 organization_id=organization.id,
                 role=Role.auditor(),
+                audit_context=ctx,
             )
         )
 
 
 def test_create_membership_rejects_invalid_role() -> None:
-    uow = InMemoryUnitOfWork()
-    user = _seed_user(uow)
-    organization = _seed_organization(uow)
+    stack = make_admin_audit_stack()
+    user = _seed_user(stack.uow)
+    organization = _seed_organization(stack.uow)
+    ctx = _audit_context(user, organization)
 
     with pytest.raises(InvalidMembershipRole):
-        CreateMembershipHandler(uow).handle(
+        CreateMembershipHandler(stack.uow, stack.audit).handle(
             CreateMembershipCommand(
                 user_id=user.id,
                 organization_id=organization.id,
                 role=Role(value="owner"),
+                audit_context=ctx,
             )
         )
 
 
 def test_deactivate_membership_rejects_self_deactivation() -> None:
-    uow = InMemoryUnitOfWork()
-    user = _seed_user(uow)
-    organization = _seed_organization(uow)
-    membership = CreateMembershipHandler(uow).handle(
+    stack = make_admin_audit_stack()
+    user = _seed_user(stack.uow)
+    organization = _seed_organization(stack.uow)
+    ctx = _audit_context(user, organization)
+    membership = CreateMembershipHandler(stack.uow, stack.audit).handle(
         CreateMembershipCommand(
             user_id=user.id,
             organization_id=organization.id,
             role=Role.admin(),
+            audit_context=ctx,
         )
     )
 
     with pytest.raises(SelfMembershipDeactivationError):
-        DeactivateMembershipHandler(uow).handle(
+        DeactivateMembershipHandler(stack.uow, stack.audit).handle(
             DeactivateMembershipCommand(
                 membership_id=membership.id,
-                authorization=_authorization_for(uow, user=user, organization=organization),
+                authorization=_authorization_for(stack.uow, user=user, organization=organization),
+                audit_context=ctx,
             )
         )
 
 
 def test_role_change_rejects_self_admin_downgrade() -> None:
-    uow = InMemoryUnitOfWork()
-    user = _seed_user(uow)
-    organization = _seed_organization(uow)
-    membership = CreateMembershipHandler(uow).handle(
+    stack = make_admin_audit_stack()
+    user = _seed_user(stack.uow)
+    organization = _seed_organization(stack.uow)
+    ctx = _audit_context(user, organization)
+    membership = CreateMembershipHandler(stack.uow, stack.audit).handle(
         CreateMembershipCommand(
             user_id=user.id,
             organization_id=organization.id,
             role=Role.admin(),
+            audit_context=ctx,
         )
     )
 
     with pytest.raises(SelfMembershipRoleDowngradeError):
-        UpdateMembershipRoleHandler(uow).handle(
+        UpdateMembershipRoleHandler(stack.uow, stack.audit).handle(
             UpdateMembershipRoleCommand(
                 membership_id=membership.id,
                 role=Role.member(),
-                authorization=_authorization_for(uow, user=user, organization=organization),
+                authorization=_authorization_for(stack.uow, user=user, organization=organization),
+                audit_context=ctx,
             )
         )
 
 
 def test_deactivate_last_administrator_is_rejected() -> None:
-    uow = InMemoryUnitOfWork()
-    admin_user = _seed_user(uow)
-    actor = _seed_user(uow)
-    organization = _seed_organization(uow)
-    admin_membership = CreateMembershipHandler(uow).handle(
+    stack = make_admin_audit_stack()
+    admin_user = _seed_user(stack.uow)
+    actor = _seed_user(stack.uow)
+    organization = _seed_organization(stack.uow)
+    actor_ctx = _audit_context(actor, organization)
+    admin_membership = CreateMembershipHandler(stack.uow, stack.audit).handle(
         CreateMembershipCommand(
             user_id=admin_user.id,
             organization_id=organization.id,
             role=Role.admin(),
+            audit_context=actor_ctx,
         )
     )
-    CreateMembershipHandler(uow).handle(
+    CreateMembershipHandler(stack.uow, stack.audit).handle(
         CreateMembershipCommand(
             user_id=actor.id,
             organization_id=organization.id,
             role=Role.member(),
+            audit_context=actor_ctx,
         )
     )
 
     with pytest.raises(LastOrganizationAdministratorError):
-        DeactivateMembershipHandler(uow).handle(
+        DeactivateMembershipHandler(stack.uow, stack.audit).handle(
             DeactivateMembershipCommand(
                 membership_id=admin_membership.id,
-                authorization=_authorization_for(uow, user=actor, organization=organization),
+                authorization=_authorization_for(stack.uow, user=actor, organization=organization),
+                audit_context=actor_ctx,
             )
         )
 
 
 def test_activate_and_deactivate_membership() -> None:
-    uow = InMemoryUnitOfWork()
-    user = _seed_user(uow)
-    organization = _seed_organization(uow)
-    actor = _seed_user(uow)
-    CreateMembershipHandler(uow).handle(
+    stack = make_admin_audit_stack()
+    user = _seed_user(stack.uow)
+    organization = _seed_organization(stack.uow)
+    actor = _seed_user(stack.uow)
+    actor_ctx = _audit_context(actor, organization)
+    CreateMembershipHandler(stack.uow, stack.audit).handle(
         CreateMembershipCommand(
             user_id=actor.id,
             organization_id=organization.id,
             role=Role.admin(),
+            audit_context=actor_ctx,
         )
     )
-    membership = CreateMembershipHandler(uow).handle(
+    membership = CreateMembershipHandler(stack.uow, stack.audit).handle(
         CreateMembershipCommand(
             user_id=user.id,
             organization_id=organization.id,
             role=Role.member(),
             is_active=False,
+            audit_context=actor_ctx,
         )
     )
     assert membership.status is MembershipStatus.REVOKED
 
-    activated = ActivateMembershipHandler(uow).handle(
-        ActivateMembershipCommand(membership_id=membership.id)
+    activated = ActivateMembershipHandler(stack.uow, stack.audit).handle(
+        ActivateMembershipCommand(membership_id=membership.id, audit_context=actor_ctx)
     )
     assert activated.is_active() is True
 
-    deactivated = DeactivateMembershipHandler(uow).handle(
+    deactivated = DeactivateMembershipHandler(stack.uow, stack.audit).handle(
         DeactivateMembershipCommand(
             membership_id=activated.id,
-            authorization=_authorization_for(uow, user=actor, organization=organization),
+            authorization=_authorization_for(stack.uow, user=actor, organization=organization),
+            audit_context=actor_ctx,
         )
     )
     assert deactivated.is_active() is False
