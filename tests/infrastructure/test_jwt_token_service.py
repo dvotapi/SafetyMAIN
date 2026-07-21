@@ -1,0 +1,49 @@
+from __future__ import annotations
+
+from uuid import uuid4
+
+import pytest
+
+from backend.core.contracts.token_service import TokenValidationError
+from backend.core.domain.value_objects import UserId
+from backend.core.infrastructure.auth.jwt_token_service import JwtTokenService
+
+
+@pytest.fixture
+def token_service() -> JwtTokenService:
+    return JwtTokenService(
+        secret_key="test-secret-key-with-sufficient-length",
+        algorithm="HS256",
+        access_token_ttl_seconds=3600,
+        refresh_token_ttl_seconds=604800,
+        issuer="safetymain",
+    )
+
+
+def test_jwt_token_service_issues_and_validates_access_token(
+    token_service: JwtTokenService,
+) -> None:
+    user_id = UserId(value=uuid4())
+
+    tokens = token_service.issue_tokens(user_id)
+
+    assert token_service.validate_access_token(tokens.access_token) == user_id
+
+
+def test_jwt_token_service_rejects_refresh_token_as_access_token(
+    token_service: JwtTokenService,
+) -> None:
+    user_id = UserId(value=uuid4())
+    tokens = token_service.issue_tokens(user_id)
+
+    with pytest.raises(TokenValidationError):
+        token_service.validate_access_token(tokens.refresh_token)
+
+
+def test_jwt_token_service_refreshes_tokens(token_service: JwtTokenService) -> None:
+    user_id = UserId(value=uuid4())
+    tokens = token_service.issue_tokens(user_id)
+
+    refreshed = token_service.refresh_tokens(tokens.refresh_token)
+
+    assert token_service.validate_access_token(refreshed.access_token) == user_id

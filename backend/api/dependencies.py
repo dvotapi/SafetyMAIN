@@ -9,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 
 from backend.api.knowledge_object_params import ORGANIZATION_ID_HEADER
+from backend.api.middleware import get_request_id
 from backend.bootstrap.container import AppContainer, ReadinessCheck, UowFactory
 from backend.bootstrap.settings import AppSettings
 from backend.core.application.handlers.archive_knowledge_object import (
@@ -47,6 +48,10 @@ from backend.core.application.handlers.remove_knowledge_object_relation import (
 from backend.core.application.handlers.search_knowledge_objects import (
     SearchKnowledgeObjectsHandler,
 )
+from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
+from backend.core.application.handlers.refresh_authentication import (
+    RefreshAuthenticationHandler,
+)
 from backend.core.application.handlers.restore_knowledge_object import (
     RestoreKnowledgeObjectHandler,
 )
@@ -54,7 +59,10 @@ from backend.core.application.handlers.update_knowledge_object import (
     UpdateKnowledgeObjectHandler,
 )
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
-from backend.core.domain.value_objects import KnowledgeObjectId, OrganizationId
+from backend.core.contracts.token_service import TokenValidationError
+from backend.core.application.exceptions.authentication import UnauthenticatedError
+from backend.core.domain.value_objects import KnowledgeObjectId, OrganizationId, UserId
+from backend.api.security import SecurityContext
 
 
 def get_container(request: Request) -> AppContainer:
@@ -188,3 +196,54 @@ def get_search_knowledge_objects_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
 ) -> SearchKnowledgeObjectsHandler:
     return SearchKnowledgeObjectsHandler(uow)
+
+
+def get_authenticate_user_handler(
+    container: AppContainer = Depends(get_container),
+) -> AuthenticateUserHandler:
+    return AuthenticateUserHandler(
+        user_lookup=container.user_lookup,
+        user_credentials=container.user_credentials,
+        password_hasher=container.password_hasher,
+        token_service=container.token_service,
+    )
+
+
+def get_refresh_authentication_handler(
+    container: AppContainer = Depends(get_container),
+) -> RefreshAuthenticationHandler:
+    return RefreshAuthenticationHandler(container.token_service)
+
+
+def get_bearer_token(
+    authorization: Annotated[str | None, Header()] = None,
+) -> str:
+    if authorization is None:
+        raise UnauthenticatedError()
+
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token.strip():
+        raise UnauthenticatedError()
+
+    return token.strip()
+
+
+def get_authenticated_user(
+    token: Annotated[str, Depends(get_bearer_token)],
+    container: AppContainer = Depends(get_container),
+) -> UserId:
+    try:
+        return container.token_service.validate_access_token(token)
+    except TokenValidationError as exc:
+        raise UnauthenticatedError() from exc
+
+
+def get_security_context(
+    request: Request,
+    user_id: UserId = Depends(get_authenticated_user),
+) -> SecurityContext:
+    return SecurityContext(
+        user_id=user_id,
+        authentication_method="bearer_jwt",
+        request_id=get_request_id(request),
+    )

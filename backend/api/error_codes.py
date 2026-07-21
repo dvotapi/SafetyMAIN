@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+from backend.core.application.exceptions.authentication import (
+    AuthenticationForbiddenError,
+    InvalidCredentialsError,
+    InvalidRefreshTokenError,
+    UnauthenticatedError,
+)
 from backend.core.domain.exceptions import (
     CrossOrganizationKnowledgeObjectRelation,
     DuplicateKnowledgeObject,
@@ -31,6 +37,11 @@ CROSS_ORGANIZATION_KNOWLEDGE_OBJECT_RELATION = (
     "cross_organization_knowledge_object_relation"
 )
 
+UNAUTHENTICATED = "unauthenticated"
+INVALID_CREDENTIALS = "invalid_credentials"
+INVALID_REFRESH_TOKEN = "invalid_refresh_token"
+AUTHENTICATION_FORBIDDEN = "authentication_forbidden"
+
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
 SERVICE_NOT_READY = "service_not_ready"
@@ -49,6 +60,10 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         DUPLICATE_KNOWLEDGE_OBJECT_RELATION,
         SELF_REFERENCING_KNOWLEDGE_OBJECT_RELATION,
         CROSS_ORGANIZATION_KNOWLEDGE_OBJECT_RELATION,
+        UNAUTHENTICATED,
+        INVALID_CREDENTIALS,
+        INVALID_REFRESH_TOKEN,
+        AUTHENTICATION_FORBIDDEN,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -99,4 +114,25 @@ DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     CrossOrganizationKnowledgeObjectRelation: (
         "Knowledge Object Relation cannot cross organizations."
     ),
+}
+
+APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
+    UnauthenticatedError: 401,
+    InvalidCredentialsError: 401,
+    InvalidRefreshTokenError: 401,
+    AuthenticationForbiddenError: 403,
+}
+
+APPLICATION_AUTHENTICATION_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
+    UnauthenticatedError: UNAUTHENTICATED,
+    InvalidCredentialsError: INVALID_CREDENTIALS,
+    InvalidRefreshTokenError: INVALID_REFRESH_TOKEN,
+    AuthenticationForbiddenError: AUTHENTICATION_FORBIDDEN,
+}
+
+APPLICATION_AUTHENTICATION_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
+    UnauthenticatedError: "Authentication is required.",
+    InvalidCredentialsError: "Invalid email or password.",
+    InvalidRefreshTokenError: "The refresh token is invalid or expired.",
+    AuthenticationForbiddenError: "The user account cannot authenticate.",
 }

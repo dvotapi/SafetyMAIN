@@ -5,11 +5,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 
 from backend.api.constants import API_V1_PREFIX
 from backend.api.exception_handlers import register_exception_handlers
 from backend.api.logging import configure_logging
 from backend.api.middleware import RequestIdMiddleware
+from backend.api.routers import auth as auth_router
 from backend.api.routers import knowledge_objects as knowledge_objects_router
 from backend.api.routers import relations as relations_router
 from backend.api.routers import system as system_router
@@ -68,8 +70,30 @@ def create_app(
 
     register_exception_handlers(application)
 
+    def custom_openapi() -> dict[str, object]:
+        if application.openapi_schema:
+            return application.openapi_schema
+
+        schema = get_openapi(
+            title=application.title,
+            version=application.version,
+            routes=application.routes,
+        )
+        components = schema.setdefault("components", {})
+        security_schemes = components.setdefault("securitySchemes", {})
+        security_schemes["BearerAuth"] = {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+        application.openapi_schema = schema
+        return schema
+
+    application.openapi = custom_openapi
+
     api_v1 = APIRouter(prefix=API_V1_PREFIX)
     api_v1.include_router(system_router.router)
+    api_v1.include_router(auth_router.router)
     api_v1.include_router(knowledge_objects_router.router)
     api_v1.include_router(relations_router.router)
     application.include_router(api_v1)

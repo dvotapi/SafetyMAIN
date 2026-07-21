@@ -21,10 +21,15 @@ CREATE_KNOWLEDGE_OBJECT_RELATION = "create_knowledge_object_relation"
 GET_KNOWLEDGE_OBJECT_RELATION = "get_knowledge_object_relation"
 DELETE_KNOWLEDGE_OBJECT_RELATION = "delete_knowledge_object_relation"
 
+AUTH_LOGIN = "auth_login"
+AUTH_REFRESH = "auth_refresh"
+
 STABLE_OPERATION_IDS: frozenset[str] = frozenset(
     {
         HEALTH,
         READINESS,
+        AUTH_LOGIN,
+        AUTH_REFRESH,
         CREATE_KNOWLEDGE_OBJECT,
         SEARCH_KNOWLEDGE_OBJECTS,
         GET_KNOWLEDGE_OBJECT,

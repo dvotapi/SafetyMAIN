@@ -29,6 +29,7 @@ requests currently require a temporary organization header.
 | [KnowledgeObjectAPI.md](KnowledgeObjectAPI.md) | Knowledge Object CRUD, lifecycle, history |
 | [KnowledgeObjectSearchAPI.md](KnowledgeObjectSearchAPI.md) | Structured Knowledge Object search |
 | [RelationAPI.md](RelationAPI.md) | Relations and traversal endpoints |
+| [AuthenticationAPI.md](AuthenticationAPI.md) | Login, refresh, and Bearer auth foundation |
 
 Future authentication design: [AuthenticationArchitecture.md](../architecture/AuthenticationArchitecture.md)
 

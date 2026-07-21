@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from backend.api.app import create_app
 from backend.api.dependencies import get_readiness_check, get_settings, get_uow, get_uow_factory
-from backend.bootstrap.container import AppContainer
+from backend.bootstrap.container import AppContainer, create_container
 from backend.bootstrap.settings import AppSettings
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.repositories import (
@@ -99,13 +99,7 @@ def client(app: FastAPI, app_settings: AppSettings) -> Iterator[TestClient]:
 
 @pytest.fixture
 def isolated_container(app_settings: AppSettings) -> AppContainer:
-    return AppContainer(
-        settings=app_settings,
-        engine=None,
-        session_factory=None,
-        uow_factory=FakeUnitOfWork,
-        readiness_check=lambda: None,
-    )
+    return create_container(app_settings)
 
 
 def make_request_id() -> str:

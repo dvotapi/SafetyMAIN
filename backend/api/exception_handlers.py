@@ -9,6 +9,9 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend.api.error_codes import (
+    APPLICATION_AUTHENTICATION_EXCEPTION_ERROR_CODES,
+    APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS,
+    APPLICATION_AUTHENTICATION_EXCEPTION_MESSAGES,
     DOMAIN_EXCEPTION_ERROR_CODES,
     DOMAIN_EXCEPTION_HTTP_STATUS,
     DOMAIN_EXCEPTION_MESSAGES,
@@ -25,6 +28,7 @@ from backend.api.schemas.errors import (
     APIValidationErrorDetails,
     APIValidationViolation,
 )
+from backend.core.application.exceptions.authentication import AuthenticationError
 from backend.core.domain.exceptions import SafetyMainDomainError
 
 logger = get_logger("safetymain.api.exceptions")
@@ -127,6 +131,21 @@ def _validation_details(exc: RequestValidationError) -> dict[str, object]:
     return APIValidationErrorDetails(violations=tuple(violations)).model_dump(mode="json")
 
 
+def _resolve_authentication_exception(
+    exc: AuthenticationError,
+) -> tuple[int, str, str] | None:
+    for exception_type, status_code in (
+        APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS.items()
+    ):
+        if isinstance(exc, exception_type):
+            return (
+                status_code,
+                APPLICATION_AUTHENTICATION_EXCEPTION_ERROR_CODES[exception_type],
+                APPLICATION_AUTHENTICATION_EXCEPTION_MESSAGES[exception_type],
+            )
+    return None
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ServiceNotReadyError)
     async def service_not_ready_handler(
@@ -137,6 +156,33 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=503,
             code=SERVICE_NOT_READY,
             message="The service is not ready.",
+            request=request,
+        )
+
+    @app.exception_handler(AuthenticationError)
+    async def authentication_error_handler(
+        request: Request,
+        exc: AuthenticationError,
+    ) -> JSONResponse:
+        resolved = _resolve_authentication_exception(exc)
+        if resolved is None:
+            logger.exception(
+                "Unhandled authentication error on %s %s",
+                request.method,
+                request.url.path,
+            )
+            return _json_error(
+                status_code=500,
+                code=INTERNAL_SERVER_ERROR,
+                message="An unexpected error occurred.",
+                request=request,
+            )
+
+        status_code, code, message = resolved
+        return _json_error(
+            status_code=status_code,
+            code=code,
+            message=message,
             request=request,
         )
 

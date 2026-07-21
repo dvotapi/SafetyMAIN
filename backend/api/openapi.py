@@ -38,6 +38,13 @@ READINESS_ERROR_RESPONSES = {
     status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": APIErrorResponse},
 }
 
+AUTH_ERROR_RESPONSES = {
+    status.HTTP_401_UNAUTHORIZED: {"model": APIErrorResponse},
+    status.HTTP_403_FORBIDDEN: {"model": APIErrorResponse},
+    status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": APIErrorResponse},
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": APIErrorResponse},
+}
+
 
 def created_response(*, model: type[object], description: str) -> dict[int | str, dict[str, object]]:
     return {

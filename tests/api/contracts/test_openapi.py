@@ -9,6 +9,8 @@ from backend.bootstrap.settings import AppSettings
 EXPECTED_PATHS: dict[str, set[str]] = {
     "/api/v1/health": {"get"},
     "/api/v1/ready": {"get"},
+    "/api/v1/auth/login": {"post"},
+    "/api/v1/auth/refresh": {"post"},
     "/api/v1/knowledge-objects": {"get", "post"},
     "/api/v1/knowledge-objects/{knowledge_object_id}": {"get", "put", "delete"},
     "/api/v1/knowledge-objects/{knowledge_object_id}/archive": {"post"},
@@ -95,7 +97,18 @@ def test_openapi_system_routes_do_not_require_organization_header(
     application = create_app(settings=app_settings)
     paths = application.openapi()["paths"]
 
-    for path in ("/api/v1/health", "/api/v1/ready"):
+    for path in ("/api/v1/health", "/api/v1/ready", "/api/v1/auth/login", "/api/v1/auth/refresh"):
         for operation in paths[path].values():
             parameter_names = {item["name"] for item in operation.get("parameters", [])}
             assert "X-Organization-ID" not in parameter_names
+
+
+def test_openapi_documents_bearer_auth_security_scheme(app_settings: AppSettings) -> None:
+    application = create_app(settings=app_settings)
+    schema = application.openapi()
+
+    assert schema["components"]["securitySchemes"]["BearerAuth"] == {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+    }

@@ -557,7 +557,7 @@ use cases.
 | Task | Deliverable |
 |------|-------------|
 | **P3-002** | User and Organization Domain — entities, VOs, membership model |
-| **P3-003** | Authentication Infrastructure — JWT validation, Bootstrap wiring |
+| **P3-003** | Authentication API — JWT infrastructure, login/refresh endpoints |
 | **P3-004** | Authorization Application services — membership port, handler integration |
 | **P3-005** | HTTP API integration — dependencies, OpenAPI security, contract tests |
 | **P3-006** | Persistence — membership tables, Alembic migrations |
