@@ -86,6 +86,7 @@ def create_app(
             "scheme": "bearer",
             "bearerFormat": "JWT",
         }
+        _apply_protected_business_route_security(schema)
         application.openapi_schema = schema
         return schema
 
@@ -99,6 +100,31 @@ def create_app(
     application.include_router(api_v1)
 
     return application
+
+
+def _apply_protected_business_route_security(schema: dict[str, object]) -> None:
+    """Document enforced-mode Bearer requirements on business operations.
+
+    OpenAPI is static and describes the enforced contract. Compatibility mode
+    (`AUTH_ENFORCEMENT=false`) remains documented separately.
+    """
+
+    paths = schema.get("paths")
+    if not isinstance(paths, dict):
+        return
+
+    protected_prefixes = ("/api/v1/knowledge-objects", "/api/v1/relations")
+    http_methods = frozenset({"get", "post", "put", "delete", "patch", "head", "options"})
+
+    for path, path_item in paths.items():
+        if not isinstance(path, str) or not path.startswith(protected_prefixes):
+            continue
+        if not isinstance(path_item, dict):
+            continue
+        for method, operation in path_item.items():
+            if method not in http_methods or not isinstance(operation, dict):
+                continue
+            operation["security"] = [{"BearerAuth": []}]
 
 
 # Thin default instance for Uvicorn. Construction has no external side effects.

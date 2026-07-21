@@ -73,7 +73,7 @@ HTTP concerns inside Application services.
 | Method | Responsibility |
 |--------|----------------|
 | `require_organization_access()` | Verify active membership for actor + organization |
-| `require_permission()` | Verify membership, then evaluate role permissions (P3-006) |
+| `require_permission()` | Verify membership, then evaluate role permissions (P3-006, applied P4-002) |
 | `authorize_security_context()` | Validate authenticated tenant context before handler work |
 
 Dependencies:

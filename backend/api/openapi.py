@@ -45,6 +45,20 @@ AUTH_ERROR_RESPONSES = {
     status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": APIErrorResponse},
 }
 
+BEARER_AUTH_SECURITY: list[dict[str, list[str]]] = [{"BearerAuth": []}]
+
+PROTECTED_BUSINESS_ERROR_RESPONSES = {
+    status.HTTP_401_UNAUTHORIZED: {"model": APIErrorResponse},
+    status.HTTP_403_FORBIDDEN: {"model": APIErrorResponse},
+    **COMMON_ERROR_RESPONSES,
+}
+
+PROTECTED_BUSINESS_SEARCH_ERROR_RESPONSES = {
+    status.HTTP_401_UNAUTHORIZED: {"model": APIErrorResponse},
+    status.HTTP_403_FORBIDDEN: {"model": APIErrorResponse},
+    **SEARCH_ERROR_RESPONSES,
+}
+
 
 def created_response(*, model: type[object], description: str) -> dict[int | str, dict[str, object]]:
     return {

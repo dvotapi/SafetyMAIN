@@ -19,7 +19,8 @@ Authorization decisions extend the P3-004 membership foundation with role and
 permission evaluation.
 
 Tenant isolation, membership validation, and handler business logic remain
-unchanged. Permission checks are opt-in at the API layer.
+unchanged. Business routes apply permission checks through `require_permission()`
+(P4-002).
 
 ---
 
@@ -131,7 +132,7 @@ Existing methods are unchanged:
 
 ## 7. API Integration
 
-Permission checks are exposed as an opt-in FastAPI dependency:
+Permission checks are exposed as a FastAPI dependency:
 
 ```python
 tenant_context: Annotated[
@@ -145,9 +146,10 @@ Behavior:
 - `AUTH_ENFORCEMENT=false` — dependency is a no-op (compatibility mode)
 - `AUTH_ENFORCEMENT=true` — membership and permission checks run
 
-Existing Knowledge Object and Relation routers continue to use
-`get_tenant_context()` only. Endpoint behavior changes only when a route
-explicitly adds `require_permission()`.
+Knowledge Object and Relation routers apply `require_permission()` to every
+business endpoint (P4-002). See
+[SecurityEnforcementRollout.md](SecurityEnforcementRollout.md) for the full
+permission matrix.
 
 ---
 
@@ -170,11 +172,12 @@ membership.
 |-----------|------------|
 | P3-004 | Membership enforcement |
 | P3-005 | Tenant context migration |
-| P3-006 | Role and permission evaluation (this document) |
-| P3-007 | Security architecture review (next) |
+| P3-006 | Role and permission evaluation |
+| P3-007 | Security architecture review |
+| P4-002 | Business route enforcement (this rollout) |
 
-RBAC is available but not yet applied to production business routes. Routes can
-adopt `require_permission()` incrementally during authenticated rollout.
+RBAC is applied to all Knowledge Object and Relation business routes. See
+[SecurityEnforcementRollout.md](SecurityEnforcementRollout.md).
 
 ---
 

@@ -148,6 +148,61 @@ def assert_no_forbidden_method_calls(
     raise AssertionError(f"Architecture dependency violations found:\n{formatted_violations}")
 
 
+@dataclass(frozen=True, slots=True)
+class NameAssignmentViolation:
+    source_file: Path
+    assigned_name: str
+    rule: str
+
+
+def find_forbidden_name_assignments(
+    root: Path,
+    *,
+    forbidden_names: Sequence[str],
+    rule: str,
+) -> tuple[NameAssignmentViolation, ...]:
+    violations: list[NameAssignmentViolation] = []
+
+    for source_file in iter_python_files(root):
+        tree = ast.parse(source_file.read_text(encoding="utf-8"), filename=str(source_file))
+        for node in tree.body:
+            if not isinstance(node, ast.Assign):
+                continue
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in forbidden_names:
+                    violations.append(
+                        NameAssignmentViolation(
+                            source_file=source_file,
+                            assigned_name=target.id,
+                            rule=rule,
+                        )
+                    )
+
+    return tuple(violations)
+
+
+def assert_no_forbidden_name_assignments(
+    root: Path,
+    *,
+    forbidden_names: Sequence[str],
+    rule: str,
+) -> None:
+    violations = find_forbidden_name_assignments(
+        root,
+        forbidden_names=forbidden_names,
+        rule=rule,
+    )
+    if not violations:
+        return
+
+    formatted_violations = "\n".join(
+        f"- {violation.source_file}: forbidden assignment `{violation.assigned_name}` "
+        f"violates {violation.rule}"
+        for violation in violations
+    )
+    raise AssertionError(f"Architecture dependency violations found:\n{formatted_violations}")
+
+
 def _matches_forbidden_prefix(
     imported_module: str,
     forbidden_prefixes: Sequence[str],

@@ -29,10 +29,11 @@ def create_object(
     *,
     object_type: str = "policy",
     metadata: dict[str, object] | None = None,
+    headers: dict[str, str] | None = None,
 ) -> dict[str, object]:
     response = client.post(
         "/api/v1/knowledge-objects",
-        headers=organization_headers(organization_id),
+        headers=headers or organization_headers(organization_id),
         json={
             "type": object_type,
             "metadata": metadata or {"title": "Information Security Policy"},

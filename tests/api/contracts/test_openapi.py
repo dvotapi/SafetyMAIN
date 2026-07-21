@@ -112,3 +112,45 @@ def test_openapi_documents_bearer_auth_security_scheme(app_settings: AppSettings
         "scheme": "bearer",
         "bearerFormat": "JWT",
     }
+
+
+def test_openapi_business_routes_require_bearer_auth(app_settings: AppSettings) -> None:
+    application = create_app(settings=app_settings)
+    paths = application.openapi()["paths"]
+
+    business_paths = [
+        path
+        for path in paths
+        if path.startswith("/api/v1/knowledge-objects") or path.startswith("/api/v1/relations")
+    ]
+
+    assert business_paths
+    for path in business_paths:
+        for operation in paths[path].values():
+            if not isinstance(operation, dict):
+                continue
+            assert operation.get("security") == [{"BearerAuth": []}]
+
+
+def test_openapi_auth_routes_do_not_require_bearer_auth(app_settings: AppSettings) -> None:
+    application = create_app(settings=app_settings)
+    paths = application.openapi()["paths"]
+
+    for path in ("/api/v1/health", "/api/v1/ready", "/api/v1/auth/login", "/api/v1/auth/refresh"):
+        for operation in paths[path].values():
+            if not isinstance(operation, dict):
+                continue
+            assert operation.get("security") != [{"BearerAuth": []}]
+
+
+def test_openapi_protected_routes_document_auth_error_responses(
+    app_settings: AppSettings,
+) -> None:
+    application = create_app(settings=app_settings)
+    paths = application.openapi()["paths"]
+
+    create_operation = paths["/api/v1/knowledge-objects"]["post"]
+    assert "401" in create_operation["responses"]
+    assert "403" in create_operation["responses"]
+    unauthorized_schema = create_operation["responses"]["401"]["content"]["application/json"]["schema"]
+    assert "$ref" in unauthorized_schema or "properties" in unauthorized_schema

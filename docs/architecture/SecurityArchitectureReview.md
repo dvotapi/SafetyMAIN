@@ -160,7 +160,7 @@ No business handler independently resolves tenant context.
 - Unknown roles deny permissions safely (empty permission set).
 - `PermissionDeniedError` maps to `403` / `permission_denied`.
 - Permission checks require prior membership validation.
-- `require_permission()` is opt-in; production business routes unchanged.
+- `require_permission()` applied to all Knowledge Object and Relation business routes (P4-002).
 
 ### Compatibility mode
 
@@ -230,12 +230,17 @@ Secrets are not logged or returned in API responses.
 - Business routes document `X-Organization-ID`
 - Operation IDs remain stable
 
+### Verified (P4-002 update)
+
+- Business operations declare `security: [BearerAuth]` in OpenAPI (enforced contract)
+- Protected operations document `401` and `403` responses
+
 ### Known limitation
 
-Business operations do not declare `security: [BearerAuth]` because
-compatibility mode allows header-only access. OpenAPI therefore understates
-enforced-mode requirements. Document this until compatibility mode is retired
-or OpenAPI becomes environment-aware.
+OpenAPI describes the enforced-mode contract statically. When
+`AUTH_ENFORCEMENT=false`, compatibility mode allows header-only access without
+Bearer tokens even though OpenAPI documents Bearer requirements. See
+[SecurityEnforcementRollout.md](SecurityEnforcementRollout.md).
 
 ---
 
@@ -262,8 +267,8 @@ Database-marked tests skipped when PostgreSQL is unavailable (expected).
 1. **In-memory identity and membership stores** — development/test adapters only.
 2. **Compatibility mode default** — `AUTH_ENFORCEMENT=false` preserves legacy
    header-only clients.
-3. **RBAC not applied to production business routes** — opt-in by design.
-4. **OpenAPI security understates enforced mode** — see §11.
+3. **RBAC applied to business routes** — enforced when `AUTH_ENFORCEMENT=true` (P4-002).
+4. **OpenAPI describes enforced contract statically** — see SecurityEnforcementRollout.md.
 5. **HS256 dev secret default** — not production-safe without configuration.
 6. **No audit logging** — out of Phase P3 scope.
 7. **No OIDC / external IdP** — future adapter track.
@@ -276,8 +281,8 @@ Database-marked tests skipped when PostgreSQL is unavailable (expected).
 |----------|------|
 | High | Persist identity and membership (SQLAlchemy adapters) |
 | High | Set production `JWT_SECRET_KEY` and enable `AUTH_ENFORCEMENT=true` after client migration |
-| Medium | Apply `require_permission()` to business routes during authenticated rollout |
-| Medium | Document or generate environment-aware OpenAPI for enforced mode |
+| Medium | Enable `AUTH_ENFORCEMENT=true` in production after client migration |
+| Low | Retire compatibility mode when all clients use Bearer tokens |
 | Low | Evaluate asymmetric JWT signing (RS256/EdDSA) |
 | Low | Add JWT algorithm whitelist in settings if additional algorithms are never required |
 | Future | OIDC / enterprise IdP adapter (post Phase P3 closeout) |

@@ -11,12 +11,12 @@ from backend.api.dependencies import (
     get_create_knowledge_object_relation_handler,
     get_get_knowledge_object_relation_handler,
     get_remove_knowledge_object_relation_handler,
-    get_tenant_context,
+    require_permission,
 )
 from backend.api.security import TenantContext
 from backend.api.mappers.relations import to_relation_response
 from backend.api.openapi import (
-    COMMON_ERROR_RESPONSES,
+    PROTECTED_BUSINESS_ERROR_RESPONSES,
     created_response,
     no_content_response,
     success_response,
@@ -48,6 +48,12 @@ from backend.core.application.handlers.remove_knowledge_object_relation import (
 from backend.core.application.queries.get_knowledge_object_relation import (
     GetKnowledgeObjectRelationQuery,
 )
+from backend.core.application.authorization.policies.resource_permissions import (
+    RELATION_DELETE,
+    RELATION_READ,
+    RELATION_WRITE,
+)
+
 from backend.core.domain.value_objects import (
     KnowledgeObjectId,
     KnowledgeObjectRelationType,
@@ -71,12 +77,15 @@ def get_relation_id(relation_id: UUID) -> UUID:
             model=KnowledgeObjectRelationResponse,
             description="Relation created.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def create_relation(
     request_body: CreateKnowledgeObjectRelationRequest,
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(RELATION_WRITE)),
+    ],
     handler: Annotated[
         CreateKnowledgeObjectRelationHandler,
         Depends(get_create_knowledge_object_relation_handler),
@@ -109,12 +118,15 @@ def create_relation(
             model=KnowledgeObjectRelationResponse,
             description="Relation returned.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def get_relation(
     relation_id: Annotated[UUID, Depends(get_relation_id)],
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(RELATION_READ)),
+    ],
     handler: Annotated[
         GetKnowledgeObjectRelationHandler,
         Depends(get_get_knowledge_object_relation_handler),
@@ -136,12 +148,15 @@ def get_relation(
     summary="Delete a Knowledge Object relation",
     responses={
         **no_content_response(description="Relation deleted."),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def delete_relation(
     relation_id: Annotated[UUID, Depends(get_relation_id)],
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(RELATION_DELETE)),
+    ],
     handler: Annotated[
         RemoveKnowledgeObjectRelationHandler,
         Depends(get_remove_knowledge_object_relation_handler),

@@ -17,10 +17,10 @@ from backend.api.dependencies import (
     get_get_knowledge_object_history_handler,
     get_get_outgoing_relations_handler,
     get_knowledge_object_id,
-    get_tenant_context,
     get_restore_knowledge_object_handler,
     get_search_knowledge_objects_handler,
     get_update_knowledge_object_handler,
+    require_permission,
 )
 from backend.api.params.knowledge_object_search import (
     KnowledgeObjectSearchParams,
@@ -35,8 +35,8 @@ from backend.api.mappers.knowledge_objects import (
     to_knowledge_object_responses,
 )
 from backend.api.openapi import (
-    COMMON_ERROR_RESPONSES,
-    SEARCH_ERROR_RESPONSES,
+    PROTECTED_BUSINESS_ERROR_RESPONSES,
+    PROTECTED_BUSINESS_SEARCH_ERROR_RESPONSES,
     created_response,
     no_content_response,
     success_response,
@@ -130,6 +130,13 @@ from backend.core.application.queries.search_knowledge_objects import (
     SearchKnowledgeObjectsQuery,
 )
 from backend.core.application.queries.relation_direction import RelationDirection
+from backend.core.application.authorization.policies.resource_permissions import (
+    KNOWLEDGE_OBJECT_DELETE,
+    KNOWLEDGE_OBJECT_READ,
+    KNOWLEDGE_OBJECT_WRITE,
+    RELATION_READ,
+)
+
 from backend.core.domain.value_objects import (
     KnowledgeObjectId,
     KnowledgeObjectRelationType,
@@ -150,12 +157,15 @@ router = APIRouter(prefix="/knowledge-objects", tags=["Knowledge Objects"])
             model=KnowledgeObjectResponse,
             description="Knowledge Object created.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def create_knowledge_object(
     request_body: CreateKnowledgeObjectRequest,
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(KNOWLEDGE_OBJECT_WRITE)),
+    ],
     handler: Annotated[
         CreateKnowledgeObjectHandler,
         Depends(get_create_knowledge_object_handler),
@@ -187,11 +197,14 @@ def create_knowledge_object(
             model=KnowledgeObjectSearchResponse,
             description="Search results returned.",
         ),
-        **SEARCH_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_SEARCH_ERROR_RESPONSES,
     },
 )
 def search_knowledge_objects(
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(KNOWLEDGE_OBJECT_READ)),
+    ],
     search_params: Annotated[
         KnowledgeObjectSearchParams,
         Depends(parse_knowledge_object_search_params),
@@ -232,11 +245,14 @@ def search_knowledge_objects(
             model=KnowledgeObjectResponse,
             description="Knowledge Object returned.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def get_knowledge_object(
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(KNOWLEDGE_OBJECT_READ)),
+    ],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         GetKnowledgeObjectHandler,
@@ -262,12 +278,15 @@ def get_knowledge_object(
             model=KnowledgeObjectResponse,
             description="Knowledge Object updated.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def update_knowledge_object(
     request_body: UpdateKnowledgeObjectRequest,
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(KNOWLEDGE_OBJECT_WRITE)),
+    ],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         UpdateKnowledgeObjectHandler,
@@ -295,11 +314,14 @@ def update_knowledge_object(
             model=KnowledgeObjectResponse,
             description="Knowledge Object archived.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def archive_knowledge_object(
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(KNOWLEDGE_OBJECT_WRITE)),
+    ],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         ArchiveKnowledgeObjectHandler,
@@ -325,11 +347,14 @@ def archive_knowledge_object(
             model=KnowledgeObjectResponse,
             description="Knowledge Object restored.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def restore_knowledge_object(
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(KNOWLEDGE_OBJECT_WRITE)),
+    ],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         RestoreKnowledgeObjectHandler,
@@ -352,11 +377,14 @@ def restore_knowledge_object(
     summary="Soft-delete a Knowledge Object",
     responses={
         **no_content_response(description="Knowledge Object deleted."),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def delete_knowledge_object(
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(KNOWLEDGE_OBJECT_DELETE)),
+    ],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         DeleteKnowledgeObjectHandler,
@@ -382,11 +410,14 @@ def delete_knowledge_object(
             model=KnowledgeObjectHistoryResponse,
             description="Historical versions returned.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def get_knowledge_object_history(
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(KNOWLEDGE_OBJECT_READ)),
+    ],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         GetKnowledgeObjectHistoryHandler,
@@ -414,11 +445,14 @@ def get_knowledge_object_history(
             model=KnowledgeObjectRelationListResponse,
             description="Outgoing relations returned.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def list_outgoing_relations(
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(RELATION_READ)),
+    ],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     relation_type: Annotated[
         KnowledgeObjectRelationType | None,
@@ -449,11 +483,14 @@ def list_outgoing_relations(
             model=KnowledgeObjectRelationListResponse,
             description="Incoming relations returned.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def list_incoming_relations(
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(RELATION_READ)),
+    ],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     relation_type: Annotated[
         KnowledgeObjectRelationType | None,
@@ -484,11 +521,14 @@ def list_incoming_relations(
             model=KnowledgeObjectListResponse,
             description="Connected Knowledge Objects returned.",
         ),
-        **COMMON_ERROR_RESPONSES,
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
     },
 )
 def list_connected_knowledge_objects(
-    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    tenant_context: Annotated[
+        TenantContext,
+        Depends(require_permission(RELATION_READ)),
+    ],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     direction: Annotated[RelationDirection, Depends(connected_direction_query)],
     relation_type: Annotated[

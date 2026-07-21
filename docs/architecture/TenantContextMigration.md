@@ -109,6 +109,7 @@ in later tasks.
 
 ## 7. Next Step
 
-RBAC was introduced in P3-006. See [RoleBasedAuthorization.md](RoleBasedAuthorization.md).
+Business route enforcement completed in P4-002. See
+[SecurityEnforcementRollout.md](SecurityEnforcementRollout.md).
 
 Phase P3 security review: [SecurityArchitectureReview.md](SecurityArchitectureReview.md).
