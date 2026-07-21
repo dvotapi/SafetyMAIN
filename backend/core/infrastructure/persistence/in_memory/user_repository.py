@@ -4,6 +4,10 @@ from backend.core.domain.entities.user import User
 from backend.core.domain.exceptions import UserNotFound
 from backend.core.domain.repositories import UserRepositoryContract
 from backend.core.domain.value_objects import UserId
+from backend.core.domain.value_objects.user_list_criteria import (
+    UserListCriteria,
+    UserListResult,
+)
 
 
 class InMemoryUserRepository(UserRepositoryContract):
@@ -35,3 +39,29 @@ class InMemoryUserRepository(UserRepositoryContract):
             del self._users_by_email[previous.email]
             self._users_by_email[user.email] = user.id
         self._users_by_id[user.id] = user
+
+    def list_users(self, criteria: UserListCriteria) -> UserListResult:
+        users = list(self._users_by_id.values())
+
+        if criteria.is_active is not None:
+            users = [user for user in users if user.is_active() == criteria.is_active]
+        if criteria.email is not None:
+            needle = criteria.email.strip().lower()
+            users = [user for user in users if needle in user.email]
+        if criteria.display_name is not None:
+            needle = criteria.display_name.strip().lower()
+            users = [user for user in users if needle in user.display_name.lower()]
+
+        users.sort(
+            key=lambda user: user.created_at,
+            reverse=not criteria.sort_ascending,
+        )
+        total = len(users)
+        page = users[criteria.offset : criteria.offset + criteria.limit]
+
+        return UserListResult(
+            items=tuple(page),
+            total=total,
+            offset=criteria.offset,
+            limit=criteria.limit,
+        )

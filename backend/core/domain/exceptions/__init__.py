@@ -11,7 +11,13 @@ from backend.core.domain.exceptions.organization import (
     OrganizationError,
     OrganizationNotFound,
 )
-from backend.core.domain.exceptions.user import UserError, UserNotFound
+from backend.core.domain.exceptions.user import (
+    DuplicateUserEmail,
+    UserAlreadyActive,
+    UserAlreadyDeactivated,
+    UserError,
+    UserNotFound,
+)
 from backend.core.domain.exceptions.knowledge_object import (
     DuplicateKnowledgeObject,
     InvalidKnowledgeObjectStateTransition,
@@ -35,6 +41,8 @@ __all__ = [
     "CrossOrganizationKnowledgeObjectRelation",
     "DuplicateKnowledgeObject",
     "DuplicateKnowledgeObjectRelation",
+    "DuplicateKnowledgeObjectRelation",
+    "DuplicateUserEmail",
     "InactiveMembership",
     "InvalidKnowledgeObjectStateTransition",
     "KnowledgeObjectAlreadyActive",
@@ -52,6 +60,8 @@ __all__ = [
     "OrganizationError",
     "OrganizationNotFound",
     "SafetyMainDomainError",
+    "UserAlreadyActive",
+    "UserAlreadyDeactivated",
     "UserError",
     "UserNotFound",
     "SelfReferencingKnowledgeObjectRelation",

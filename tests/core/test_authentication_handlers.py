@@ -50,6 +50,7 @@ def identity_store(auth_settings: AppSettings) -> InMemoryIdentityStore:
         email="operator@example.com",
         status=UserStatus.ACTIVE,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     store.register_user(
         user,
@@ -108,6 +109,7 @@ def test_authenticate_user_handler_rejects_suspended_user(
         email="suspended@example.com",
         status=UserStatus.SUSPENDED,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     identity_store.register_user(
         suspended_user,

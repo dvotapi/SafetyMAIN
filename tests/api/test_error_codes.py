@@ -53,6 +53,10 @@ def test_required_task_error_codes_are_registered() -> None:
         "knowledge_object_relation_not_found",
         "duplicate_knowledge_object_relation",
         "self_referencing_knowledge_object_relation",
+        "user_not_found",
+        "duplicate_user_email",
+        "user_already_active",
+        "user_already_deactivated",
     }
     assert required_codes.issubset(PUBLIC_ERROR_CODES)
 

@@ -93,6 +93,7 @@ def seed_development_identity(
             email=email,
             status=UserStatus.ACTIVE,
             created_at=now,
+            updated_at=now,
         )
         identity_adapter.register_user(user, password_hash)
         membership_adapter.register_membership(

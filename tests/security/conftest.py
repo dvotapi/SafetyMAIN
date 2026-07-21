@@ -43,6 +43,7 @@ def auth_client(auth_settings: AppSettings) -> tuple[TestClient, str]:
         email="operator@example.com",
         status=UserStatus.ACTIVE,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     identity_store.register_user(
         user,
@@ -94,6 +95,7 @@ def build_enforced_client(
         email="operator@example.com",
         status=UserStatus.ACTIVE,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     organization_id = OrganizationId(value=uuid4())
     identity_store.register_user(

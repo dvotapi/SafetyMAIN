@@ -15,7 +15,8 @@ DOMAIN_ROOT = PROJECT_ROOT / "backend" / "core" / "domain"
 API_ROUTERS_ROOT = PROJECT_ROOT / "backend" / "api" / "routers"
 KNOWLEDGE_OBJECTS_ROUTER = API_ROUTERS_ROOT / "knowledge_objects.py"
 RELATIONS_ROUTER = API_ROUTERS_ROOT / "relations.py"
-BUSINESS_ROUTERS = (KNOWLEDGE_OBJECTS_ROUTER, RELATIONS_ROUTER)
+ADMIN_USERS_ROUTER = API_ROUTERS_ROOT / "admin_users.py"
+BUSINESS_ROUTERS = (KNOWLEDGE_OBJECTS_ROUTER, RELATIONS_ROUTER, ADMIN_USERS_ROUTER)
 
 
 def test_application_security_modules_do_not_import_jwt_or_fastapi() -> None:

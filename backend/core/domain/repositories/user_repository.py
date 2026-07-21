@@ -4,6 +4,10 @@ from typing import Protocol
 
 from backend.core.domain.entities.user import User
 from backend.core.domain.value_objects import UserId
+from backend.core.domain.value_objects.user_list_criteria import (
+    UserListCriteria,
+    UserListResult,
+)
 
 
 class UserRepositoryContract(Protocol):
@@ -19,4 +23,7 @@ class UserRepositoryContract(Protocol):
         ...
 
     def save(self, user: User) -> None:
+        ...
+
+    def list_users(self, criteria: UserListCriteria) -> UserListResult:
         ...

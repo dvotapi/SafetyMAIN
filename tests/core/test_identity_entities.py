@@ -28,6 +28,7 @@ def test_user_normalizes_email_and_display_name() -> None:
         email="  Operator@Example.com ",
         status=UserStatus.ACTIVE,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
 
     assert user.display_name == "Safety Operator"
@@ -43,6 +44,7 @@ def test_user_rejects_empty_email() -> None:
             email="   ",
             status=UserStatus.ACTIVE,
             created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
 
@@ -53,6 +55,7 @@ def test_suspended_user_cannot_authenticate() -> None:
         email="operator@example.com",
         status=UserStatus.SUSPENDED,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
 
     assert user.can_authenticate() is False

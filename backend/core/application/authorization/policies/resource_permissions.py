@@ -19,3 +19,5 @@ KNOWLEDGE_OBJECT_DELETE = Permission.from_system_permission(
 RELATION_READ = Permission.from_system_permission(SystemPermission.RELATION_MANAGE)
 RELATION_WRITE = Permission.from_system_permission(SystemPermission.RELATION_MANAGE)
 RELATION_DELETE = Permission.from_system_permission(SystemPermission.RELATION_MANAGE)
+USER_READ = Permission.from_system_permission(SystemPermission.USER_READ)
+USER_WRITE = Permission.from_system_permission(SystemPermission.USER_WRITE)

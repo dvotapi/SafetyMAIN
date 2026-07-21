@@ -24,12 +24,25 @@ DELETE_KNOWLEDGE_OBJECT_RELATION = "delete_knowledge_object_relation"
 AUTH_LOGIN = "auth_login"
 AUTH_REFRESH = "auth_refresh"
 
+CREATE_USER = "create_user"
+LIST_USERS = "list_users"
+GET_USER = "get_user"
+UPDATE_USER = "update_user"
+ACTIVATE_USER = "activate_user"
+DEACTIVATE_USER = "deactivate_user"
+
 STABLE_OPERATION_IDS: frozenset[str] = frozenset(
     {
         HEALTH,
         READINESS,
         AUTH_LOGIN,
         AUTH_REFRESH,
+        CREATE_USER,
+        LIST_USERS,
+        GET_USER,
+        UPDATE_USER,
+        ACTIVATE_USER,
+        DEACTIVATE_USER,
         CREATE_KNOWLEDGE_OBJECT,
         SEARCH_KNOWLEDGE_OBJECTS,
         GET_KNOWLEDGE_OBJECT,

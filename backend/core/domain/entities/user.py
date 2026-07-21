@@ -23,6 +23,7 @@ class User(BaseModel):
     status: UserStatus
     external_subject: str | None = Field(default=None, frozen=True)
     created_at: datetime = Field(frozen=True)
+    updated_at: datetime
 
     @field_validator("email")
     @classmethod

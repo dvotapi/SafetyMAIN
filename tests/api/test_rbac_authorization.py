@@ -62,6 +62,7 @@ def _build_permission_protected_client(
         email="operator@example.com",
         status=UserStatus.ACTIVE,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     organization_id = OrganizationId(value=uuid4())
     identity_store.register_user(

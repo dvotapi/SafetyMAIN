@@ -11,6 +11,7 @@ from backend.api.constants import API_V1_PREFIX
 from backend.api.exception_handlers import register_exception_handlers
 from backend.api.logging import configure_logging
 from backend.api.middleware import RequestIdMiddleware
+from backend.api.routers import admin_users as admin_users_router
 from backend.api.routers import auth as auth_router
 from backend.api.routers import knowledge_objects as knowledge_objects_router
 from backend.api.routers import relations as relations_router
@@ -101,6 +102,7 @@ def create_app(
     api_v1.include_router(auth_router.router)
     api_v1.include_router(knowledge_objects_router.router)
     api_v1.include_router(relations_router.router)
+    api_v1.include_router(admin_users_router.router)
     application.include_router(api_v1)
 
     return application
@@ -117,7 +119,11 @@ def _apply_protected_business_route_security(schema: dict[str, object]) -> None:
     if not isinstance(paths, dict):
         return
 
-    protected_prefixes = ("/api/v1/knowledge-objects", "/api/v1/relations")
+    protected_prefixes = (
+        "/api/v1/knowledge-objects",
+        "/api/v1/relations",
+        "/api/v1/admin/users",
+    )
     http_methods = frozenset({"get", "post", "put", "delete", "patch", "head", "options"})
 
     for path, path_item in paths.items():

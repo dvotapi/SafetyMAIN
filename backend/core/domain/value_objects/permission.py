@@ -12,6 +12,8 @@ class SystemPermission(str, Enum):
     RELATION_MANAGE = "relation:manage"
     MEMBERSHIP_MANAGE = "membership:manage"
     ORGANIZATION_ADMIN = "organization:admin"
+    USER_READ = "user:read"
+    USER_WRITE = "user:write"
 
 
 class Permission(BaseModel):

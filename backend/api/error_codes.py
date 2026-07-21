@@ -16,6 +16,7 @@ from backend.core.domain.exceptions import (
     CrossOrganizationKnowledgeObjectRelation,
     DuplicateKnowledgeObject,
     DuplicateKnowledgeObjectRelation,
+    DuplicateUserEmail,
     InvalidKnowledgeObjectStateTransition,
     KnowledgeObjectAlreadyActive,
     KnowledgeObjectAlreadyArchived,
@@ -24,6 +25,9 @@ from backend.core.domain.exceptions import (
     KnowledgeObjectRelationNotFound,
     KnowledgeObjectVersionConflict,
     SelfReferencingKnowledgeObjectRelation,
+    UserAlreadyActive,
+    UserAlreadyDeactivated,
+    UserNotFound,
 )
 
 # Public API error codes (external contract). Do not derive these from class names.
@@ -51,6 +55,11 @@ ORGANIZATION_ACCESS_DENIED = "organization_access_denied"
 PERMISSION_DENIED = "permission_denied"
 ORGANIZATION_CONTEXT_REQUIRED = "organization_context_required"
 
+USER_NOT_FOUND = "user_not_found"
+DUPLICATE_USER_EMAIL = "duplicate_user_email"
+USER_ALREADY_ACTIVE = "user_already_active"
+USER_ALREADY_DEACTIVATED = "user_already_deactivated"
+
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
 SERVICE_NOT_READY = "service_not_ready"
@@ -76,6 +85,10 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         ORGANIZATION_ACCESS_DENIED,
         PERMISSION_DENIED,
         ORGANIZATION_CONTEXT_REQUIRED,
+        USER_NOT_FOUND,
+        DUPLICATE_USER_EMAIL,
+        USER_ALREADY_ACTIVE,
+        USER_ALREADY_DEACTIVATED,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -94,6 +107,10 @@ DOMAIN_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
     DuplicateKnowledgeObjectRelation: 409,
     SelfReferencingKnowledgeObjectRelation: 422,
     CrossOrganizationKnowledgeObjectRelation: 422,
+    UserNotFound: 404,
+    DuplicateUserEmail: 409,
+    UserAlreadyActive: 409,
+    UserAlreadyDeactivated: 409,
 }
 
 DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
@@ -108,6 +125,10 @@ DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
     DuplicateKnowledgeObjectRelation: DUPLICATE_KNOWLEDGE_OBJECT_RELATION,
     SelfReferencingKnowledgeObjectRelation: SELF_REFERENCING_KNOWLEDGE_OBJECT_RELATION,
     CrossOrganizationKnowledgeObjectRelation: CROSS_ORGANIZATION_KNOWLEDGE_OBJECT_RELATION,
+    UserNotFound: USER_NOT_FOUND,
+    DuplicateUserEmail: DUPLICATE_USER_EMAIL,
+    UserAlreadyActive: USER_ALREADY_ACTIVE,
+    UserAlreadyDeactivated: USER_ALREADY_DEACTIVATED,
 }
 
 DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
@@ -126,6 +147,10 @@ DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     CrossOrganizationKnowledgeObjectRelation: (
         "Knowledge Object Relation cannot cross organizations."
     ),
+    UserNotFound: "User was not found.",
+    DuplicateUserEmail: "User email already exists.",
+    UserAlreadyActive: "User is already active.",
+    UserAlreadyDeactivated: "User is already deactivated.",
 }
 
 APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {

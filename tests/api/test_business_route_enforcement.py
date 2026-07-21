@@ -68,6 +68,7 @@ def _register_user_with_role_in_org(
         email=email,
         status=UserStatus.ACTIVE,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     container.identity_store.register_user(
         user,
@@ -120,6 +121,7 @@ def _build_client_without_membership(
         email="unassigned@example.com",
         status=UserStatus.ACTIVE,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     organization_id = OrganizationId(value=uuid4())
     identity_store.register_user(

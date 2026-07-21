@@ -34,6 +34,24 @@ class UserRepositoryContractSuite:
         assert repository.get_by_email(user.email) == user
         assert repository.get_by_email("missing@example.com") is None
 
+    def test_list_users_supports_filtering(self, repository: UserRepositoryContract) -> None:
+        from backend.core.domain.value_objects.user_list_criteria import UserListCriteria
+
+        active_user = _create_user()
+        inactive_user = _create_user()
+        inactive_user = inactive_user.model_copy(
+            update={"email": f"inactive-{uuid4()}@example.com", "status": UserStatus.DEACTIVATED}
+        )
+        repository.add(active_user)
+        repository.add(inactive_user)
+
+        result = repository.list_users(
+            UserListCriteria(offset=0, limit=10, is_active=True)
+        )
+
+        assert result.total == 1
+        assert result.items[0].id == active_user.id
+
 
 class MembershipRepositoryContractSuite:
     @pytest.fixture()
@@ -57,12 +75,14 @@ class MembershipRepositoryContractSuite:
 
 
 def _create_user() -> User:
+    now = datetime.now(UTC)
     return User(
         id=UserId(value=uuid4()),
         display_name="Safety Operator",
         email=f"operator-{uuid4()}@example.com",
         status=UserStatus.ACTIVE,
-        created_at=datetime.now(UTC),
+        created_at=now,
+        updated_at=now,
     )
 
 

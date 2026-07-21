@@ -10,6 +10,7 @@ Related documents:
 - [ArchitectureReviewV2.md](ArchitectureReviewV2.md) — readiness gate for authentication foundation
 - [APIFoundation.md](../api/APIFoundation.md) — request ID and error envelope
 - [ArchitectureTesting.md](ArchitectureTesting.md) — dependency rules
+- [UserManagement.md](UserManagement.md) — administrative user API (P5-001)
 
 ---
 
@@ -568,6 +569,7 @@ use cases.
 | **P3-005** | Tenant Context Migration — authenticated business API integration |
 | **P3-006** | Role-Based Authorization — roles and permission evaluation |
 | **P3-007** | Security Architecture Review — see [SecurityArchitectureReview.md](SecurityArchitectureReview.md) |
+| **P5-001** | User Management API — see [UserManagement.md](UserManagement.md) |
 | **Future** | OIDC / enterprise IdP adapter (optional track) |
 
 Each task must include architecture test updates and contract tests before behavior

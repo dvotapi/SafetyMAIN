@@ -16,8 +16,8 @@ SafetyMAIN exposes a versioned HTTP API under:
 The API layer is a thin inbound adapter over Application use cases. Business rules
 live in Domain and Application layers.
 
-Authentication and organization membership are **not** implemented yet. Business
-requests currently require a temporary organization header.
+Authentication uses Bearer JWT. Business and administrative requests require
+organization membership context via `X-Organization-ID` for RBAC evaluation.
 
 ---
 
@@ -30,8 +30,10 @@ requests currently require a temporary organization header.
 | [KnowledgeObjectSearchAPI.md](KnowledgeObjectSearchAPI.md) | Structured Knowledge Object search |
 | [RelationAPI.md](RelationAPI.md) | Relations and traversal endpoints |
 | [AuthenticationAPI.md](AuthenticationAPI.md) | Login, refresh, and Bearer auth foundation |
+| [AdminUserAPI.md](AdminUserAPI.md) | Administrative user management (P5-001) |
 
-Future authentication design: [AuthenticationArchitecture.md](../architecture/AuthenticationArchitecture.md)
+Architecture: [AuthenticationArchitecture.md](../architecture/AuthenticationArchitecture.md),
+[UserManagement.md](../architecture/UserManagement.md)
 
 ---
 
@@ -94,8 +96,7 @@ Operation IDs are stable and suitable for generated clients. See
 
 ## Current Limitations
 
-- No authentication or authorization
-- No organization membership enforcement
+- No password provisioning or reset through the admin user API
 - No rate limiting or idempotency keys
 - No cursor pagination or full-text search
 - Live PostgreSQL HTTP integration tests are not part of the current suite

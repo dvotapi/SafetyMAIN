@@ -58,6 +58,14 @@ from backend.core.application.handlers.restore_knowledge_object import (
 from backend.core.application.handlers.update_knowledge_object import (
     UpdateKnowledgeObjectHandler,
 )
+from backend.core.application.handlers.create_user import CreateUserHandler
+from backend.core.application.handlers.get_user import GetUserHandler
+from backend.core.application.handlers.list_users import ListUsersHandler
+from backend.core.application.handlers.update_user import UpdateUserHandler
+from backend.core.application.handlers.user_lifecycle import (
+    ActivateUserHandler,
+    DeactivateUserHandler,
+)
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.contracts.token_service import TokenValidationError
 from backend.core.application.exceptions.authentication import UnauthenticatedError
@@ -228,6 +236,51 @@ def get_knowledge_object_id(
         return KnowledgeObjectId(value=knowledge_object_id)
     except ValidationError as exc:
         raise RequestValidationError(exc.errors()) from exc
+
+
+def get_user_id(
+    user_id: Annotated[UUID, Path()],
+) -> UserId:
+    try:
+        return UserId(value=user_id)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
+def get_create_user_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> CreateUserHandler:
+    return CreateUserHandler(uow)
+
+
+def get_get_user_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> GetUserHandler:
+    return GetUserHandler(uow)
+
+
+def get_list_users_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ListUsersHandler:
+    return ListUsersHandler(uow)
+
+
+def get_update_user_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> UpdateUserHandler:
+    return UpdateUserHandler(uow)
+
+
+def get_activate_user_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ActivateUserHandler:
+    return ActivateUserHandler(uow)
+
+
+def get_deactivate_user_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> DeactivateUserHandler:
+    return DeactivateUserHandler(uow)
 
 
 def get_create_knowledge_object_handler(

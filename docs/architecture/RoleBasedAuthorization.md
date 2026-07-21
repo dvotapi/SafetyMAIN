@@ -109,6 +109,16 @@ defines reusable policy constants:
 | `RELATION_READ` | `relation:manage` |
 | `RELATION_WRITE` | `relation:manage` |
 | `RELATION_DELETE` | `relation:manage` |
+| `USER_READ` | `user:read` |
+| `USER_WRITE` | `user:write` |
+
+Admin user API permissions (P5-001):
+
+| Role | `user:read` | `user:write` |
+|------|-------------|--------------|
+| admin | yes | yes |
+| member | no | no |
+| auditor | yes | no |
 
 Relation and delete policies map to existing domain capabilities because P3-002
 defines `relation:manage` and does not split relation or delete permissions.
@@ -174,10 +184,10 @@ membership.
 | P3-005 | Tenant context migration |
 | P3-006 | Role and permission evaluation |
 | P3-007 | Security architecture review |
-| P4-002 | Business route enforcement (this rollout) |
+| P4-002 | Business route enforcement |
+| P5-001 | User Management API (this rollout) |
 
-RBAC is applied to all Knowledge Object and Relation business routes. See
-[SecurityEnforcementRollout.md](SecurityEnforcementRollout.md).
+See [UserManagement.md](UserManagement.md) for administrative user endpoints.
 
 ---
 

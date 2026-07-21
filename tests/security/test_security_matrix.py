@@ -64,6 +64,7 @@ def test_security_matrix_login_inactive_user_returns_forbidden(
         email="suspended@example.com",
         status=UserStatus.SUSPENDED,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     identity_store.register_user(
         user,
@@ -222,6 +223,7 @@ def test_security_matrix_conflicting_token_and_header_organizations(
         email="operator@example.com",
         status=UserStatus.ACTIVE,
         created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     organization_id = OrganizationId(value=uuid4())
     identity_store.register_user(

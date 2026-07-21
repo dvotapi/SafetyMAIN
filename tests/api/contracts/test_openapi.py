@@ -21,6 +21,10 @@ EXPECTED_PATHS: dict[str, set[str]] = {
     "/api/v1/knowledge-objects/{knowledge_object_id}/connected": {"get"},
     "/api/v1/relations": {"post"},
     "/api/v1/relations/{relation_id}": {"get", "delete"},
+    "/api/v1/admin/users": {"get", "post"},
+    "/api/v1/admin/users/{user_id}": {"get", "patch"},
+    "/api/v1/admin/users/{user_id}/activate": {"post"},
+    "/api/v1/admin/users/{user_id}/deactivate": {"post"},
 }
 
 
@@ -121,7 +125,9 @@ def test_openapi_business_routes_require_bearer_auth(app_settings: AppSettings) 
     business_paths = [
         path
         for path in paths
-        if path.startswith("/api/v1/knowledge-objects") or path.startswith("/api/v1/relations")
+        if path.startswith("/api/v1/knowledge-objects")
+        or path.startswith("/api/v1/relations")
+        or path.startswith("/api/v1/admin/users")
     ]
 
     assert business_paths
