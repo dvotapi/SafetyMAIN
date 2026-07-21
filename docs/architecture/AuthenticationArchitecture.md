@@ -427,6 +427,12 @@ New authentication modules must be covered by architecture tests forbidding:
 Implemented in **P3-002**. See [IdentityDomain.md](IdentityDomain.md) for the
 concrete domain model, repository contracts, and application ports.
 
+Membership verification is deferred to future authorization tasks.
+
+Authorization foundation: [AuthorizationFoundation.md](AuthorizationFoundation.md).
+
+Tenant context migration: [TenantContextMigration.md](TenantContextMigration.md).
+
 The following concepts guided P3-002 and remain the architectural baseline:
 
 ### 7.1 User
@@ -558,9 +564,9 @@ use cases.
 |------|-------------|
 | **P3-002** | User and Organization Domain — entities, VOs, membership model |
 | **P3-003** | Authentication API — JWT infrastructure, login/refresh endpoints |
-| **P3-004** | Authorization Application services — membership port, handler integration |
-| **P3-005** | HTTP API integration — dependencies, OpenAPI security, contract tests |
-| **P3-006** | Persistence — membership tables, Alembic migrations |
+| **P3-004** | Authorization Foundation — membership verification and policies |
+| **P3-005** | Tenant Context Migration — authenticated business API integration |
+| **P3-006** | Role-Based Authorization — roles and permission evaluation |
 | **P3-007** | OIDC / enterprise IdP adapter (optional track) |
 
 Each task must include architecture test updates and contract tests before behavior

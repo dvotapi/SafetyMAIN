@@ -3,11 +3,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from backend.core.domain.value_objects import UserId
+from backend.core.domain.value_objects import OrganizationId, UserId
 
 
 class TokenValidationError(Exception):
     """Raised when a token cannot be validated."""
+
+
+@dataclass(frozen=True, slots=True)
+class AccessTokenClaims:
+    user_id: UserId
+    organization_id: OrganizationId | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,4 +34,7 @@ class TokenServiceContract(Protocol):
         ...
 
     def validate_access_token(self, token: str) -> UserId:
+        ...
+
+    def validate_access_token_claims(self, token: str) -> AccessTokenClaims:
         ...

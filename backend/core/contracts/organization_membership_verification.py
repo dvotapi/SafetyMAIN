@@ -1,16 +1,7 @@
 from __future__ import annotations
 
-from typing import Protocol
+from backend.core.contracts.membership_verification import MembershipVerificationPort
 
-from backend.core.domain.value_objects import OrganizationId, UserId
+OrganizationMembershipVerificationPort = MembershipVerificationPort
 
-
-class OrganizationMembershipVerificationPort(Protocol):
-    """Application port for verifying tenant access through membership."""
-
-    def is_active_member(
-        self,
-        user_id: UserId,
-        organization_id: OrganizationId,
-    ) -> bool:
-        ...
+__all__ = ["OrganizationMembershipVerificationPort"]

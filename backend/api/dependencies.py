@@ -61,6 +61,7 @@ from backend.core.application.handlers.update_knowledge_object import (
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.contracts.token_service import TokenValidationError
 from backend.core.application.exceptions.authentication import UnauthenticatedError
+from backend.core.application.context.tenant_context import TenantContext
 from backend.core.domain.value_objects import KnowledgeObjectId, OrganizationId, UserId
 from backend.api.security import SecurityContext
 
@@ -96,13 +97,94 @@ def get_uow(
         yield uow
 
 
-def get_organization_id(
-    x_organization_id: Annotated[str, Header(alias=ORGANIZATION_ID_HEADER)],
-) -> OrganizationId:
+def _parse_optional_organization_header(
+    raw_value: str | None,
+) -> OrganizationId | None:
+    if raw_value is None:
+        return None
     try:
-        return OrganizationId(value=x_organization_id)
+        return OrganizationId(value=raw_value)
     except ValidationError as exc:
         raise RequestValidationError(exc.errors()) from exc
+
+
+def _require_organization_header(raw_value: str | None) -> OrganizationId:
+    if raw_value is None:
+        raise RequestValidationError(
+            [
+                {
+                    "type": "missing",
+                    "loc": ("header", ORGANIZATION_ID_HEADER),
+                    "msg": "Field required",
+                    "input": None,
+                }
+            ]
+        )
+    return _parse_optional_organization_header(raw_value)  # type: ignore[return-value]
+
+
+def _extract_bearer_token(authorization: str | None) -> str | None:
+    if authorization is None:
+        return None
+
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token.strip():
+        raise UnauthenticatedError()
+
+    return token.strip()
+
+
+def get_tenant_context(
+    request: Request,
+    settings: Annotated[AppSettings, Depends(get_settings)],
+    container: Annotated[AppContainer, Depends(get_container)],
+    x_organization_id: Annotated[str | None, Header(alias=ORGANIZATION_ID_HEADER)] = None,
+    authorization: Annotated[str | None, Header()] = None,
+) -> TenantContext:
+    request_id = get_request_id(request)
+    header_organization_id = _parse_optional_organization_header(x_organization_id)
+
+    if not settings.auth_enforcement:
+        organization_id = _require_organization_header(x_organization_id)
+        return TenantContext(
+            security_context=SecurityContext.anonymous(request_id=request_id),
+            organization_id=organization_id,
+        )
+
+    bearer_token = _extract_bearer_token(authorization)
+    if bearer_token is None:
+        raise UnauthenticatedError()
+
+    try:
+        token_claims = container.token_service.validate_access_token_claims(bearer_token)
+    except TokenValidationError as exc:
+        raise UnauthenticatedError() from exc
+
+    security_context = SecurityContext.authenticated(
+        user_id=token_claims.user_id,
+        authentication_method="bearer_jwt",
+        request_id=request_id,
+    )
+    organization_id = container.tenant_context_resolver.resolve_organization_id(
+        user_id=token_claims.user_id,
+        token_organization_id=token_claims.organization_id,
+        header_organization_id=header_organization_id,
+    )
+    tenant_context = container.tenant_context_resolver.build_tenant_context(
+        security_context=security_context,
+        organization_id=organization_id,
+    )
+    container.authorization_service.require_organization_access(
+        actor_user_id=token_claims.user_id,
+        organization_id=organization_id,
+    )
+    return tenant_context
+
+
+def get_organization_id(
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+) -> OrganizationId:
+    return tenant_context.organization_id
 
 
 def get_knowledge_object_id(
@@ -242,7 +324,7 @@ def get_security_context(
     request: Request,
     user_id: UserId = Depends(get_authenticated_user),
 ) -> SecurityContext:
-    return SecurityContext(
+    return SecurityContext.authenticated(
         user_id=user_id,
         authentication_method="bearer_jwt",
         request_id=get_request_id(request),

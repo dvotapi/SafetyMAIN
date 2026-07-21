@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Response, status
 from fastapi.responses import JSONResponse
 
 from backend.api.constants import API_V1_PREFIX
+from backend.api.security import TenantContext
 from backend.api.dependencies import (
     get_archive_knowledge_object_handler,
     get_create_knowledge_object_handler,
@@ -16,7 +17,7 @@ from backend.api.dependencies import (
     get_get_knowledge_object_history_handler,
     get_get_outgoing_relations_handler,
     get_knowledge_object_id,
-    get_organization_id,
+    get_tenant_context,
     get_restore_knowledge_object_handler,
     get_search_knowledge_objects_handler,
     get_update_knowledge_object_handler,
@@ -133,7 +134,6 @@ from backend.core.domain.value_objects import (
     KnowledgeObjectId,
     KnowledgeObjectRelationType,
     KnowledgeObjectVersion,
-    OrganizationId,
 )
 
 router = APIRouter(prefix="/knowledge-objects", tags=["Knowledge Objects"])
@@ -155,7 +155,7 @@ router = APIRouter(prefix="/knowledge-objects", tags=["Knowledge Objects"])
 )
 def create_knowledge_object(
     request_body: CreateKnowledgeObjectRequest,
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     handler: Annotated[
         CreateKnowledgeObjectHandler,
         Depends(get_create_knowledge_object_handler),
@@ -164,7 +164,7 @@ def create_knowledge_object(
     knowledge_object = handler.handle(
         CreateKnowledgeObjectCommand(
             object_type=request_body.type,
-            organization_id=organization_id.value,
+            organization_id=tenant_context.organization_id.value,
             payload=dict(request_body.metadata),
         )
     )
@@ -191,7 +191,7 @@ def create_knowledge_object(
     },
 )
 def search_knowledge_objects(
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     search_params: Annotated[
         KnowledgeObjectSearchParams,
         Depends(parse_knowledge_object_search_params),
@@ -203,7 +203,7 @@ def search_knowledge_objects(
 ) -> KnowledgeObjectSearchResponse:
     result = handler.handle(
         SearchKnowledgeObjectsQuery(
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
             object_type=search_params.object_type,
             status=search_params.status,
             metadata_equals=search_params.metadata_equals,
@@ -236,7 +236,7 @@ def search_knowledge_objects(
     },
 )
 def get_knowledge_object(
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         GetKnowledgeObjectHandler,
@@ -245,7 +245,7 @@ def get_knowledge_object(
 ) -> KnowledgeObjectResponse:
     knowledge_object = handler.handle(
         GetKnowledgeObjectQuery(
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
             object_id=knowledge_object_id,
         )
     )
@@ -267,7 +267,7 @@ def get_knowledge_object(
 )
 def update_knowledge_object(
     request_body: UpdateKnowledgeObjectRequest,
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         UpdateKnowledgeObjectHandler,
@@ -277,7 +277,7 @@ def update_knowledge_object(
     knowledge_object = handler.handle(
         UpdateKnowledgeObjectCommand(
             object_id=knowledge_object_id,
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
             expected_version=KnowledgeObjectVersion(value=request_body.version),
             payload=dict(request_body.metadata),
         )
@@ -299,7 +299,7 @@ def update_knowledge_object(
     },
 )
 def archive_knowledge_object(
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         ArchiveKnowledgeObjectHandler,
@@ -309,7 +309,7 @@ def archive_knowledge_object(
     knowledge_object = handler.handle(
         ArchiveKnowledgeObjectCommand(
             object_id=knowledge_object_id,
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
         )
     )
     return to_knowledge_object_response(knowledge_object)
@@ -329,7 +329,7 @@ def archive_knowledge_object(
     },
 )
 def restore_knowledge_object(
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         RestoreKnowledgeObjectHandler,
@@ -339,7 +339,7 @@ def restore_knowledge_object(
     knowledge_object = handler.handle(
         RestoreKnowledgeObjectCommand(
             object_id=knowledge_object_id,
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
         )
     )
     return to_knowledge_object_response(knowledge_object)
@@ -356,7 +356,7 @@ def restore_knowledge_object(
     },
 )
 def delete_knowledge_object(
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         DeleteKnowledgeObjectHandler,
@@ -366,7 +366,7 @@ def delete_knowledge_object(
     handler.handle(
         DeleteKnowledgeObjectCommand(
             object_id=knowledge_object_id,
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
         )
     )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -386,7 +386,7 @@ def delete_knowledge_object(
     },
 )
 def get_knowledge_object_history(
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     handler: Annotated[
         GetKnowledgeObjectHistoryHandler,
@@ -395,7 +395,7 @@ def get_knowledge_object_history(
 ) -> KnowledgeObjectHistoryResponse:
     history = handler.handle(
         GetKnowledgeObjectHistoryQuery(
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
             object_id=knowledge_object_id,
         )
     )
@@ -418,7 +418,7 @@ def get_knowledge_object_history(
     },
 )
 def list_outgoing_relations(
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     relation_type: Annotated[
         KnowledgeObjectRelationType | None,
@@ -431,7 +431,7 @@ def list_outgoing_relations(
 ) -> KnowledgeObjectRelationListResponse:
     relations = handler.handle(
         GetOutgoingRelationsQuery(
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
             knowledge_object_id=knowledge_object_id,
             relation_type=relation_type,
         )
@@ -453,7 +453,7 @@ def list_outgoing_relations(
     },
 )
 def list_incoming_relations(
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     relation_type: Annotated[
         KnowledgeObjectRelationType | None,
@@ -466,7 +466,7 @@ def list_incoming_relations(
 ) -> KnowledgeObjectRelationListResponse:
     relations = handler.handle(
         GetIncomingRelationsQuery(
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
             knowledge_object_id=knowledge_object_id,
             relation_type=relation_type,
         )
@@ -488,7 +488,7 @@ def list_incoming_relations(
     },
 )
 def list_connected_knowledge_objects(
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     knowledge_object_id: Annotated[KnowledgeObjectId, Depends(get_knowledge_object_id)],
     direction: Annotated[RelationDirection, Depends(connected_direction_query)],
     relation_type: Annotated[
@@ -501,7 +501,7 @@ def list_connected_knowledge_objects(
     ],
 ) -> KnowledgeObjectListResponse:
     relations_query = GetConnectedKnowledgeObjectsQuery(
-        organization_id=organization_id,
+        organization_id=tenant_context.organization_id,
         knowledge_object_id=knowledge_object_id,
         direction=direction,
         relation_type=relation_type,

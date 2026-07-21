@@ -3,6 +3,9 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
+from uuid import UUID
+
+from backend.core.domain.value_objects import OrganizationId
 
 
 APP_NAME_ENV = "APP_NAME"
@@ -15,6 +18,8 @@ JWT_ALGORITHM_ENV = "JWT_ALGORITHM"
 JWT_ACCESS_TOKEN_TTL_SECONDS_ENV = "JWT_ACCESS_TOKEN_TTL_SECONDS"
 JWT_REFRESH_TOKEN_TTL_SECONDS_ENV = "JWT_REFRESH_TOKEN_TTL_SECONDS"
 JWT_ISSUER_ENV = "JWT_ISSUER"
+AUTH_ENFORCEMENT_ENV = "AUTH_ENFORCEMENT"
+DEFAULT_ORGANIZATION_ID_ENV = "DEFAULT_ORGANIZATION_ID"
 
 DEFAULT_APP_NAME = "SafetyMAIN API"
 DEFAULT_APP_VERSION = "0.1.0"
@@ -43,6 +48,28 @@ class AppSettings:
     jwt_access_token_ttl_seconds: int = DEFAULT_JWT_ACCESS_TOKEN_TTL_SECONDS
     jwt_refresh_token_ttl_seconds: int = DEFAULT_JWT_REFRESH_TOKEN_TTL_SECONDS
     jwt_issuer: str | None = DEFAULT_JWT_ISSUER
+    auth_enforcement: bool = False
+    default_organization_id: OrganizationId | None = None
+
+
+def _read_bool(raw_value: str, *, default: bool) -> bool:
+    normalized = raw_value.strip().lower()
+    if not normalized:
+        return default
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise ValueError("AUTH_ENFORCEMENT must be a boolean value.")
+
+
+def _read_optional_organization_id(raw_value: str | None) -> OrganizationId | None:
+    if raw_value is None:
+        return None
+    normalized = raw_value.strip()
+    if not normalized:
+        return None
+    return OrganizationId(value=UUID(normalized))
 
 
 def _read_positive_int(raw_value: str, *, default: int) -> int:
@@ -103,4 +130,11 @@ def load_settings(environment: Mapping[str, str] | None = None) -> AppSettings:
             default=DEFAULT_JWT_REFRESH_TOKEN_TTL_SECONDS,
         ),
         jwt_issuer=jwt_issuer,
+        auth_enforcement=_read_bool(
+            source.get(AUTH_ENFORCEMENT_ENV, "false"),
+            default=False,
+        ),
+        default_organization_id=_read_optional_organization_id(
+            source.get(DEFAULT_ORGANIZATION_ID_ENV)
+        ),
     )

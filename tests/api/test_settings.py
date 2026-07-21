@@ -18,6 +18,8 @@ def test_load_settings_defaults() -> None:
         jwt_access_token_ttl_seconds=3600,
         jwt_refresh_token_ttl_seconds=604800,
         jwt_issuer="safetymain",
+        auth_enforcement=False,
+        default_organization_id=None,
     )
 
 
@@ -51,3 +53,16 @@ def test_settings_do_not_require_database_url() -> None:
 def test_load_settings_rejects_non_positive_jwt_ttl() -> None:
     with pytest.raises(ValueError):
         load_settings(environment={"JWT_ACCESS_TOKEN_TTL_SECONDS": "0"})
+
+
+def test_load_settings_parses_auth_enforcement_and_default_organization() -> None:
+    org_id = "11111111-1111-1111-1111-111111111111"
+    settings = load_settings(
+        environment={
+            "AUTH_ENFORCEMENT": "true",
+            "DEFAULT_ORGANIZATION_ID": org_id,
+        }
+    )
+    assert settings.auth_enforcement is True
+    assert settings.default_organization_id is not None
+    assert str(settings.default_organization_id.value) == org_id

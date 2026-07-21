@@ -10,6 +10,7 @@ from backend.api.error_codes import (
     REQUEST_VALIDATION_MESSAGE,
 )
 from backend.core.application.exceptions.authentication import AuthenticationError
+from backend.core.application.exceptions.authorization import AuthorizationError
 from backend.core.domain.exceptions import SafetyMainDomainError
 
 
@@ -39,6 +40,8 @@ def test_required_task_error_codes_are_registered() -> None:
         "invalid_credentials",
         "invalid_refresh_token",
         "authentication_forbidden",
+        "organization_access_denied",
+        "organization_context_required",
         "knowledge_object_not_found",
         "duplicate_knowledge_object",
         "knowledge_object_version_conflict",
@@ -72,6 +75,27 @@ def test_authentication_exception_registry_is_complete() -> None:
         assert code in PUBLIC_ERROR_CODES
         assert APPLICATION_AUTHENTICATION_EXCEPTION_MESSAGES[exception_type]
         assert APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS[exception_type] >= 400
+
+
+def test_authorization_exception_registry_is_complete() -> None:
+    from backend.api.error_codes import (
+        APPLICATION_AUTHORIZATION_EXCEPTION_ERROR_CODES,
+        APPLICATION_AUTHORIZATION_EXCEPTION_HTTP_STATUS,
+        APPLICATION_AUTHORIZATION_EXCEPTION_MESSAGES,
+    )
+
+    assert set(APPLICATION_AUTHORIZATION_EXCEPTION_HTTP_STATUS) == set(
+        APPLICATION_AUTHORIZATION_EXCEPTION_ERROR_CODES
+    )
+    assert set(APPLICATION_AUTHORIZATION_EXCEPTION_HTTP_STATUS) == set(
+        APPLICATION_AUTHORIZATION_EXCEPTION_MESSAGES
+    )
+
+    for exception_type, code in APPLICATION_AUTHORIZATION_EXCEPTION_ERROR_CODES.items():
+        assert issubclass(exception_type, AuthorizationError)
+        assert code in PUBLIC_ERROR_CODES
+        assert APPLICATION_AUTHORIZATION_EXCEPTION_MESSAGES[exception_type]
+        assert APPLICATION_AUTHORIZATION_EXCEPTION_HTTP_STATUS[exception_type] >= 400
 
 
 def test_validation_message_is_stable() -> None:

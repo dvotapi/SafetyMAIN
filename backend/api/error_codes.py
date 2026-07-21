@@ -6,6 +6,11 @@ from backend.core.application.exceptions.authentication import (
     InvalidRefreshTokenError,
     UnauthenticatedError,
 )
+from backend.core.application.exceptions.authorization import (
+    MembershipRequiredError,
+    OrganizationAccessDeniedError,
+    OrganizationContextMismatchError,
+)
 from backend.core.domain.exceptions import (
     CrossOrganizationKnowledgeObjectRelation,
     DuplicateKnowledgeObject,
@@ -41,6 +46,8 @@ UNAUTHENTICATED = "unauthenticated"
 INVALID_CREDENTIALS = "invalid_credentials"
 INVALID_REFRESH_TOKEN = "invalid_refresh_token"
 AUTHENTICATION_FORBIDDEN = "authentication_forbidden"
+ORGANIZATION_ACCESS_DENIED = "organization_access_denied"
+ORGANIZATION_CONTEXT_REQUIRED = "organization_context_required"
 
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
@@ -64,6 +71,8 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         INVALID_CREDENTIALS,
         INVALID_REFRESH_TOKEN,
         AUTHENTICATION_FORBIDDEN,
+        ORGANIZATION_ACCESS_DENIED,
+        ORGANIZATION_CONTEXT_REQUIRED,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -135,4 +144,22 @@ APPLICATION_AUTHENTICATION_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     InvalidCredentialsError: "Invalid email or password.",
     InvalidRefreshTokenError: "The refresh token is invalid or expired.",
     AuthenticationForbiddenError: "The user account cannot authenticate.",
+}
+
+APPLICATION_AUTHORIZATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
+    OrganizationAccessDeniedError: 403,
+    MembershipRequiredError: 422,
+    OrganizationContextMismatchError: 422,
+}
+
+APPLICATION_AUTHORIZATION_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
+    OrganizationAccessDeniedError: ORGANIZATION_ACCESS_DENIED,
+    MembershipRequiredError: ORGANIZATION_CONTEXT_REQUIRED,
+    OrganizationContextMismatchError: ORGANIZATION_CONTEXT_REQUIRED,
+}
+
+APPLICATION_AUTHORIZATION_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
+    OrganizationAccessDeniedError: "Organization access was denied.",
+    MembershipRequiredError: "Organization membership context is required.",
+    OrganizationContextMismatchError: "Organization membership context is required.",
 }

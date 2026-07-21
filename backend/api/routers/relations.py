@@ -10,9 +10,10 @@ from backend.api.constants import API_V1_PREFIX
 from backend.api.dependencies import (
     get_create_knowledge_object_relation_handler,
     get_get_knowledge_object_relation_handler,
-    get_organization_id,
     get_remove_knowledge_object_relation_handler,
+    get_tenant_context,
 )
+from backend.api.security import TenantContext
 from backend.api.mappers.relations import to_relation_response
 from backend.api.openapi import (
     COMMON_ERROR_RESPONSES,
@@ -50,7 +51,6 @@ from backend.core.application.queries.get_knowledge_object_relation import (
 from backend.core.domain.value_objects import (
     KnowledgeObjectId,
     KnowledgeObjectRelationType,
-    OrganizationId,
 )
 
 router = APIRouter(prefix="/relations", tags=["Relations"])
@@ -76,7 +76,7 @@ def get_relation_id(relation_id: UUID) -> UUID:
 )
 def create_relation(
     request_body: CreateKnowledgeObjectRelationRequest,
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     handler: Annotated[
         CreateKnowledgeObjectRelationHandler,
         Depends(get_create_knowledge_object_relation_handler),
@@ -84,7 +84,7 @@ def create_relation(
 ) -> JSONResponse:
     relation = handler.handle(
         CreateKnowledgeObjectRelationCommand(
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
             source_object_id=KnowledgeObjectId(value=request_body.source_object_id),
             target_object_id=KnowledgeObjectId(value=request_body.target_object_id),
             relation_type=KnowledgeObjectRelationType(value=request_body.type),
@@ -114,7 +114,7 @@ def create_relation(
 )
 def get_relation(
     relation_id: Annotated[UUID, Depends(get_relation_id)],
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     handler: Annotated[
         GetKnowledgeObjectRelationHandler,
         Depends(get_get_knowledge_object_relation_handler),
@@ -122,7 +122,7 @@ def get_relation(
 ) -> KnowledgeObjectRelationResponse:
     relation = handler.handle(
         GetKnowledgeObjectRelationQuery(
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
             relation_id=relation_id,
         )
     )
@@ -141,7 +141,7 @@ def get_relation(
 )
 def delete_relation(
     relation_id: Annotated[UUID, Depends(get_relation_id)],
-    organization_id: Annotated[OrganizationId, Depends(get_organization_id)],
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     handler: Annotated[
         RemoveKnowledgeObjectRelationHandler,
         Depends(get_remove_knowledge_object_relation_handler),
@@ -149,7 +149,7 @@ def delete_relation(
 ) -> Response:
     handler.handle(
         RemoveKnowledgeObjectRelationCommand(
-            organization_id=organization_id,
+            organization_id=tenant_context.organization_id,
             relation_id=relation_id,
         )
     )
