@@ -1,0 +1,21 @@
+from __future__ import annotations
+
+from backend.core.domain.value_objects.permission import Permission, SystemPermission
+
+# Reusable permission policies mapped to the existing domain role-permission model.
+# Relation read/write/delete operations require relation:manage because P3-002
+# defines a single relation capability rather than granular relation permissions.
+# Knowledge object delete requires knowledge_object:write for the same reason.
+
+KNOWLEDGE_OBJECT_READ = Permission.from_system_permission(
+    SystemPermission.KNOWLEDGE_OBJECT_READ
+)
+KNOWLEDGE_OBJECT_WRITE = Permission.from_system_permission(
+    SystemPermission.KNOWLEDGE_OBJECT_WRITE
+)
+KNOWLEDGE_OBJECT_DELETE = Permission.from_system_permission(
+    SystemPermission.KNOWLEDGE_OBJECT_WRITE
+)
+RELATION_READ = Permission.from_system_permission(SystemPermission.RELATION_MANAGE)
+RELATION_WRITE = Permission.from_system_permission(SystemPermission.RELATION_MANAGE)
+RELATION_DELETE = Permission.from_system_permission(SystemPermission.RELATION_MANAGE)

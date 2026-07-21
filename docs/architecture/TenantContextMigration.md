@@ -109,5 +109,6 @@ in later tasks.
 
 ## 7. Next Step
 
-**P3-006 — Role-Based Authorization** will extend policy evaluation beyond active
-membership.
+RBAC was introduced in P3-006. See [RoleBasedAuthorization.md](RoleBasedAuthorization.md).
+
+**P3-007 — Security Architecture Review** is the next milestone.

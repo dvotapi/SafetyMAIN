@@ -13,7 +13,9 @@ from backend.core.application.context.security_context import SecurityContext
 from backend.core.application.exceptions.authorization import (
     MembershipRequiredError,
     OrganizationAccessDeniedError,
+    PermissionDeniedError,
 )
+from backend.core.domain.value_objects.permission import Permission, SystemPermission
 from backend.core.domain.entities.membership import Membership, MembershipStatus
 from backend.core.domain.value_objects import MembershipId, OrganizationId, Role, UserId
 from backend.core.infrastructure.auth.in_memory_membership_store import (
@@ -88,3 +90,60 @@ def test_organization_access_policy_uses_membership_verification_port() -> None:
         actor_user_id=user_id,
         organization_id=organization_id,
     )
+
+
+def test_authorization_service_allows_member_permission() -> None:
+    user_id = UserId(value=uuid4())
+    organization_id = OrganizationId(value=uuid4())
+    membership_store = InMemoryMembershipStore()
+    membership_store.register_membership(
+        Membership(
+            id=MembershipId(value=uuid4()),
+            user_id=user_id,
+            organization_id=organization_id,
+            status=MembershipStatus.ACTIVE,
+            role=Role.member(),
+            joined_at=datetime.now(UTC),
+        )
+    )
+    service = AuthorizationService(
+        membership_verification=membership_store,
+        membership_lookup=membership_store,
+    )
+
+    service.require_permission(
+        actor_user_id=user_id,
+        organization_id=organization_id,
+        permission=Permission.from_system_permission(SystemPermission.KNOWLEDGE_OBJECT_WRITE),
+    )
+
+
+def test_authorization_service_denies_auditor_write_permission() -> None:
+    user_id = UserId(value=uuid4())
+    organization_id = OrganizationId(value=uuid4())
+    membership_store = InMemoryMembershipStore()
+    membership_store.register_membership(
+        Membership(
+            id=MembershipId(value=uuid4()),
+            user_id=user_id,
+            organization_id=organization_id,
+            status=MembershipStatus.ACTIVE,
+            role=Role.auditor(),
+            joined_at=datetime.now(UTC),
+        )
+    )
+    service = AuthorizationService(
+        membership_verification=membership_store,
+        membership_lookup=membership_store,
+    )
+
+    with pytest.raises(PermissionDeniedError) as exc_info:
+        service.require_permission(
+            actor_user_id=user_id,
+            organization_id=organization_id,
+            permission=Permission.from_system_permission(
+                SystemPermission.KNOWLEDGE_OBJECT_WRITE
+            ),
+        )
+
+    assert exc_info.value.role == Role.auditor()

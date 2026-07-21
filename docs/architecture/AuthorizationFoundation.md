@@ -9,6 +9,7 @@ Related documents:
 - [AuthenticationArchitecture.md](AuthenticationArchitecture.md)
 - [IdentityDomain.md](IdentityDomain.md)
 - [AuthenticationAPI.md](../api/AuthenticationAPI.md)
+- [RoleBasedAuthorization.md](RoleBasedAuthorization.md)
 
 ---
 
@@ -72,12 +73,14 @@ HTTP concerns inside Application services.
 | Method | Responsibility |
 |--------|----------------|
 | `require_organization_access()` | Verify active membership for actor + organization |
+| `require_permission()` | Verify membership, then evaluate role permissions (P3-006) |
 | `authorize_security_context()` | Validate authenticated tenant context before handler work |
 
 Dependencies:
 
 - `AuthorizationPolicyPort` (default: `OrganizationAccessPolicy`)
 - `MembershipVerificationPort` (used by the default policy)
+- `PermissionPolicyPort` (default: `PermissionAccessPolicy`, P3-006)
 
 The service is wired in Bootstrap and exposed on `AppContainer.authorization_service`.
 
@@ -85,7 +88,7 @@ The service is wired in Bootstrap and exposed on `AppContainer.authorization_ser
 
 ## 5. Policies
 
-Initial policy scope (no RBAC):
+Organization access policy (P3-004):
 
 | Policy | Decision |
 |--------|----------|
@@ -93,7 +96,8 @@ Initial policy scope (no RBAC):
 | Active membership | `MembershipVerificationPort.is_active_member()` must be true |
 | Organization access | Raises `OrganizationAccessDeniedError` when membership is absent or inactive |
 
-Role- and permission-based policies are intentionally deferred.
+Role- and permission-based policies were added in P3-006. See
+[RoleBasedAuthorization.md](RoleBasedAuthorization.md).
 
 ---
 
@@ -104,6 +108,7 @@ Role- and permission-based policies are intentionally deferred.
 | `MembershipVerificationPort` | `contracts/membership_verification.py` | Active membership check |
 | `MembershipLookupPort` | `contracts/membership_lookup.py` | Resolve memberships for tenant selection |
 | `AuthorizationPolicyPort` | `contracts/authorization_policy.py` | Reusable authorization policy contract |
+| `PermissionPolicyPort` | `contracts/permission_policy.py` | Permission policy contract (P3-006) |
 
 `OrganizationMembershipVerificationPort` remains as a compatibility alias for
 `MembershipVerificationPort`.
@@ -115,6 +120,7 @@ Role- and permission-based policies are intentionally deferred.
 | Exception | HTTP | Public code |
 |-----------|------|-------------|
 | `OrganizationAccessDeniedError` | `403` | `organization_access_denied` |
+| `PermissionDeniedError` | `403` | `permission_denied` |
 | `MembershipRequiredError` | `422` | `organization_context_required` |
 
 Exceptions are mapped through the existing API error envelope. Cross-organization
@@ -134,14 +140,5 @@ deferred to a later persistence task.
 
 ## 9. Next Step
 
-**P3-005 — Tenant Context Migration** connected authenticated tenant resolution to
-business HTTP routes while preserving compatibility mode.
-
-See [TenantContextMigration.md](TenantContextMigration.md).
-
----
-
-## 9. Next Step
-
-**P3-006 — Role-Based Authorization** will extend policy evaluation beyond active
-membership.
+**P3-007 — Security Architecture Review** follows RBAC introduction in
+[RoleBasedAuthorization.md](RoleBasedAuthorization.md).

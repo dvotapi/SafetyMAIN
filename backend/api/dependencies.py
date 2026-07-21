@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from typing import Annotated
 from uuid import UUID
 
@@ -62,8 +62,42 @@ from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.contracts.token_service import TokenValidationError
 from backend.core.application.exceptions.authentication import UnauthenticatedError
 from backend.core.application.context.tenant_context import TenantContext
-from backend.core.domain.value_objects import KnowledgeObjectId, OrganizationId, UserId
+from backend.core.domain.value_objects import KnowledgeObjectId, OrganizationId, Permission, UserId
+from backend.core.domain.value_objects.permission import SystemPermission
 from backend.api.security import SecurityContext
+
+
+def require_permission(
+    permission: SystemPermission | Permission,
+) -> Callable[..., TenantContext]:
+    """Opt-in FastAPI dependency for role-based permission checks."""
+
+    required_permission = (
+        permission
+        if isinstance(permission, Permission)
+        else Permission.from_system_permission(permission)
+    )
+
+    def _dependency(
+        tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+        container: Annotated[AppContainer, Depends(get_container)],
+        settings: Annotated[AppSettings, Depends(get_settings)],
+    ) -> TenantContext:
+        if not settings.auth_enforcement:
+            return tenant_context
+
+        actor_user_id = tenant_context.actor_user_id
+        if actor_user_id is None:
+            raise UnauthenticatedError()
+
+        container.authorization_service.require_permission(
+            actor_user_id=actor_user_id,
+            organization_id=tenant_context.organization_id,
+            permission=required_permission,
+        )
+        return tenant_context
+
+    return _dependency
 
 
 def get_container(request: Request) -> AppContainer:

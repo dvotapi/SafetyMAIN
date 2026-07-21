@@ -10,6 +10,7 @@ from backend.core.application.exceptions.authorization import (
     MembershipRequiredError,
     OrganizationAccessDeniedError,
     OrganizationContextMismatchError,
+    PermissionDeniedError,
 )
 from backend.core.domain.exceptions import (
     CrossOrganizationKnowledgeObjectRelation,
@@ -47,6 +48,7 @@ INVALID_CREDENTIALS = "invalid_credentials"
 INVALID_REFRESH_TOKEN = "invalid_refresh_token"
 AUTHENTICATION_FORBIDDEN = "authentication_forbidden"
 ORGANIZATION_ACCESS_DENIED = "organization_access_denied"
+PERMISSION_DENIED = "permission_denied"
 ORGANIZATION_CONTEXT_REQUIRED = "organization_context_required"
 
 REQUEST_VALIDATION_ERROR = "request_validation_error"
@@ -72,6 +74,7 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         INVALID_REFRESH_TOKEN,
         AUTHENTICATION_FORBIDDEN,
         ORGANIZATION_ACCESS_DENIED,
+        PERMISSION_DENIED,
         ORGANIZATION_CONTEXT_REQUIRED,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
@@ -148,18 +151,21 @@ APPLICATION_AUTHENTICATION_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
 
 APPLICATION_AUTHORIZATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
     OrganizationAccessDeniedError: 403,
+    PermissionDeniedError: 403,
     MembershipRequiredError: 422,
     OrganizationContextMismatchError: 422,
 }
 
 APPLICATION_AUTHORIZATION_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
     OrganizationAccessDeniedError: ORGANIZATION_ACCESS_DENIED,
+    PermissionDeniedError: PERMISSION_DENIED,
     MembershipRequiredError: ORGANIZATION_CONTEXT_REQUIRED,
     OrganizationContextMismatchError: ORGANIZATION_CONTEXT_REQUIRED,
 }
 
 APPLICATION_AUTHORIZATION_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     OrganizationAccessDeniedError: "Organization access was denied.",
+    PermissionDeniedError: "Permission was denied.",
     MembershipRequiredError: "Organization membership context is required.",
     OrganizationContextMismatchError: "Organization membership context is required.",
 }

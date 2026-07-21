@@ -10,6 +10,7 @@ from backend.core.application.exceptions.authorization import (
     MembershipRequiredError,
     OrganizationAccessDeniedError,
     OrganizationContextMismatchError,
+    PermissionDeniedError,
 )
 
 __all__ = [
@@ -21,5 +22,6 @@ __all__ = [
     "MembershipRequiredError",
     "OrganizationAccessDeniedError",
     "OrganizationContextMismatchError",
+    "PermissionDeniedError",
     "UnauthenticatedError",
 ]

@@ -102,6 +102,7 @@ def create_container(
     )
     authorization_service = AuthorizationService(
         membership_verification=resolved_membership_store,
+        membership_lookup=resolved_membership_store,
     )
     tenant_context_resolver = TenantContextResolver(
         resolved_membership_store,

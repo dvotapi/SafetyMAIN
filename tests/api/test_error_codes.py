@@ -41,6 +41,7 @@ def test_required_task_error_codes_are_registered() -> None:
         "invalid_refresh_token",
         "authentication_forbidden",
         "organization_access_denied",
+        "permission_denied",
         "organization_context_required",
         "knowledge_object_not_found",
         "duplicate_knowledge_object",
