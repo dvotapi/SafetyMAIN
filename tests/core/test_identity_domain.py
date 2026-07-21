@@ -45,12 +45,14 @@ def test_membership_not_found_carries_user_and_organization_context() -> None:
 
 def test_membership_service_activates_invited_membership() -> None:
     service = MembershipService()
+    now = datetime.now(UTC)
     membership = Membership(
         id=MembershipId(value=uuid4()),
         user_id=UserId(value=uuid4()),
         organization_id=OrganizationId(value=uuid4()),
         status=MembershipStatus.INVITED,
         role=Role.member(),
+        updated_at=now,
     )
 
     activated = service.activate(membership)
@@ -61,13 +63,15 @@ def test_membership_service_activates_invited_membership() -> None:
 
 def test_membership_service_rejects_reactivating_revoked_membership() -> None:
     service = MembershipService()
+    now = datetime.now(UTC)
     membership = Membership(
         id=MembershipId(value=uuid4()),
         user_id=UserId(value=uuid4()),
         organization_id=OrganizationId(value=uuid4()),
         status=MembershipStatus.REVOKED,
         role=Role.member(),
-        revoked_at=datetime.now(UTC),
+        updated_at=now,
+        revoked_at=now,
     )
 
     with pytest.raises(CannotActivateRevokedMembership):
@@ -76,13 +80,15 @@ def test_membership_service_rejects_reactivating_revoked_membership() -> None:
 
 def test_membership_service_revoke_is_idempotent_guarded() -> None:
     service = MembershipService()
+    now = datetime.now(UTC)
     membership = Membership(
         id=MembershipId(value=uuid4()),
         user_id=UserId(value=uuid4()),
         organization_id=OrganizationId(value=uuid4()),
         status=MembershipStatus.REVOKED,
         role=Role.member(),
-        revoked_at=datetime.now(UTC),
+        updated_at=now,
+        revoked_at=now,
     )
 
     with pytest.raises(MembershipAlreadyRevoked):
@@ -97,6 +103,7 @@ def test_membership_service_raises_when_access_is_not_granted() -> None:
         organization_id=OrganizationId(value=uuid4()),
         status=MembershipStatus.INVITED,
         role=Role.member(),
+        updated_at=datetime.now(UTC),
     )
 
     with pytest.raises(InactiveMembership):
@@ -112,6 +119,7 @@ def test_membership_service_rejects_double_activation() -> None:
         status=MembershipStatus.ACTIVE,
         role=Role.member(),
         joined_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
 
     with pytest.raises(MembershipAlreadyActive):

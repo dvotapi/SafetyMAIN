@@ -238,6 +238,7 @@ def test_security_matrix_conflicting_token_and_header_organizations(
             status=MembershipStatus.ACTIVE,
             role=Role.member(),
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     token_with_org = container.token_service.issue_tokens(
@@ -274,6 +275,7 @@ def test_security_matrix_sole_active_membership_fallback() -> None:
             status=MembershipStatus.ACTIVE,
             role=Role.member(),
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     resolver = TenantContextResolver(membership_store)
@@ -299,6 +301,7 @@ def test_security_matrix_multiple_active_memberships_require_explicit_selection(
                 status=MembershipStatus.ACTIVE,
                 role=Role.member(),
                 joined_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
         )
     resolver = TenantContextResolver(membership_store)
@@ -490,6 +493,7 @@ def test_security_matrix_cross_organization_knowledge_object_masked_with_auth(
             status=MembershipStatus.ACTIVE,
             role=Role.member(),
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
 

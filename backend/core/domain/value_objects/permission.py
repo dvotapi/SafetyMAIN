@@ -11,6 +11,8 @@ class SystemPermission(str, Enum):
     KNOWLEDGE_OBJECT_WRITE = "knowledge_object:write"
     RELATION_MANAGE = "relation:manage"
     MEMBERSHIP_MANAGE = "membership:manage"
+    MEMBERSHIP_READ = "membership:read"
+    MEMBERSHIP_WRITE = "membership:write"
     ORGANIZATION_ADMIN = "organization:admin"
     ORGANIZATION_READ = "organization:read"
     ORGANIZATION_WRITE = "organization:write"

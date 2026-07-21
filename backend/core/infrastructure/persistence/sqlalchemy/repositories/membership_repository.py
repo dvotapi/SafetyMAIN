@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.core.domain.entities.membership import Membership
-from backend.core.domain.exceptions import MembershipNotFound
+from backend.core.domain.exceptions import MembershipByIdNotFound, MembershipNotFound
 from backend.core.domain.repositories import MembershipRepositoryContract
 from backend.core.domain.value_objects import MembershipId, OrganizationId, UserId
+from backend.core.domain.value_objects.membership_list_criteria import (
+    MembershipListCriteria,
+    MembershipListResult,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.mappers.membership_mapper import (
     apply_to_model,
     to_domain,
@@ -27,10 +31,7 @@ class SQLAlchemyMembershipRepository(MembershipRepositoryContract):
     def get(self, membership_id: MembershipId) -> Membership:
         model = self._session.get(MembershipModel, membership_id.value)
         if model is None:
-            raise MembershipNotFound(
-                user_id=UserId(value=membership_id.value),
-                organization_id=OrganizationId(value=membership_id.value),
-            )
+            raise MembershipByIdNotFound(membership_id)
         return to_domain(model)
 
     def get_by_user_and_organization(
@@ -66,6 +67,44 @@ class SQLAlchemyMembershipRepository(MembershipRepositoryContract):
         )
         models = self._session.scalars(statement).all()
         return tuple(to_domain(model) for model in models)
+
+    def list_memberships(self, criteria: MembershipListCriteria) -> MembershipListResult:
+        filters: list[object] = [
+            MembershipModel.organization_id == criteria.organization_id.value
+        ]
+        if criteria.user_id is not None:
+            filters.append(MembershipModel.user_id == criteria.user_id.value)
+        if criteria.role is not None:
+            filters.append(MembershipModel.role == criteria.role.value)
+        if criteria.is_active is not None:
+            filters.append(MembershipModel.is_active == criteria.is_active)
+
+        count_statement = select(func.count()).select_from(MembershipModel).where(*filters)
+        total = int(self._session.scalar(count_statement) or 0)
+
+        statement = select(MembershipModel).where(*filters)
+        if criteria.sort_ascending:
+            order_clause = (
+                MembershipModel.created_at.asc(),
+                MembershipModel.id.asc(),
+            )
+        else:
+            order_clause = (
+                MembershipModel.created_at.desc(),
+                MembershipModel.id.asc(),
+            )
+        models = self._session.scalars(
+            statement.order_by(*order_clause)
+            .offset(criteria.offset)
+            .limit(criteria.limit)
+        ).all()
+
+        return MembershipListResult(
+            items=tuple(to_domain(model) for model in models),
+            total=total,
+            offset=criteria.offset,
+            limit=criteria.limit,
+        )
 
     def save(self, membership: Membership) -> None:
         model = self._session.get(MembershipModel, membership.id.value)

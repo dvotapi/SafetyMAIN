@@ -35,6 +35,7 @@ def test_authorization_service_allows_active_member() -> None:
             status=MembershipStatus.ACTIVE,
             role=Role.member(),
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     service = AuthorizationService(membership_verification=membership_store)
@@ -104,6 +105,7 @@ def test_authorization_service_allows_member_permission() -> None:
             status=MembershipStatus.ACTIVE,
             role=Role.member(),
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     service = AuthorizationService(
@@ -130,6 +132,7 @@ def test_authorization_service_denies_auditor_write_permission() -> None:
             status=MembershipStatus.ACTIVE,
             role=Role.auditor(),
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     service = AuthorizationService(

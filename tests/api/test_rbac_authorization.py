@@ -77,6 +77,7 @@ def _build_permission_protected_client(
             status=MembershipStatus.ACTIVE,
             role=role,
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     authenticate_handler = AuthenticateUserHandler(

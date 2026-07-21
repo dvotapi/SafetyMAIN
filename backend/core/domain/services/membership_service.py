@@ -23,6 +23,7 @@ class MembershipService:
             update={
                 "status": MembershipStatus.ACTIVE,
                 "joined_at": membership.joined_at or datetime.now(UTC),
+                "updated_at": datetime.now(UTC),
             }
         )
 
@@ -34,6 +35,7 @@ class MembershipService:
             update={
                 "status": MembershipStatus.REVOKED,
                 "revoked_at": datetime.now(UTC),
+                "updated_at": datetime.now(UTC),
             }
         )
 

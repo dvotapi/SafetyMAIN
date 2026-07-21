@@ -74,11 +74,22 @@ from backend.core.application.handlers.organization_lifecycle import (
     ActivateOrganizationHandler,
     DeactivateOrganizationHandler,
 )
+from backend.core.application.handlers.create_membership import CreateMembershipHandler
+from backend.core.application.handlers.get_membership import GetMembershipHandler
+from backend.core.application.handlers.list_memberships import ListMembershipsHandler
+from backend.core.application.handlers.update_membership_role import UpdateMembershipRoleHandler
+from backend.core.application.handlers.membership_lifecycle import (
+    ActivateMembershipHandler,
+    DeactivateMembershipHandler,
+)
+from backend.core.application.policies.membership_administration import (
+    MembershipAuthorizationContext,
+)
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.contracts.token_service import TokenValidationError
 from backend.core.application.exceptions.authentication import UnauthenticatedError
 from backend.core.application.context.tenant_context import TenantContext
-from backend.core.domain.value_objects import KnowledgeObjectId, OrganizationId, Permission, UserId
+from backend.core.domain.value_objects import KnowledgeObjectId, MembershipId, OrganizationId, Permission, UserId
 from backend.core.domain.value_objects.permission import SystemPermission
 from backend.api.security import SecurityContext
 
@@ -334,6 +345,75 @@ def get_deactivate_organization_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
 ) -> DeactivateOrganizationHandler:
     return DeactivateOrganizationHandler(uow)
+
+
+def get_membership_id(
+    membership_id: Annotated[UUID, Path()],
+) -> MembershipId:
+    try:
+        return MembershipId(value=membership_id)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
+def get_membership_authorization_context(
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> MembershipAuthorizationContext:
+    actor_user_id = tenant_context.actor_user_id
+    if actor_user_id is None:
+        raise UnauthenticatedError()
+
+    auth_membership = uow.memberships.get_by_user_and_organization(
+        actor_user_id,
+        tenant_context.organization_id,
+    )
+    if auth_membership is None:
+        from backend.core.application.exceptions.authorization import MembershipRequiredError
+
+        raise MembershipRequiredError()
+
+    return MembershipAuthorizationContext(
+        actor_user_id=actor_user_id,
+        authorization_organization_id=tenant_context.organization_id,
+        authorization_membership_id=auth_membership.id,
+    )
+
+
+def get_create_membership_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> CreateMembershipHandler:
+    return CreateMembershipHandler(uow)
+
+
+def get_get_membership_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> GetMembershipHandler:
+    return GetMembershipHandler(uow)
+
+
+def get_list_memberships_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ListMembershipsHandler:
+    return ListMembershipsHandler(uow)
+
+
+def get_update_membership_role_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> UpdateMembershipRoleHandler:
+    return UpdateMembershipRoleHandler(uow)
+
+
+def get_activate_membership_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ActivateMembershipHandler:
+    return ActivateMembershipHandler(uow)
+
+
+def get_deactivate_membership_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> DeactivateMembershipHandler:
+    return DeactivateMembershipHandler(uow)
 
 
 def get_create_knowledge_object_handler(

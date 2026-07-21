@@ -83,6 +83,7 @@ def test_active_membership_grants_organization_access() -> None:
         status=MembershipStatus.ACTIVE,
         role=Role.member(),
         joined_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
 
     assert membership.grants_organization_access() is True
@@ -95,6 +96,7 @@ def test_invited_membership_does_not_grant_organization_access() -> None:
         organization_id=OrganizationId(value=uuid4()),
         status=MembershipStatus.INVITED,
         role=Role.member(),
+        updated_at=datetime.now(UTC),
     )
 
     assert membership.grants_organization_access() is False

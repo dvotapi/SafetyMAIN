@@ -110,6 +110,7 @@ def build_enforced_client(
             status=membership_status,
             role=role,
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     authenticate_handler = AuthenticateUserHandler(

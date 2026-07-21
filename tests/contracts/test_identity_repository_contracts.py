@@ -125,6 +125,34 @@ class MembershipRepositoryContractSuite:
         ) == membership
         assert repository.list_by_user(membership.user_id) == (membership,)
 
+    def test_list_memberships_supports_filtering(
+        self,
+        repository: MembershipRepositoryContract,
+    ) -> None:
+        from backend.core.domain.value_objects.membership_list_criteria import (
+            MembershipListCriteria,
+        )
+
+        organization_id = OrganizationId(value=uuid4())
+        active_membership = _create_membership(organization_id=organization_id)
+        inactive_membership = _create_membership(organization_id=organization_id).model_copy(
+            update={"status": MembershipStatus.REVOKED}
+        )
+        repository.add(active_membership)
+        repository.add(inactive_membership)
+
+        result = repository.list_memberships(
+            MembershipListCriteria(
+                organization_id=organization_id,
+                offset=0,
+                limit=10,
+                is_active=True,
+            )
+        )
+
+        assert result.total == 1
+        assert result.items[0].id == active_membership.id
+
 
 def _create_user() -> User:
     now = datetime.now(UTC)
@@ -149,14 +177,19 @@ def _create_organization(*, name: str = "SafetyMAIN Development Organization") -
     )
 
 
-def _create_membership() -> Membership:
+def _create_membership(
+    *,
+    organization_id: OrganizationId | None = None,
+) -> Membership:
+    now = datetime.now(UTC)
     return Membership(
         id=MembershipId(value=uuid4()),
         user_id=UserId(value=uuid4()),
-        organization_id=OrganizationId(value=uuid4()),
+        organization_id=organization_id or OrganizationId(value=uuid4()),
         status=MembershipStatus.ACTIVE,
         role=Role.member(),
-        joined_at=datetime.now(UTC),
+        joined_at=now,
+        updated_at=now,
     )
 
 

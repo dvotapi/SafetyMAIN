@@ -18,14 +18,14 @@ def to_model(membership: Membership) -> MembershipModel:
         role=membership.role.value,
         is_active=membership.is_active(),
         created_at=membership.joined_at or now,
-        updated_at=membership.revoked_at or now,
+        updated_at=membership.updated_at,
     )
 
 
 def apply_to_model(model: MembershipModel, membership: Membership) -> None:
     model.role = membership.role.value
     model.is_active = membership.is_active()
-    model.updated_at = membership.revoked_at or datetime.now(UTC)
+    model.updated_at = membership.updated_at
 
 
 def to_domain(model: MembershipModel) -> Membership:
@@ -37,5 +37,6 @@ def to_domain(model: MembershipModel) -> Membership:
         status=status,
         role=Role(value=model.role),
         joined_at=model.created_at,
+        updated_at=model.updated_at,
         revoked_at=None if model.is_active else model.updated_at,
     )

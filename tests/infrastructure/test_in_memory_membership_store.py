@@ -21,6 +21,7 @@ def test_in_memory_membership_store_tracks_active_membership() -> None:
         status=MembershipStatus.ACTIVE,
         role=Role.member(),
         joined_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
 
     store.register_membership(membership)
@@ -41,6 +42,7 @@ def test_in_memory_membership_store_rejects_invited_membership() -> None:
             organization_id=organization_id,
             status=MembershipStatus.INVITED,
             role=Role.member(),
+            updated_at=datetime.now(UTC),
         )
     )
 

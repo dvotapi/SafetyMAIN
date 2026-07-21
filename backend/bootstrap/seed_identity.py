@@ -106,5 +106,6 @@ def seed_development_identity(
                 status=MembershipStatus.ACTIVE,
                 role=role,
                 joined_at=now,
+                updated_at=now,
             )
         )

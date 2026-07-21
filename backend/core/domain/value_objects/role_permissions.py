@@ -16,6 +16,7 @@ SYSTEM_ROLE_PERMISSIONS: dict[SystemRole, frozenset[SystemPermission]] = {
         {
             SystemPermission.KNOWLEDGE_OBJECT_READ,
             SystemPermission.ORGANIZATION_READ,
+            SystemPermission.MEMBERSHIP_READ,
             SystemPermission.USER_READ,
         }
     ),

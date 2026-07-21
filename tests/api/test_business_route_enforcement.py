@@ -82,6 +82,7 @@ def _register_user_with_role_in_org(
             status=MembershipStatus.ACTIVE,
             role=role,
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     authenticate_handler = AuthenticateUserHandler(
@@ -316,6 +317,7 @@ def test_cross_organization_knowledge_object_masked_after_authorization(
             status=MembershipStatus.ACTIVE,
             role=Role.admin(),
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     created = create_object(

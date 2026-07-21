@@ -18,10 +18,18 @@ from backend.core.domain.exceptions import (
     DuplicateKnowledgeObjectRelation,
     DuplicateUserEmail,
     CurrentOrganizationDeactivationError,
+    DuplicateMembership,
     DuplicateOrganizationName,
+    InvalidMembershipRole,
+    LastOrganizationAdministratorError,
+    MembershipAlreadyActive,
+    MembershipAlreadyInactive,
+    MembershipByIdNotFound,
     OrganizationAlreadyActive,
     OrganizationAlreadyInactive,
     OrganizationNotFound,
+    SelfMembershipDeactivationError,
+    SelfMembershipRoleDowngradeError,
     InvalidKnowledgeObjectStateTransition,
     KnowledgeObjectAlreadyActive,
     KnowledgeObjectAlreadyArchived,
@@ -71,6 +79,15 @@ ORGANIZATION_ALREADY_ACTIVE = "organization_already_active"
 ORGANIZATION_ALREADY_INACTIVE = "organization_already_inactive"
 CURRENT_ORGANIZATION_DEACTIVATION = "current_organization_deactivation"
 
+MEMBERSHIP_NOT_FOUND = "membership_not_found"
+DUPLICATE_MEMBERSHIP = "duplicate_membership"
+MEMBERSHIP_ALREADY_ACTIVE = "membership_already_active"
+MEMBERSHIP_ALREADY_INACTIVE = "membership_already_inactive"
+SELF_MEMBERSHIP_DEACTIVATION = "self_membership_deactivation"
+SELF_MEMBERSHIP_ROLE_DOWNGRADE = "self_membership_role_downgrade"
+LAST_ORGANIZATION_ADMINISTRATOR = "last_organization_administrator"
+INVALID_MEMBERSHIP_ROLE = "invalid_membership_role"
+
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
 SERVICE_NOT_READY = "service_not_ready"
@@ -105,6 +122,14 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         ORGANIZATION_ALREADY_ACTIVE,
         ORGANIZATION_ALREADY_INACTIVE,
         CURRENT_ORGANIZATION_DEACTIVATION,
+        MEMBERSHIP_NOT_FOUND,
+        DUPLICATE_MEMBERSHIP,
+        MEMBERSHIP_ALREADY_ACTIVE,
+        MEMBERSHIP_ALREADY_INACTIVE,
+        SELF_MEMBERSHIP_DEACTIVATION,
+        SELF_MEMBERSHIP_ROLE_DOWNGRADE,
+        LAST_ORGANIZATION_ADMINISTRATOR,
+        INVALID_MEMBERSHIP_ROLE,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -132,6 +157,14 @@ DOMAIN_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
     OrganizationAlreadyActive: 409,
     OrganizationAlreadyInactive: 409,
     CurrentOrganizationDeactivationError: 409,
+    MembershipByIdNotFound: 404,
+    DuplicateMembership: 409,
+    MembershipAlreadyActive: 409,
+    MembershipAlreadyInactive: 409,
+    SelfMembershipDeactivationError: 409,
+    SelfMembershipRoleDowngradeError: 409,
+    LastOrganizationAdministratorError: 409,
+    InvalidMembershipRole: 422,
 }
 
 DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
@@ -155,6 +188,14 @@ DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
     OrganizationAlreadyActive: ORGANIZATION_ALREADY_ACTIVE,
     OrganizationAlreadyInactive: ORGANIZATION_ALREADY_INACTIVE,
     CurrentOrganizationDeactivationError: CURRENT_ORGANIZATION_DEACTIVATION,
+    MembershipByIdNotFound: MEMBERSHIP_NOT_FOUND,
+    DuplicateMembership: DUPLICATE_MEMBERSHIP,
+    MembershipAlreadyActive: MEMBERSHIP_ALREADY_ACTIVE,
+    MembershipAlreadyInactive: MEMBERSHIP_ALREADY_INACTIVE,
+    SelfMembershipDeactivationError: SELF_MEMBERSHIP_DEACTIVATION,
+    SelfMembershipRoleDowngradeError: SELF_MEMBERSHIP_ROLE_DOWNGRADE,
+    LastOrganizationAdministratorError: LAST_ORGANIZATION_ADMINISTRATOR,
+    InvalidMembershipRole: INVALID_MEMBERSHIP_ROLE,
 }
 
 DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
@@ -184,6 +225,20 @@ DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     CurrentOrganizationDeactivationError: (
         "The current authorization organization cannot be deactivated."
     ),
+    MembershipByIdNotFound: "Organization membership was not found.",
+    DuplicateMembership: "Organization membership already exists.",
+    MembershipAlreadyActive: "Organization membership is already active.",
+    MembershipAlreadyInactive: "Organization membership is already inactive.",
+    SelfMembershipDeactivationError: (
+        "The current authorization membership cannot be deactivated."
+    ),
+    SelfMembershipRoleDowngradeError: (
+        "The current authorization membership role cannot be downgraded."
+    ),
+    LastOrganizationAdministratorError: (
+        "Organization must retain at least one active administrator."
+    ),
+    InvalidMembershipRole: "Membership role is invalid.",
 }
 
 APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {

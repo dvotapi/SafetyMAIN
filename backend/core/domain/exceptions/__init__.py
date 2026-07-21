@@ -1,11 +1,18 @@
 from backend.core.domain.exceptions.base import SafetyMainDomainError
 from backend.core.domain.exceptions.membership import (
     CannotActivateRevokedMembership,
+    DuplicateMembership,
     InactiveMembership,
+    InvalidMembershipRole,
+    LastOrganizationAdministratorError,
     MembershipAlreadyActive,
+    MembershipAlreadyInactive,
     MembershipAlreadyRevoked,
+    MembershipByIdNotFound,
     MembershipError,
     MembershipNotFound,
+    SelfMembershipDeactivationError,
+    SelfMembershipRoleDowngradeError,
 )
 from backend.core.domain.exceptions.organization import (
     CurrentOrganizationDeactivationError,
@@ -47,7 +54,10 @@ __all__ = [
     "DuplicateKnowledgeObjectRelation",
     "DuplicateKnowledgeObjectRelation",
     "DuplicateUserEmail",
+    "DuplicateMembership",
     "InactiveMembership",
+    "InvalidMembershipRole",
+    "LastOrganizationAdministratorError",
     "InvalidKnowledgeObjectStateTransition",
     "KnowledgeObjectAlreadyActive",
     "KnowledgeObjectAlreadyArchived",
@@ -58,7 +68,9 @@ __all__ = [
     "KnowledgeObjectRelationNotFound",
     "KnowledgeObjectVersionConflict",
     "MembershipAlreadyActive",
+    "MembershipAlreadyInactive",
     "MembershipAlreadyRevoked",
+    "MembershipByIdNotFound",
     "MembershipError",
     "MembershipNotFound",
     "CurrentOrganizationDeactivationError",
@@ -72,5 +84,7 @@ __all__ = [
     "UserAlreadyDeactivated",
     "UserError",
     "UserNotFound",
+    "SelfMembershipDeactivationError",
+    "SelfMembershipRoleDowngradeError",
     "SelfReferencingKnowledgeObjectRelation",
 ]

@@ -113,6 +113,8 @@ defines reusable policy constants:
 | `USER_WRITE` | `user:write` |
 | `ORGANIZATION_READ` | `organization:read` |
 | `ORGANIZATION_WRITE` | `organization:write` |
+| `MEMBERSHIP_READ` | `membership:read` |
+| `MEMBERSHIP_WRITE` | `membership:write` |
 
 Admin user API permissions (P5-001):
 
@@ -126,6 +128,14 @@ Admin organization API permissions (P5-002):
 
 | Role | `organization:read` | `organization:write` |
 |------|---------------------|----------------------|
+| admin | yes | yes |
+| member | no | no |
+| auditor | yes | no |
+
+Admin membership API permissions (P5-003):
+
+| Role | `membership:read` | `membership:write` |
+|------|-------------------|---------------------|
 | admin | yes | yes |
 | member | no | no |
 | auditor | yes | no |
@@ -196,10 +206,11 @@ membership.
 | P3-007 | Security architecture review |
 | P4-002 | Business route enforcement |
 | P5-001 | User Management API |
-| P5-002 | Organization Management API (this rollout) |
+| P5-002 | Organization Management API |
+| P5-003 | Membership Management API (this rollout) |
 
-See [UserManagement.md](UserManagement.md) and
-[OrganizationManagement.md](OrganizationManagement.md) for administrative endpoints.
+See [UserManagement.md](UserManagement.md), [OrganizationManagement.md](OrganizationManagement.md),
+and [MembershipManagement.md](MembershipManagement.md).
 
 ---
 

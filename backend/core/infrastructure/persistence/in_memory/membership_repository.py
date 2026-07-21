@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from backend.core.domain.entities.membership import Membership
-from backend.core.domain.exceptions import MembershipNotFound
+from backend.core.domain.exceptions import MembershipByIdNotFound, MembershipNotFound
 from backend.core.domain.repositories import MembershipRepositoryContract
 from backend.core.domain.value_objects import MembershipId, OrganizationId, UserId
+from backend.core.domain.value_objects.membership_list_criteria import (
+    MembershipListCriteria,
+    MembershipListResult,
+)
 
 
 class InMemoryMembershipRepository(MembershipRepositoryContract):
@@ -22,10 +26,7 @@ class InMemoryMembershipRepository(MembershipRepositoryContract):
     def get(self, membership_id: MembershipId) -> Membership:
         membership = self._memberships_by_id.get(membership_id)
         if membership is None:
-            raise MembershipNotFound(
-                user_id=UserId(value=membership_id.value),
-                organization_id=OrganizationId(value=membership_id.value),
-            )
+            raise MembershipByIdNotFound(membership_id)
         return membership
 
     def get_by_user_and_organization(
@@ -50,6 +51,47 @@ class InMemoryMembershipRepository(MembershipRepositoryContract):
             membership
             for membership in self._memberships_by_id.values()
             if membership.organization_id == organization_id
+        )
+
+    def list_memberships(self, criteria: MembershipListCriteria) -> MembershipListResult:
+        memberships = [
+            membership
+            for membership in self._memberships_by_id.values()
+            if membership.organization_id == criteria.organization_id
+        ]
+
+        if criteria.user_id is not None:
+            memberships = [
+                membership
+                for membership in memberships
+                if membership.user_id == criteria.user_id
+            ]
+        if criteria.role is not None:
+            memberships = [
+                membership
+                for membership in memberships
+                if membership.role.value == criteria.role.value
+            ]
+        if criteria.is_active is not None:
+            memberships = [
+                membership
+                for membership in memberships
+                if membership.is_active() == criteria.is_active
+            ]
+
+        memberships.sort(key=lambda membership: membership.id.value)
+        memberships.sort(
+            key=lambda membership: membership.joined_at or membership.updated_at,
+            reverse=not criteria.sort_ascending,
+        )
+        total = len(memberships)
+        page = memberships[criteria.offset : criteria.offset + criteria.limit]
+
+        return MembershipListResult(
+            items=tuple(page),
+            total=total,
+            offset=criteria.offset,
+            limit=criteria.limit,
         )
 
     def save(self, membership: Membership) -> None:

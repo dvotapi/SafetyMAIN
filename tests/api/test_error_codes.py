@@ -62,6 +62,14 @@ def test_required_task_error_codes_are_registered() -> None:
         "organization_already_active",
         "organization_already_inactive",
         "current_organization_deactivation",
+        "membership_not_found",
+        "duplicate_membership",
+        "membership_already_active",
+        "membership_already_inactive",
+        "self_membership_deactivation",
+        "self_membership_role_downgrade",
+        "last_organization_administrator",
+        "invalid_membership_role",
     }
     assert required_codes.issubset(PUBLIC_ERROR_CODES)
 

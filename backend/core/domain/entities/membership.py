@@ -23,6 +23,7 @@ class Membership(BaseModel):
     status: MembershipStatus
     role: Role
     joined_at: datetime | None = Field(default=None, frozen=True)
+    updated_at: datetime
     revoked_at: datetime | None = None
 
     def is_active(self) -> bool:

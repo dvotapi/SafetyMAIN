@@ -53,6 +53,7 @@ def test_permission_evaluator_allows_member_write_permission() -> None:
             status=MembershipStatus.ACTIVE,
             role=Role.member(),
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     evaluator = PermissionEvaluator(membership_store)
@@ -76,6 +77,7 @@ def test_permission_evaluator_denies_auditor_write_permission() -> None:
             status=MembershipStatus.ACTIVE,
             role=Role.auditor(),
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     evaluator = PermissionEvaluator(membership_store)
@@ -105,6 +107,7 @@ def test_permission_evaluator_denies_unknown_role() -> None:
             status=MembershipStatus.ACTIVE,
             role=Role(value="custom-role"),
             joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     evaluator = PermissionEvaluator(membership_store)

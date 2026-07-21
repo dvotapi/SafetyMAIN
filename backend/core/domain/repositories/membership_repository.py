@@ -4,6 +4,10 @@ from typing import Protocol, Sequence
 
 from backend.core.domain.entities.membership import Membership
 from backend.core.domain.value_objects import MembershipId, OrganizationId, UserId
+from backend.core.domain.value_objects.membership_list_criteria import (
+    MembershipListCriteria,
+    MembershipListResult,
+)
 
 
 class MembershipRepositoryContract(Protocol):
@@ -29,6 +33,9 @@ class MembershipRepositoryContract(Protocol):
         self,
         organization_id: OrganizationId,
     ) -> Sequence[Membership]:
+        ...
+
+    def list_memberships(self, criteria: MembershipListCriteria) -> MembershipListResult:
         ...
 
     def save(self, membership: Membership) -> None:
