@@ -1,8 +1,12 @@
 # Architecture Review v2
 
 Status: Active  
-Date: 2026-07-20  
+Date: 2026-07-20 (pre-authentication)  
 Task: TASK-P2-005
+
+> **Note:** Phase P3 security review completed in
+> [SecurityArchitectureReview.md](SecurityArchitectureReview.md) (2026-07-21).
+> This document remains the pre-authentication architecture gate record.
 
 ---
 

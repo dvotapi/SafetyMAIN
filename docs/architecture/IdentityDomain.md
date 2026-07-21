@@ -60,8 +60,8 @@ System permissions include `knowledge_object:read`, `knowledge_object:write`,
 `relation:manage`, `membership:manage`, and `organization:admin`.
 
 Role-to-permission mapping lives in
-`domain/value_objects/role_permissions.py`. Permission evaluation is deferred to
-future authorization tasks.
+`domain/value_objects/role_permissions.py`. Permission evaluation is implemented
+in Application services — see [RoleBasedAuthorization.md](RoleBasedAuthorization.md).
 
 ### 3.2 Entities
 

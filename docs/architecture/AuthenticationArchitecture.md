@@ -567,7 +567,8 @@ use cases.
 | **P3-004** | Authorization Foundation — membership verification and policies |
 | **P3-005** | Tenant Context Migration — authenticated business API integration |
 | **P3-006** | Role-Based Authorization — roles and permission evaluation |
-| **P3-007** | OIDC / enterprise IdP adapter (optional track) |
+| **P3-007** | Security Architecture Review — see [SecurityArchitectureReview.md](SecurityArchitectureReview.md) |
+| **Future** | OIDC / enterprise IdP adapter (optional track) |
 
 Each task must include architecture test updates and contract tests before behavior
 is enabled by default.

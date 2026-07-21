@@ -142,3 +142,6 @@ deferred to a later persistence task.
 
 **P3-007 — Security Architecture Review** follows RBAC introduction in
 [RoleBasedAuthorization.md](RoleBasedAuthorization.md).
+
+See [SecurityArchitectureReview.md](SecurityArchitectureReview.md) for the Phase P3
+readiness decision.

@@ -66,3 +66,8 @@ def test_load_settings_parses_auth_enforcement_and_default_organization() -> Non
     assert settings.auth_enforcement is True
     assert settings.default_organization_id is not None
     assert str(settings.default_organization_id.value) == org_id
+
+
+def test_load_settings_rejects_invalid_auth_enforcement_value() -> None:
+    with pytest.raises(ValueError, match="AUTH_ENFORCEMENT"):
+        load_settings(environment={"AUTH_ENFORCEMENT": "maybe"})

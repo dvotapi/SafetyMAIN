@@ -187,3 +187,12 @@ This milestone does not:
 - add attribute-based access control;
 - add audit logging;
 - enforce permissions on existing handlers automatically.
+
+---
+
+## 11. Phase P3 Review
+
+Security architecture review completed in
+[SecurityArchitectureReview.md](SecurityArchitectureReview.md).
+
+**Decision: `READY WITH CONDITIONS`**

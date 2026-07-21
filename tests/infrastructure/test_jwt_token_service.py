@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from uuid import uuid4
 
+import jwt
 import pytest
 
 from backend.core.contracts.token_service import TokenValidationError
@@ -60,3 +62,24 @@ def test_jwt_token_service_exposes_optional_organization_claim(
 
     assert claims.user_id == user_id
     assert claims.organization_id == organization_id
+
+
+def test_jwt_token_service_rejects_invalid_issuer(token_service: JwtTokenService) -> None:
+    user_id = UserId(value=uuid4())
+    now = datetime.now(UTC)
+    payload = {
+        "sub": str(user_id.value),
+        "typ": "access",
+        "jti": str(uuid4()),
+        "iat": int(now.timestamp()),
+        "exp": int(now.timestamp()) + 3600,
+        "iss": "wrong-issuer",
+    }
+    token = jwt.encode(
+        payload,
+        "test-secret-key-with-sufficient-length",
+        algorithm="HS256",
+    )
+
+    with pytest.raises(TokenValidationError):
+        token_service.validate_access_token(token)

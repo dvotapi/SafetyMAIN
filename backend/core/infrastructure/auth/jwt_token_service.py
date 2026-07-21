@@ -97,12 +97,19 @@ class JwtTokenService:
         *,
         expected_type: str,
     ) -> tuple[UserId, OrganizationId | None]:
+        decode_options: dict[str, object] = {"require": ["exp", "sub", "typ"]}
+        decode_kwargs: dict[str, object] = {
+            "algorithms": [self._algorithm],
+            "options": decode_options,
+        }
+        if self._issuer is not None:
+            decode_kwargs["issuer"] = self._issuer
+
         try:
             payload = jwt.decode(
                 token,
                 self._secret_key,
-                algorithms=[self._algorithm],
-                options={"require": ["exp", "sub", "typ"]},
+                **decode_kwargs,
             )
         except jwt.PyJWTError as exc:
             raise TokenValidationError("Token validation failed.") from exc

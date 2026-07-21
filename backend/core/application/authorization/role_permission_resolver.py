@@ -9,4 +9,7 @@ class RolePermissionResolver:
     """Resolves effective permissions for a membership role."""
 
     def resolve(self, role: Role) -> frozenset[Permission]:
-        return permissions_for_role(role)
+        try:
+            return permissions_for_role(role)
+        except ValueError:
+            return frozenset()

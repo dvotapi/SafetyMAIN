@@ -91,3 +91,28 @@ def test_permission_evaluator_denies_auditor_write_permission() -> None:
     assert exc_info.value.organization_id == organization_id
     assert exc_info.value.permission == KNOWLEDGE_OBJECT_WRITE
     assert exc_info.value.role == Role.auditor()
+
+
+def test_permission_evaluator_denies_unknown_role() -> None:
+    user_id = UserId(value=uuid4())
+    organization_id = OrganizationId(value=uuid4())
+    membership_store = InMemoryMembershipStore()
+    membership_store.register_membership(
+        Membership(
+            id=MembershipId(value=uuid4()),
+            user_id=user_id,
+            organization_id=organization_id,
+            status=MembershipStatus.ACTIVE,
+            role=Role(value="custom-role"),
+            joined_at=datetime.now(UTC),
+        )
+    )
+    evaluator = PermissionEvaluator(membership_store)
+
+    with pytest.raises(PermissionDeniedError):
+        evaluator.require_permission(
+            user_id=user_id,
+            organization_id=organization_id,
+            permission=KNOWLEDGE_OBJECT_WRITE,
+        )
+
