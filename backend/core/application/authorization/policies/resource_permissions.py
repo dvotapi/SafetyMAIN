@@ -21,3 +21,5 @@ RELATION_WRITE = Permission.from_system_permission(SystemPermission.RELATION_MAN
 RELATION_DELETE = Permission.from_system_permission(SystemPermission.RELATION_MANAGE)
 USER_READ = Permission.from_system_permission(SystemPermission.USER_READ)
 USER_WRITE = Permission.from_system_permission(SystemPermission.USER_WRITE)
+ORGANIZATION_READ = Permission.from_system_permission(SystemPermission.ORGANIZATION_READ)
+ORGANIZATION_WRITE = Permission.from_system_permission(SystemPermission.ORGANIZATION_WRITE)

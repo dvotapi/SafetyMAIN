@@ -5,11 +5,15 @@ import pytest
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.membership_repository import (
     SQLAlchemyMembershipRepository,
 )
+from backend.core.infrastructure.persistence.sqlalchemy.repositories.organization_repository import (
+    SQLAlchemyOrganizationRepository,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.user_repository import (
     SQLAlchemyUserRepository,
 )
 from tests.contracts.test_identity_repository_contracts import (
     MembershipRepositoryContractSuite,
+    OrganizationRepositoryContractSuite,
     UserRepositoryContractSuite,
 )
 
@@ -28,3 +32,10 @@ class TestSQLAlchemyMembershipRepositoryContract(MembershipRepositoryContractSui
     @pytest.fixture()
     def repository(self, sqlalchemy_session) -> SQLAlchemyMembershipRepository:
         return SQLAlchemyMembershipRepository(sqlalchemy_session)
+
+
+@pytest.mark.db
+class TestSQLAlchemyOrganizationRepositoryContract(OrganizationRepositoryContractSuite):
+    @pytest.fixture()
+    def repository(self, sqlalchemy_session) -> SQLAlchemyOrganizationRepository:
+        return SQLAlchemyOrganizationRepository(sqlalchemy_session)

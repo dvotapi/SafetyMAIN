@@ -7,10 +7,16 @@ import pytest
 
 from backend.core.domain.entities.membership import Membership, MembershipStatus
 from backend.core.domain.entities.user import User, UserStatus
-from backend.core.domain.repositories import MembershipRepositoryContract, UserRepositoryContract
+from backend.core.domain.entities.organization import Organization, OrganizationStatus
+from backend.core.domain.repositories import (
+    MembershipRepositoryContract,
+    OrganizationRepositoryContract,
+    UserRepositoryContract,
+)
 from backend.core.domain.value_objects import MembershipId, OrganizationId, Role, UserId
 from backend.core.infrastructure.persistence.in_memory import (
     InMemoryMembershipRepository,
+    InMemoryOrganizationRepository,
     InMemoryUserRepository,
 )
 
@@ -53,6 +59,52 @@ class UserRepositoryContractSuite:
         assert result.items[0].id == active_user.id
 
 
+class OrganizationRepositoryContractSuite:
+    @pytest.fixture()
+    def repository(self) -> OrganizationRepositoryContract:
+        raise NotImplementedError
+
+    def test_add_and_get_organization(
+        self,
+        repository: OrganizationRepositoryContract,
+    ) -> None:
+        organization = _create_organization()
+        repository.add(organization)
+        assert repository.get(organization.id) == organization
+
+    def test_get_by_normalized_name(
+        self,
+        repository: OrganizationRepositoryContract,
+    ) -> None:
+        organization = _create_organization(name="Acme Safety")
+        repository.add(organization)
+
+        assert repository.get_by_normalized_name("acme safety") == organization
+        assert repository.get_by_normalized_name("missing") is None
+
+    def test_list_organizations_supports_filtering(
+        self,
+        repository: OrganizationRepositoryContract,
+    ) -> None:
+        from backend.core.domain.value_objects.organization_list_criteria import (
+            OrganizationListCriteria,
+        )
+
+        active_org = _create_organization(name="Alpha Org")
+        inactive_org = _create_organization(name="Beta Org").model_copy(
+            update={"status": OrganizationStatus.DEACTIVATED}
+        )
+        repository.add(active_org)
+        repository.add(inactive_org)
+
+        result = repository.list_organizations(
+            OrganizationListCriteria(offset=0, limit=10, is_active=True)
+        )
+
+        assert result.total == 1
+        assert result.items[0].id == active_org.id
+
+
 class MembershipRepositoryContractSuite:
     @pytest.fixture()
     def repository(self) -> MembershipRepositoryContract:
@@ -86,6 +138,17 @@ def _create_user() -> User:
     )
 
 
+def _create_organization(*, name: str = "SafetyMAIN Development Organization") -> Organization:
+    now = datetime.now(UTC)
+    return Organization(
+        id=OrganizationId(value=uuid4()),
+        name=name,
+        status=OrganizationStatus.ACTIVE,
+        created_at=now,
+        updated_at=now,
+    )
+
+
 def _create_membership() -> Membership:
     return Membership(
         id=MembershipId(value=uuid4()),
@@ -101,6 +164,12 @@ class TestInMemoryUserRepositoryContract(UserRepositoryContractSuite):
     @pytest.fixture()
     def repository(self) -> UserRepositoryContract:
         return InMemoryUserRepository()
+
+
+class TestInMemoryOrganizationRepositoryContract(OrganizationRepositoryContractSuite):
+    @pytest.fixture()
+    def repository(self) -> OrganizationRepositoryContract:
+        return InMemoryOrganizationRepository()
 
 
 class TestInMemoryMembershipRepositoryContract(MembershipRepositoryContractSuite):

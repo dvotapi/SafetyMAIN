@@ -111,11 +111,21 @@ defines reusable policy constants:
 | `RELATION_DELETE` | `relation:manage` |
 | `USER_READ` | `user:read` |
 | `USER_WRITE` | `user:write` |
+| `ORGANIZATION_READ` | `organization:read` |
+| `ORGANIZATION_WRITE` | `organization:write` |
 
 Admin user API permissions (P5-001):
 
 | Role | `user:read` | `user:write` |
 |------|-------------|--------------|
+| admin | yes | yes |
+| member | no | no |
+| auditor | yes | no |
+
+Admin organization API permissions (P5-002):
+
+| Role | `organization:read` | `organization:write` |
+|------|---------------------|----------------------|
 | admin | yes | yes |
 | member | no | no |
 | auditor | yes | no |
@@ -185,9 +195,11 @@ membership.
 | P3-006 | Role and permission evaluation |
 | P3-007 | Security architecture review |
 | P4-002 | Business route enforcement |
-| P5-001 | User Management API (this rollout) |
+| P5-001 | User Management API |
+| P5-002 | Organization Management API (this rollout) |
 
-See [UserManagement.md](UserManagement.md) for administrative user endpoints.
+See [UserManagement.md](UserManagement.md) and
+[OrganizationManagement.md](OrganizationManagement.md) for administrative endpoints.
 
 ---
 

@@ -66,6 +66,14 @@ from backend.core.application.handlers.user_lifecycle import (
     ActivateUserHandler,
     DeactivateUserHandler,
 )
+from backend.core.application.handlers.create_organization import CreateOrganizationHandler
+from backend.core.application.handlers.get_organization import GetOrganizationHandler
+from backend.core.application.handlers.list_organizations import ListOrganizationsHandler
+from backend.core.application.handlers.update_organization import UpdateOrganizationHandler
+from backend.core.application.handlers.organization_lifecycle import (
+    ActivateOrganizationHandler,
+    DeactivateOrganizationHandler,
+)
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.contracts.token_service import TokenValidationError
 from backend.core.application.exceptions.authentication import UnauthenticatedError
@@ -247,6 +255,15 @@ def get_user_id(
         raise RequestValidationError(exc.errors()) from exc
 
 
+def get_target_organization_id(
+    organization_id: Annotated[UUID, Path()],
+) -> OrganizationId:
+    try:
+        return OrganizationId(value=organization_id)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
 def get_create_user_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
 ) -> CreateUserHandler:
@@ -281,6 +298,42 @@ def get_deactivate_user_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
 ) -> DeactivateUserHandler:
     return DeactivateUserHandler(uow)
+
+
+def get_create_organization_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> CreateOrganizationHandler:
+    return CreateOrganizationHandler(uow)
+
+
+def get_get_organization_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> GetOrganizationHandler:
+    return GetOrganizationHandler(uow)
+
+
+def get_list_organizations_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ListOrganizationsHandler:
+    return ListOrganizationsHandler(uow)
+
+
+def get_update_organization_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> UpdateOrganizationHandler:
+    return UpdateOrganizationHandler(uow)
+
+
+def get_activate_organization_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ActivateOrganizationHandler:
+    return ActivateOrganizationHandler(uow)
+
+
+def get_deactivate_organization_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> DeactivateOrganizationHandler:
+    return DeactivateOrganizationHandler(uow)
 
 
 def get_create_knowledge_object_handler(

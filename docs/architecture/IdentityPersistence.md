@@ -11,6 +11,7 @@ Related documents:
 - [AuthorizationFoundation.md](AuthorizationFoundation.md)
 - [SecurityArchitectureReview.md](SecurityArchitectureReview.md)
 - [UserManagement.md](UserManagement.md)
+- [OrganizationManagement.md](OrganizationManagement.md)
 - [PostgreSQLPersistence.md](../infrastructure/PostgreSQLPersistence.md)
 
 ---
@@ -31,16 +32,17 @@ unchanged.
 | Table | Domain entity | Notes |
 |-------|---------------|-------|
 | `users` | `User` | Includes `password_hash`, `display_name`, and `updated_at` |
-| `organizations` | `Organization` | Tenant organization record |
+| `organizations` | `Organization` | Includes `name`, `is_active`, and `updated_at` |
 | `memberships` | `Membership` | Role and active state for user/org pairing |
 
 Domain mapping:
 
 - `users.is_active` ↔ `UserStatus.ACTIVE`
+- `organizations.is_active` ↔ `OrganizationStatus.ACTIVE`
 - `memberships.is_active` ↔ `MembershipStatus.ACTIVE`
 - `memberships.role` ↔ domain `Role`
 
-Alembic revision: `0002_identity_persistence`.
+Alembic revisions: `0002_identity_persistence`, `0003_organization_active_state`.
 
 ---
 
@@ -190,3 +192,24 @@ Repository capabilities used by administration:
 API responses expose public UUIDs and stable DTO fields only. Password hashes and
 SQLAlchemy models never cross the HTTP boundary. See
 [UserManagement.md](UserManagement.md) and [AdminUserAPI.md](../api/AdminUserAPI.md).
+
+---
+
+## 10. Administrative Organization API (P5-002)
+
+Organization records are global identities. The administrative REST API at
+`/api/v1/admin/organizations` reuses `OrganizationRepositoryContract` through
+Application handlers and UnitOfWork.
+
+Repository capabilities used by administration:
+
+- `add`, `get`, `save` — create, read, update, lifecycle
+- `get_by_normalized_name` — case-insensitive duplicate detection
+- `list_organizations` — offset pagination with optional filters on name and active
+  state
+
+Migration `0003_organization_active_state` adds `organizations.is_active` and a
+unique index on `lower(name)`.
+
+See [OrganizationManagement.md](OrganizationManagement.md) and
+[AdminOrganizationAPI.md](../api/AdminOrganizationAPI.md).

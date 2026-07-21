@@ -51,7 +51,7 @@ def test_identity_columns_exist() -> None:
     assert {"id", "email", "password_hash", "is_active", "created_at", "updated_at"}.issubset(
         set(users.keys())
     )
-    assert {"id", "name", "created_at", "updated_at"}.issubset(set(organizations.keys()))
+    assert {"id", "name", "is_active", "created_at", "updated_at"}.issubset(set(organizations.keys()))
     assert {
         "id",
         "user_id",

@@ -57,6 +57,11 @@ def test_required_task_error_codes_are_registered() -> None:
         "duplicate_user_email",
         "user_already_active",
         "user_already_deactivated",
+        "organization_not_found",
+        "duplicate_organization_name",
+        "organization_already_active",
+        "organization_already_inactive",
+        "current_organization_deactivation",
     }
     assert required_codes.issubset(PUBLIC_ERROR_CODES)
 

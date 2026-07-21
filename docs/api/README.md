@@ -31,9 +31,11 @@ organization membership context via `X-Organization-ID` for RBAC evaluation.
 | [RelationAPI.md](RelationAPI.md) | Relations and traversal endpoints |
 | [AuthenticationAPI.md](AuthenticationAPI.md) | Login, refresh, and Bearer auth foundation |
 | [AdminUserAPI.md](AdminUserAPI.md) | Administrative user management (P5-001) |
+| [AdminOrganizationAPI.md](AdminOrganizationAPI.md) | Administrative organization management (P5-002) |
 
 Architecture: [AuthenticationArchitecture.md](../architecture/AuthenticationArchitecture.md),
-[UserManagement.md](../architecture/UserManagement.md)
+[UserManagement.md](../architecture/UserManagement.md),
+[OrganizationManagement.md](../architecture/OrganizationManagement.md)
 
 ---
 

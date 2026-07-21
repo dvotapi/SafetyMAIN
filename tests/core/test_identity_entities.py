@@ -10,6 +10,7 @@ from backend.core.domain.entities import (
     Membership,
     MembershipStatus,
     Organization,
+    OrganizationStatus,
     User,
     UserStatus,
 )
@@ -62,10 +63,13 @@ def test_suspended_user_cannot_authenticate() -> None:
 
 
 def test_organization_normalizes_name() -> None:
+    now = datetime.now(UTC)
     organization = Organization(
         id=OrganizationId(value=uuid4()),
         name="  SafetyMAIN  ",
-        created_at=datetime.now(UTC),
+        status=OrganizationStatus.ACTIVE,
+        created_at=now,
+        updated_at=now,
     )
 
     assert organization.name == "SafetyMAIN"

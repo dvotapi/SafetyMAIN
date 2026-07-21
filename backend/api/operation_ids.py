@@ -31,6 +31,13 @@ UPDATE_USER = "update_user"
 ACTIVATE_USER = "activate_user"
 DEACTIVATE_USER = "deactivate_user"
 
+CREATE_ORGANIZATION = "create_organization"
+LIST_ORGANIZATIONS = "list_organizations"
+GET_ORGANIZATION = "get_organization"
+UPDATE_ORGANIZATION = "update_organization"
+ACTIVATE_ORGANIZATION = "activate_organization"
+DEACTIVATE_ORGANIZATION = "deactivate_organization"
+
 STABLE_OPERATION_IDS: frozenset[str] = frozenset(
     {
         HEALTH,
@@ -43,6 +50,12 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         UPDATE_USER,
         ACTIVATE_USER,
         DEACTIVATE_USER,
+        CREATE_ORGANIZATION,
+        LIST_ORGANIZATIONS,
+        GET_ORGANIZATION,
+        UPDATE_ORGANIZATION,
+        ACTIVATE_ORGANIZATION,
+        DEACTIVATE_ORGANIZATION,
         CREATE_KNOWLEDGE_OBJECT,
         SEARCH_KNOWLEDGE_OBJECTS,
         GET_KNOWLEDGE_OBJECT,

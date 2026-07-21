@@ -17,6 +17,11 @@ from backend.core.domain.exceptions import (
     DuplicateKnowledgeObject,
     DuplicateKnowledgeObjectRelation,
     DuplicateUserEmail,
+    CurrentOrganizationDeactivationError,
+    DuplicateOrganizationName,
+    OrganizationAlreadyActive,
+    OrganizationAlreadyInactive,
+    OrganizationNotFound,
     InvalidKnowledgeObjectStateTransition,
     KnowledgeObjectAlreadyActive,
     KnowledgeObjectAlreadyArchived,
@@ -60,6 +65,12 @@ DUPLICATE_USER_EMAIL = "duplicate_user_email"
 USER_ALREADY_ACTIVE = "user_already_active"
 USER_ALREADY_DEACTIVATED = "user_already_deactivated"
 
+ORGANIZATION_NOT_FOUND = "organization_not_found"
+DUPLICATE_ORGANIZATION_NAME = "duplicate_organization_name"
+ORGANIZATION_ALREADY_ACTIVE = "organization_already_active"
+ORGANIZATION_ALREADY_INACTIVE = "organization_already_inactive"
+CURRENT_ORGANIZATION_DEACTIVATION = "current_organization_deactivation"
+
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
 SERVICE_NOT_READY = "service_not_ready"
@@ -89,6 +100,11 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         DUPLICATE_USER_EMAIL,
         USER_ALREADY_ACTIVE,
         USER_ALREADY_DEACTIVATED,
+        ORGANIZATION_NOT_FOUND,
+        DUPLICATE_ORGANIZATION_NAME,
+        ORGANIZATION_ALREADY_ACTIVE,
+        ORGANIZATION_ALREADY_INACTIVE,
+        CURRENT_ORGANIZATION_DEACTIVATION,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -111,6 +127,11 @@ DOMAIN_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
     DuplicateUserEmail: 409,
     UserAlreadyActive: 409,
     UserAlreadyDeactivated: 409,
+    OrganizationNotFound: 404,
+    DuplicateOrganizationName: 409,
+    OrganizationAlreadyActive: 409,
+    OrganizationAlreadyInactive: 409,
+    CurrentOrganizationDeactivationError: 409,
 }
 
 DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
@@ -129,6 +150,11 @@ DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
     DuplicateUserEmail: DUPLICATE_USER_EMAIL,
     UserAlreadyActive: USER_ALREADY_ACTIVE,
     UserAlreadyDeactivated: USER_ALREADY_DEACTIVATED,
+    OrganizationNotFound: ORGANIZATION_NOT_FOUND,
+    DuplicateOrganizationName: DUPLICATE_ORGANIZATION_NAME,
+    OrganizationAlreadyActive: ORGANIZATION_ALREADY_ACTIVE,
+    OrganizationAlreadyInactive: ORGANIZATION_ALREADY_INACTIVE,
+    CurrentOrganizationDeactivationError: CURRENT_ORGANIZATION_DEACTIVATION,
 }
 
 DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
@@ -151,6 +177,13 @@ DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     DuplicateUserEmail: "User email already exists.",
     UserAlreadyActive: "User is already active.",
     UserAlreadyDeactivated: "User is already deactivated.",
+    OrganizationNotFound: "Organization was not found.",
+    DuplicateOrganizationName: "Organization name already exists.",
+    OrganizationAlreadyActive: "Organization is already active.",
+    OrganizationAlreadyInactive: "Organization is already inactive.",
+    CurrentOrganizationDeactivationError: (
+        "The current authorization organization cannot be deactivated."
+    ),
 }
 
 APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {

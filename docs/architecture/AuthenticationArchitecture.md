@@ -570,6 +570,7 @@ use cases.
 | **P3-006** | Role-Based Authorization — roles and permission evaluation |
 | **P3-007** | Security Architecture Review — see [SecurityArchitectureReview.md](SecurityArchitectureReview.md) |
 | **P5-001** | User Management API — see [UserManagement.md](UserManagement.md) |
+| **P5-002** | Organization Management API — see [OrganizationManagement.md](OrganizationManagement.md) |
 | **Future** | OIDC / enterprise IdP adapter (optional track) |
 
 Each task must include architecture test updates and contract tests before behavior

@@ -8,6 +8,10 @@ from backend.core.domain.exceptions.membership import (
     MembershipNotFound,
 )
 from backend.core.domain.exceptions.organization import (
+    CurrentOrganizationDeactivationError,
+    DuplicateOrganizationName,
+    OrganizationAlreadyActive,
+    OrganizationAlreadyInactive,
     OrganizationError,
     OrganizationNotFound,
 )
@@ -57,6 +61,10 @@ __all__ = [
     "MembershipAlreadyRevoked",
     "MembershipError",
     "MembershipNotFound",
+    "CurrentOrganizationDeactivationError",
+    "DuplicateOrganizationName",
+    "OrganizationAlreadyActive",
+    "OrganizationAlreadyInactive",
     "OrganizationError",
     "OrganizationNotFound",
     "SafetyMainDomainError",

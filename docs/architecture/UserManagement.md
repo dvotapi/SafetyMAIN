@@ -8,7 +8,7 @@ Related documents:
 
 - [IdentityPersistence.md](IdentityPersistence.md)
 - [RoleBasedAuthorization.md](RoleBasedAuthorization.md)
-- [SecurityEnforcementRollout.md](SecurityEnforcementRollout.md)
+- [OrganizationManagement.md](OrganizationManagement.md)
 
 ---
 
@@ -127,7 +127,7 @@ List endpoint supports:
 Future work can add:
 
 - password reset and credential provisioning hooks;
-- organization and membership administration APIs;
+- organization administration — see [OrganizationManagement.md](OrganizationManagement.md);
 - suspended-state persistence separate from deactivated;
 - audit logging for administrative actions.
 

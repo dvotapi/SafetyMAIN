@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from backend.core.contracts.password_hasher import PasswordHasherContract
 from backend.core.domain.entities.membership import Membership, MembershipStatus
-from backend.core.domain.entities.organization import Organization
+from backend.core.domain.entities.organization import Organization, OrganizationStatus
 from backend.core.domain.entities.user import User, UserStatus
 from backend.core.domain.value_objects import MembershipId, OrganizationId, Role, UserId
 from backend.core.infrastructure.auth.sqlalchemy_identity_adapter import SQLAlchemyIdentityAdapter
@@ -43,7 +43,9 @@ def seed_development_identity(
     organization = Organization(
         id=OrganizationId(value=DEVELOPMENT_ORGANIZATION_ID),
         name="SafetyMAIN Development Organization",
+        status=OrganizationStatus.ACTIVE,
         created_at=now,
+        updated_at=now,
     )
 
     def _seed_organization(session: Session) -> None:
