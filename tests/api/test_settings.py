@@ -71,3 +71,10 @@ def test_load_settings_parses_auth_enforcement_and_default_organization() -> Non
 def test_load_settings_rejects_invalid_auth_enforcement_value() -> None:
     with pytest.raises(ValueError, match="AUTH_ENFORCEMENT"):
         load_settings(environment={"AUTH_ENFORCEMENT": "maybe"})
+
+
+def test_load_settings_rejects_unsupported_jwt_algorithm() -> None:
+    from backend.bootstrap.security_validation import SecurityConfigurationError
+
+    with pytest.raises(SecurityConfigurationError, match="JWT_ALGORITHM"):
+        load_settings(environment={"JWT_ALGORITHM": "RS256"})

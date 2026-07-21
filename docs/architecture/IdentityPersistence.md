@@ -166,3 +166,7 @@ Validation coverage:
 - metadata tests for identity tables
 - Alembic upgrade/downgrade smoke tests
 - repository contract suites (in-memory and PostgreSQL)
+
+Production deployments must also satisfy startup security validation documented in
+[ProductionSecurityConfiguration.md](ProductionSecurityConfiguration.md), including
+a configured `DATABASE_URL` when `APP_ENV=production`.

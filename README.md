@@ -22,3 +22,11 @@ SafetyMAIN is designed as a modular, metadata-driven platform for managing enter
 ## Status
 
 Foundation repository structure initialized.
+
+## Security Configuration
+
+Security settings are validated at startup. Development defaults are allowed when
+`APP_ENV=development`. Production deployments must configure a strong JWT secret,
+issuer, database URL, and `AUTH_ENFORCEMENT=true`.
+
+See [ProductionSecurityConfiguration.md](docs/architecture/ProductionSecurityConfiguration.md).

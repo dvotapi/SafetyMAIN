@@ -99,7 +99,7 @@ def load_settings(environment: Mapping[str, str] | None = None) -> AppSettings:
     if jwt_issuer is not None:
         jwt_issuer = jwt_issuer.strip() or None
 
-    return AppSettings(
+    settings = AppSettings(
         app_name=source.get(APP_NAME_ENV, DEFAULT_APP_NAME).strip() or DEFAULT_APP_NAME,
         app_version=(
             source.get(APP_VERSION_ENV, DEFAULT_APP_VERSION).strip() or DEFAULT_APP_VERSION
@@ -138,3 +138,8 @@ def load_settings(environment: Mapping[str, str] | None = None) -> AppSettings:
             source.get(DEFAULT_ORGANIZATION_ID_ENV)
         ),
     )
+
+    from backend.bootstrap.security_validation import validate_security_configuration
+
+    validate_security_configuration(settings)
+    return settings

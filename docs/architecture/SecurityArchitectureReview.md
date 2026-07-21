@@ -208,11 +208,12 @@ passwords, or internal exception details.
 
 | Setting | Assessment |
 |---------|------------|
-| `JWT_SECRET_KEY` | Default is insecure; must be overridden in production |
-| `JWT_ALGORITHM` | Passed to PyJWT; no whitelist yet |
-| `JWT_*_TTL_SECONDS` | Positive integer validation enforced |
-| `JWT_ISSUER` | Validated on decode when configured |
+| `JWT_SECRET_KEY` | Validated at startup; production rejects placeholders and short secrets |
+| `JWT_ALGORITHM` | Whitelist enforced at startup (`HS256`, `HS384`, `HS512`) |
+| `JWT_*_TTL_SECONDS` | Positive integer, documented ranges, refresh must exceed access |
+| `JWT_ISSUER` | Validated on decode when configured; required in production |
 | `AUTH_ENFORCEMENT` | Boolean parsing with explicit error on invalid values |
+| `APP_ENV=production` | Requires strong secret, issuer, database URL, and enforcement |
 | `DEFAULT_ORGANIZATION_ID` | UUID validation |
 
 Compatibility mode (`AUTH_ENFORCEMENT=false`) is documented as transitional.
@@ -267,8 +268,8 @@ Database-marked tests skipped when PostgreSQL is unavailable (expected).
 1. **In-memory identity and membership stores** — development/test adapters only.
 2. **Compatibility mode default** — `AUTH_ENFORCEMENT=false` preserves legacy
    header-only clients.
-3. **RBAC applied to business routes** — enforced when `AUTH_ENFORCEMENT=true` (P4-002).
-4. **OpenAPI describes enforced contract statically** — see SecurityEnforcementRollout.md.
+3. **OpenAPI describes enforced contract statically** — see SecurityEnforcementRollout.md.
+4. **Production configuration must be set explicitly** — startup validation rejects unsafe production settings (P4-003).
 5. **HS256 dev secret default** — not production-safe without configuration.
 6. **No audit logging** — out of Phase P3 scope.
 7. **No OIDC / external IdP** — future adapter track.
@@ -280,7 +281,7 @@ Database-marked tests skipped when PostgreSQL is unavailable (expected).
 | Priority | Task |
 |----------|------|
 | High | Persist identity and membership (SQLAlchemy adapters) |
-| High | Set production `JWT_SECRET_KEY` and enable `AUTH_ENFORCEMENT=true` after client migration |
+| High | Deploy with validated production security configuration (P4-003) |
 | Medium | Enable `AUTH_ENFORCEMENT=true` in production after client migration |
 | Low | Retire compatibility mode when all clients use Bearer tokens |
 | Low | Evaluate asymmetric JWT signing (RS256/EdDSA) |

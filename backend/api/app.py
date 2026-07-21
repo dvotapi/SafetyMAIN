@@ -16,7 +16,9 @@ from backend.api.routers import knowledge_objects as knowledge_objects_router
 from backend.api.routers import relations as relations_router
 from backend.api.routers import system as system_router
 from backend.bootstrap.container import AppContainer, create_container
+from backend.bootstrap.security_validation import validate_security_configuration
 from backend.bootstrap.settings import AppSettings, load_settings
+from backend.bootstrap.startup_logging import log_security_configuration
 
 
 @asynccontextmanager
@@ -43,6 +45,8 @@ def create_app(
 
     configure_logging()
     resolved_settings = settings if settings is not None else load_settings()
+    validate_security_configuration(resolved_settings)
+    log_security_configuration(resolved_settings)
     resolved_container = (
         container if container is not None else create_container(resolved_settings)
     )

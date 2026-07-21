@@ -602,7 +602,16 @@ Architecture tests must be extended for auth module boundaries before P3-003 mer
 
 ---
 
-## 12. Summary
+## 12. Production Security Configuration
+
+Startup validation (P4-003) rejects unsafe production JWT, issuer, enforcement, and
+database settings before the application constructs authentication adapters.
+
+See [ProductionSecurityConfiguration.md](ProductionSecurityConfiguration.md).
+
+---
+
+## 13. Summary
 
 SafetyMAIN adopts a **fail-closed, organization-scoped** authentication model:
 

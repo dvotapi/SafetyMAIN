@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
+from backend.bootstrap.security_validation import validate_security_configuration
 from backend.bootstrap.settings import AppSettings
 from backend.core.application.authorization.authorization_service import AuthorizationService
 from backend.core.application.tenant.tenant_context_resolver import TenantContextResolver
@@ -75,6 +76,8 @@ def create_container(
 
     ``create_engine`` is lazy: no network I/O occurs until a connection is used.
     """
+
+    validate_security_configuration(settings)
 
     engine: Engine | None = None
     session_factory: sessionmaker[Session] | None = None
