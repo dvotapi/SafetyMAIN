@@ -1,3 +1,6 @@
+from backend.core.domain.repositories.invitation_repository import (
+    InvitationRepositoryContract,
+)
 from backend.core.domain.repositories.knowledge_object_repository import (
     KnowledgeObjectRepositoryContract,
 )
@@ -13,6 +16,7 @@ from backend.core.domain.repositories.organization_repository import (
 from backend.core.domain.repositories.user_repository import UserRepositoryContract
 
 __all__ = [
+    "InvitationRepositoryContract",
     "KnowledgeObjectRelationRepositoryContract",
     "KnowledgeObjectRepositoryContract",
     "MembershipRepositoryContract",

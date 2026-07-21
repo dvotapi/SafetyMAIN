@@ -33,11 +33,14 @@ organization membership context via `X-Organization-ID` for RBAC evaluation.
 | [AdminUserAPI.md](AdminUserAPI.md) | Administrative user management (P5-001) |
 | [AdminOrganizationAPI.md](AdminOrganizationAPI.md) | Administrative organization management (P5-002) |
 | [AdminMembershipAPI.md](AdminMembershipAPI.md) | Administrative membership management (P5-003) |
+| [AdminInvitationAPI.md](AdminInvitationAPI.md) | Administrative invitation management (P5-004) |
+| [InvitationAcceptanceAPI.md](InvitationAcceptanceAPI.md) | Authenticated invitation acceptance (P5-004) |
 
 Architecture: [AuthenticationArchitecture.md](../architecture/AuthenticationArchitecture.md),
 [UserManagement.md](../architecture/UserManagement.md),
 [OrganizationManagement.md](../architecture/OrganizationManagement.md),
-[MembershipManagement.md](../architecture/MembershipManagement.md)
+[MembershipManagement.md](../architecture/MembershipManagement.md),
+[InvitationWorkflow.md](../architecture/InvitationWorkflow.md)
 
 ---
 

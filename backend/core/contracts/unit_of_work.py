@@ -4,6 +4,7 @@ from types import TracebackType
 from typing import Protocol, Self
 
 from backend.core.domain.repositories import (
+    InvitationRepositoryContract,
     KnowledgeObjectRelationRepositoryContract,
     KnowledgeObjectRepositoryContract,
     MembershipRepositoryContract,
@@ -33,6 +34,10 @@ class UnitOfWorkContract(Protocol):
 
     @property
     def memberships(self) -> MembershipRepositoryContract:
+        ...
+
+    @property
+    def invitations(self) -> InvitationRepositoryContract:
         ...
 
     def commit(self) -> None:

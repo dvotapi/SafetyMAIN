@@ -4,11 +4,15 @@ from types import TracebackType
 
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.repositories import (
+    InvitationRepositoryContract,
     KnowledgeObjectRelationRepositoryContract,
     KnowledgeObjectRepositoryContract,
     MembershipRepositoryContract,
     OrganizationRepositoryContract,
     UserRepositoryContract,
+)
+from backend.core.infrastructure.persistence.in_memory.invitation_repository import (
+    InMemoryInvitationRepository,
 )
 from backend.core.infrastructure.persistence.in_memory.knowledge_object_repository import (
     InMemoryKnowledgeObjectRepository,
@@ -35,12 +39,14 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         users: UserRepositoryContract | None = None,
         organizations: OrganizationRepositoryContract | None = None,
         memberships: MembershipRepositoryContract | None = None,
+        invitations: InvitationRepositoryContract | None = None,
     ) -> None:
         self._knowledge_objects = knowledge_objects or InMemoryKnowledgeObjectRepository()
         self._relations = relations or InMemoryKnowledgeObjectRelationRepository()
         self._users = users or InMemoryUserRepository()
         self._organizations = organizations or InMemoryOrganizationRepository()
         self._memberships = memberships or InMemoryMembershipRepository()
+        self._invitations = invitations or InMemoryInvitationRepository()
         self._knowledge_objects_snapshot: object | None = None
         self._relations_snapshot: object | None = None
         self.committed = False
@@ -65,6 +71,10 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
     @property
     def memberships(self) -> MembershipRepositoryContract:
         return self._memberships
+
+    @property
+    def invitations(self) -> InvitationRepositoryContract:
+        return self._invitations
 
     def commit(self) -> None:
         self.committed = True

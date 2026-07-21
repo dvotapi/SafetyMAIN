@@ -45,6 +45,13 @@ UPDATE_MEMBERSHIP_ROLE = "update_membership_role"
 ACTIVATE_MEMBERSHIP = "activate_membership"
 DEACTIVATE_MEMBERSHIP = "deactivate_membership"
 
+CREATE_INVITATION = "create_invitation"
+LIST_INVITATIONS = "list_invitations"
+GET_INVITATION = "get_invitation"
+REVOKE_INVITATION = "revoke_invitation"
+REISSUE_INVITATION = "reissue_invitation"
+ACCEPT_INVITATION = "accept_invitation"
+
 STABLE_OPERATION_IDS: frozenset[str] = frozenset(
     {
         HEALTH,
@@ -69,6 +76,12 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         UPDATE_MEMBERSHIP_ROLE,
         ACTIVATE_MEMBERSHIP,
         DEACTIVATE_MEMBERSHIP,
+        CREATE_INVITATION,
+        LIST_INVITATIONS,
+        GET_INVITATION,
+        REVOKE_INVITATION,
+        REISSUE_INVITATION,
+        ACCEPT_INVITATION,
         CREATE_KNOWLEDGE_OBJECT,
         SEARCH_KNOWLEDGE_OBJECTS,
         GET_KNOWLEDGE_OBJECT,

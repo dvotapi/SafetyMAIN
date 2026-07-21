@@ -6,6 +6,7 @@ from backend.core.domain.value_objects.knowledge_object_type import KnowledgeObj
 from backend.core.domain.value_objects.knowledge_object_version import (
     KnowledgeObjectVersion,
 )
+from backend.core.domain.value_objects.invitation_id import InvitationId
 from backend.core.domain.value_objects.membership_id import MembershipId
 from backend.core.domain.value_objects.organization_id import OrganizationId
 from backend.core.domain.value_objects.permission import Permission, SystemPermission
@@ -17,6 +18,7 @@ __all__ = [
     "KnowledgeObjectRelationType",
     "KnowledgeObjectType",
     "KnowledgeObjectVersion",
+    "InvitationId",
     "MembershipId",
     "OrganizationId",
     "Permission",

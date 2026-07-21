@@ -1,3 +1,6 @@
+from backend.core.infrastructure.persistence.sqlalchemy.repositories.invitation_repository import (
+    SQLAlchemyInvitationRepository,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.knowledge_object_repository import (
     SQLAlchemyKnowledgeObjectRepository,
 )
@@ -15,6 +18,7 @@ from backend.core.infrastructure.persistence.sqlalchemy.repositories.user_reposi
 )
 
 __all__ = [
+    "SQLAlchemyInvitationRepository",
     "SQLAlchemyKnowledgeObjectRelationRepository",
     "SQLAlchemyKnowledgeObjectRepository",
     "SQLAlchemyMembershipRepository",

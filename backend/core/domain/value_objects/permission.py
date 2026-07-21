@@ -18,6 +18,8 @@ class SystemPermission(str, Enum):
     ORGANIZATION_WRITE = "organization:write"
     USER_READ = "user:read"
     USER_WRITE = "user:write"
+    INVITATION_READ = "invitation:read"
+    INVITATION_WRITE = "invitation:write"
 
 
 class Permission(BaseModel):

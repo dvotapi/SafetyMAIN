@@ -70,6 +70,14 @@ def test_required_task_error_codes_are_registered() -> None:
         "self_membership_role_downgrade",
         "last_organization_administrator",
         "invalid_membership_role",
+        "invitation_not_found",
+        "duplicate_active_invitation",
+        "existing_active_membership",
+        "invitation_already_accepted",
+        "invitation_already_revoked",
+        "invitation_expired",
+        "invitation_token_invalid",
+        "invitation_email_mismatch",
     }
     assert required_codes.issubset(PUBLIC_ERROR_CODES)
 

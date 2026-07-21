@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.repositories import (
+    InvitationRepositoryContract,
     KnowledgeObjectRelationRepositoryContract,
     KnowledgeObjectRepositoryContract,
     MembershipRepositoryContract,
@@ -13,6 +14,7 @@ from backend.core.domain.repositories import (
     UserRepositoryContract,
 )
 from backend.core.infrastructure.persistence.sqlalchemy.repositories import (
+    SQLAlchemyInvitationRepository,
     SQLAlchemyKnowledgeObjectRelationRepository,
     SQLAlchemyKnowledgeObjectRepository,
     SQLAlchemyMembershipRepository,
@@ -30,6 +32,7 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._users: SQLAlchemyUserRepository | None = None
         self._organizations: SQLAlchemyOrganizationRepository | None = None
         self._memberships: SQLAlchemyMembershipRepository | None = None
+        self._invitations: SQLAlchemyInvitationRepository | None = None
         self._committed = False
         self._rolled_back = False
 
@@ -75,6 +78,13 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
 
         return self._memberships
 
+    @property
+    def invitations(self) -> InvitationRepositoryContract:
+        if self._invitations is None:
+            raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
+
+        return self._invitations
+
     def commit(self) -> None:
         if self._committed:
             return
@@ -98,6 +108,7 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._users = SQLAlchemyUserRepository(self._session)
         self._organizations = SQLAlchemyOrganizationRepository(self._session)
         self._memberships = SQLAlchemyMembershipRepository(self._session)
+        self._invitations = SQLAlchemyInvitationRepository(self._session)
         self._committed = False
         self._rolled_back = False
         return self
@@ -120,5 +131,6 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
                 self._users = None
                 self._organizations = None
                 self._memberships = None
+                self._invitations = None
 
         return False

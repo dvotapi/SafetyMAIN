@@ -34,6 +34,11 @@ EXPECTED_PATHS: dict[str, set[str]] = {
     "/api/v1/admin/memberships/{membership_id}/role": {"patch"},
     "/api/v1/admin/memberships/{membership_id}/activate": {"post"},
     "/api/v1/admin/memberships/{membership_id}/deactivate": {"post"},
+    "/api/v1/admin/invitations": {"get", "post"},
+    "/api/v1/admin/invitations/{invitation_id}": {"get"},
+    "/api/v1/admin/invitations/{invitation_id}/revoke": {"post"},
+    "/api/v1/admin/invitations/{invitation_id}/reissue": {"post"},
+    "/api/v1/invitations/accept": {"post"},
 }
 
 
@@ -139,6 +144,8 @@ def test_openapi_business_routes_require_bearer_auth(app_settings: AppSettings) 
         or path.startswith("/api/v1/admin/users")
         or path.startswith("/api/v1/admin/organizations")
         or path.startswith("/api/v1/admin/memberships")
+        or path.startswith("/api/v1/admin/invitations")
+        or path.startswith("/api/v1/invitations")
     ]
 
     assert business_paths

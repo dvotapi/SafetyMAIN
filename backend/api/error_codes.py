@@ -20,7 +20,15 @@ from backend.core.domain.exceptions import (
     CurrentOrganizationDeactivationError,
     DuplicateMembership,
     DuplicateOrganizationName,
+    DuplicateActiveInvitation,
+    ExistingActiveMembership,
     InvalidMembershipRole,
+    InvitationAlreadyAccepted,
+    InvitationAlreadyRevoked,
+    InvitationEmailMismatch,
+    InvitationExpired,
+    InvitationNotFound,
+    InvitationTokenInvalid,
     LastOrganizationAdministratorError,
     MembershipAlreadyActive,
     MembershipAlreadyInactive,
@@ -88,6 +96,15 @@ SELF_MEMBERSHIP_ROLE_DOWNGRADE = "self_membership_role_downgrade"
 LAST_ORGANIZATION_ADMINISTRATOR = "last_organization_administrator"
 INVALID_MEMBERSHIP_ROLE = "invalid_membership_role"
 
+INVITATION_NOT_FOUND = "invitation_not_found"
+DUPLICATE_ACTIVE_INVITATION = "duplicate_active_invitation"
+EXISTING_ACTIVE_MEMBERSHIP = "existing_active_membership"
+INVITATION_ALREADY_ACCEPTED = "invitation_already_accepted"
+INVITATION_ALREADY_REVOKED = "invitation_already_revoked"
+INVITATION_EXPIRED = "invitation_expired"
+INVITATION_TOKEN_INVALID = "invitation_token_invalid"
+INVITATION_EMAIL_MISMATCH = "invitation_email_mismatch"
+
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
 SERVICE_NOT_READY = "service_not_ready"
@@ -130,6 +147,14 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         SELF_MEMBERSHIP_ROLE_DOWNGRADE,
         LAST_ORGANIZATION_ADMINISTRATOR,
         INVALID_MEMBERSHIP_ROLE,
+        INVITATION_NOT_FOUND,
+        DUPLICATE_ACTIVE_INVITATION,
+        EXISTING_ACTIVE_MEMBERSHIP,
+        INVITATION_ALREADY_ACCEPTED,
+        INVITATION_ALREADY_REVOKED,
+        INVITATION_EXPIRED,
+        INVITATION_TOKEN_INVALID,
+        INVITATION_EMAIL_MISMATCH,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -165,6 +190,14 @@ DOMAIN_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
     SelfMembershipRoleDowngradeError: 409,
     LastOrganizationAdministratorError: 409,
     InvalidMembershipRole: 422,
+    InvitationNotFound: 404,
+    DuplicateActiveInvitation: 409,
+    ExistingActiveMembership: 409,
+    InvitationAlreadyAccepted: 409,
+    InvitationAlreadyRevoked: 409,
+    InvitationExpired: 409,
+    InvitationTokenInvalid: 400,
+    InvitationEmailMismatch: 403,
 }
 
 DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
@@ -196,6 +229,14 @@ DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
     SelfMembershipRoleDowngradeError: SELF_MEMBERSHIP_ROLE_DOWNGRADE,
     LastOrganizationAdministratorError: LAST_ORGANIZATION_ADMINISTRATOR,
     InvalidMembershipRole: INVALID_MEMBERSHIP_ROLE,
+    InvitationNotFound: INVITATION_NOT_FOUND,
+    DuplicateActiveInvitation: DUPLICATE_ACTIVE_INVITATION,
+    ExistingActiveMembership: EXISTING_ACTIVE_MEMBERSHIP,
+    InvitationAlreadyAccepted: INVITATION_ALREADY_ACCEPTED,
+    InvitationAlreadyRevoked: INVITATION_ALREADY_REVOKED,
+    InvitationExpired: INVITATION_EXPIRED,
+    InvitationTokenInvalid: INVITATION_TOKEN_INVALID,
+    InvitationEmailMismatch: INVITATION_EMAIL_MISMATCH,
 }
 
 DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
@@ -239,6 +280,14 @@ DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
         "Organization must retain at least one active administrator."
     ),
     InvalidMembershipRole: "Membership role is invalid.",
+    InvitationNotFound: "Invitation was not found.",
+    DuplicateActiveInvitation: "An active invitation already exists for this organization and email.",
+    ExistingActiveMembership: "User already has an active membership in the target organization.",
+    InvitationAlreadyAccepted: "Invitation has already been accepted.",
+    InvitationAlreadyRevoked: "Invitation has already been revoked.",
+    InvitationExpired: "Invitation has expired.",
+    InvitationTokenInvalid: "Invitation token is invalid.",
+    InvitationEmailMismatch: "Authenticated user email does not match the invitation.",
 }
 
 APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {

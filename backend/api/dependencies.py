@@ -82,14 +82,31 @@ from backend.core.application.handlers.membership_lifecycle import (
     ActivateMembershipHandler,
     DeactivateMembershipHandler,
 )
+from backend.core.application.handlers.create_invitation import CreateInvitationHandler
+from backend.core.application.handlers.get_invitation import GetInvitationHandler
+from backend.core.application.handlers.list_invitations import ListInvitationsHandler
+from backend.core.application.handlers.invitation_lifecycle import (
+    AcceptInvitationHandler,
+    ReissueInvitationHandler,
+    RevokeInvitationHandler,
+)
 from backend.core.application.policies.membership_administration import (
     MembershipAuthorizationContext,
 )
+from backend.core.contracts.clock import ClockContract
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.contracts.token_service import TokenValidationError
 from backend.core.application.exceptions.authentication import UnauthenticatedError
 from backend.core.application.context.tenant_context import TenantContext
-from backend.core.domain.value_objects import KnowledgeObjectId, MembershipId, OrganizationId, Permission, UserId
+from backend.core.domain.value_objects import (
+    InvitationId,
+    KnowledgeObjectId,
+    MembershipId,
+    OrganizationId,
+    Permission,
+    UserId,
+)
+from backend.core.infrastructure.time.utc_clock import UtcClock
 from backend.core.domain.value_objects.permission import SystemPermission
 from backend.api.security import SecurityContext
 
@@ -414,6 +431,61 @@ def get_deactivate_membership_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
 ) -> DeactivateMembershipHandler:
     return DeactivateMembershipHandler(uow)
+
+
+def get_clock() -> ClockContract:
+    return UtcClock()
+
+
+def get_invitation_id(
+    invitation_id: Annotated[UUID, Path()],
+) -> InvitationId:
+    try:
+        return InvitationId(value=invitation_id)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
+def get_create_invitation_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> CreateInvitationHandler:
+    return CreateInvitationHandler(uow, clock)
+
+
+def get_get_invitation_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> GetInvitationHandler:
+    return GetInvitationHandler(uow, clock)
+
+
+def get_list_invitations_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> ListInvitationsHandler:
+    return ListInvitationsHandler(uow, clock)
+
+
+def get_revoke_invitation_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> RevokeInvitationHandler:
+    return RevokeInvitationHandler(uow, clock)
+
+
+def get_reissue_invitation_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> ReissueInvitationHandler:
+    return ReissueInvitationHandler(uow, clock)
+
+
+def get_accept_invitation_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> AcceptInvitationHandler:
+    return AcceptInvitationHandler(uow, clock)
 
 
 def get_create_knowledge_object_handler(

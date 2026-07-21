@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from backend.core.infrastructure.persistence.in_memory.invitation_repository import (
+    InMemoryInvitationRepository,
+)
 from backend.core.infrastructure.persistence.in_memory.knowledge_object_relation_repository import (
     InMemoryKnowledgeObjectRelationRepository,
 )
@@ -18,6 +21,7 @@ from backend.core.infrastructure.persistence.in_memory.user_repository import (
 )
 
 __all__ = [
+    "InMemoryInvitationRepository",
     "InMemoryKnowledgeObjectRelationRepository",
     "InMemoryKnowledgeObjectRepository",
     "InMemoryMembershipRepository",
