@@ -53,10 +53,35 @@ def test_audit_event_accepts_allowlisted_metadata_keys() -> None:
             "new_status": "DEACTIVATED",
             "expiration_refreshed": True,
             "membership_id": str(uuid4()),
+            "required_permission": "user:read",
+            "http_method": "GET",
+            "route_template": "/api/v1/admin/users",
+            "operation_id": "list_users",
+            "target_identifier_present": False,
+            "permission_category": "user",
         }
     )
 
     assert set(event.metadata) <= ALLOWED_METADATA_KEYS
+
+
+def test_audit_event_accepts_permission_denial_metadata() -> None:
+    event = _event(
+        action=AuditAction.AUTHORIZATION_PERMISSION_DENIED,
+        resource_type=AuditResourceType.USER,
+        outcome=AuditOutcome.FAILURE,
+        failure_code="permission_denied",
+        metadata={
+            "required_permission": "membership:write",
+            "http_method": "POST",
+            "route_template": "/api/v1/admin/memberships",
+            "target_identifier_present": False,
+            "permission_category": "membership",
+        },
+    )
+
+    assert event.action is AuditAction.AUTHORIZATION_PERMISSION_DENIED
+    assert event.failure_code == "permission_denied"
 
 
 def test_audit_event_supports_optional_actor_and_organization_fields() -> None:
@@ -80,11 +105,13 @@ def test_audit_event_normalizes_failure_code() -> None:
 def test_audit_action_values_are_stable() -> None:
     assert AuditAction.USER_CREATE.value == "user.create"
     assert AuditAction.INVITATION_ACCEPT.value == "invitation.accept"
+    assert AuditAction.AUTHORIZATION_PERMISSION_DENIED.value == "authorization.permission_denied"
 
 
 def test_audit_resource_types_are_stable() -> None:
     assert AuditResourceType.USER.value == "USER"
     assert AuditResourceType.INVITATION.value == "INVITATION"
+    assert AuditResourceType.AUDIT_EVENT.value == "AUDIT_EVENT"
 
 
 def test_audit_outcomes_are_success_and_failure_only() -> None:

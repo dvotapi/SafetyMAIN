@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from backend.api.knowledge_object_params import ORGANIZATION_ID_HEADER
 from backend.api.middleware import get_request_id
+from backend.api.permission_denial_audit import build_permission_denial_audit_spec
 from backend.bootstrap.container import AppContainer, ReadinessCheck, UowFactory
 from backend.bootstrap.settings import AppSettings
 from backend.core.application.handlers.archive_knowledge_object import (
@@ -101,7 +102,9 @@ from backend.core.application.policies.membership_administration import (
 from backend.core.contracts.clock import ClockContract
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.contracts.token_service import TokenValidationError
+from backend.core.application.audit.permission_denial_audit import is_administrative_permission
 from backend.core.application.exceptions.authentication import UnauthenticatedError
+from backend.core.application.exceptions.authorization import PermissionDeniedError
 from backend.core.application.context.tenant_context import TenantContext
 from backend.core.domain.value_objects.audit_event_id import AuditEventId
 from backend.core.domain.value_objects import (
@@ -117,6 +120,25 @@ from backend.core.domain.value_objects.permission import SystemPermission
 from backend.api.security import SecurityContext
 
 
+def get_container(request: Request) -> AppContainer:
+    return request.app.state.container
+
+
+def get_settings(request: Request) -> AppSettings:
+    return request.app.state.settings
+
+
+def get_clock() -> ClockContract:
+    return UtcClock()
+
+
+def get_administrative_audit_recorder(
+    container: AppContainer = Depends(get_container),
+    clock: ClockContract = Depends(get_clock),
+) -> AdministrativeAuditRecorder:
+    return AdministrativeAuditRecorder(clock, container.uow_factory)
+
+
 def require_permission(
     permission: SystemPermission | Permission,
 ) -> Callable[..., TenantContext]:
@@ -129,9 +151,14 @@ def require_permission(
     )
 
     def _dependency(
+        request: Request,
         tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
         container: Annotated[AppContainer, Depends(get_container)],
         settings: Annotated[AppSettings, Depends(get_settings)],
+        audit_recorder: Annotated[
+            AdministrativeAuditRecorder,
+            Depends(get_administrative_audit_recorder),
+        ],
     ) -> TenantContext:
         if not settings.auth_enforcement:
             return tenant_context
@@ -140,22 +167,26 @@ def require_permission(
         if actor_user_id is None:
             raise UnauthenticatedError()
 
-        container.authorization_service.require_permission(
-            actor_user_id=actor_user_id,
-            organization_id=tenant_context.organization_id,
-            permission=required_permission,
-        )
+        try:
+            container.authorization_service.require_permission(
+                actor_user_id=actor_user_id,
+                organization_id=tenant_context.organization_id,
+                permission=required_permission,
+            )
+        except PermissionDeniedError:
+            if is_administrative_permission(required_permission):
+                audit_recorder.record_permission_denial(
+                    build_permission_denial_audit_spec(
+                        request=request,
+                        actor_user_id=actor_user_id,
+                        authorization_organization_id=tenant_context.organization_id,
+                        required_permission=required_permission,
+                    )
+                )
+            raise
         return tenant_context
 
     return _dependency
-
-
-def get_container(request: Request) -> AppContainer:
-    return request.app.state.container
-
-
-def get_settings(request: Request) -> AppSettings:
-    return request.app.state.settings
 
 
 def get_uow_factory(container: AppContainer = Depends(get_container)) -> UowFactory:
@@ -296,17 +327,6 @@ def get_target_organization_id(
         return OrganizationId(value=organization_id)
     except ValidationError as exc:
         raise RequestValidationError(exc.errors()) from exc
-
-
-def get_clock() -> ClockContract:
-    return UtcClock()
-
-
-def get_administrative_audit_recorder(
-    container: AppContainer = Depends(get_container),
-    clock: ClockContract = Depends(get_clock),
-) -> AdministrativeAuditRecorder:
-    return AdministrativeAuditRecorder(clock, container.uow_factory)
 
 
 def get_create_user_handler(

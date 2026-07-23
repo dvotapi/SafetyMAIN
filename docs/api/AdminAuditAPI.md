@@ -1,8 +1,8 @@
 # Admin Audit API
 
 Status: Active  
-Date: 2026-07-21  
-Task: TASK-P5-005
+Date: 2026-07-23  
+Task: TASK-P5-005, TASK-P6-001
 
 Related documents:
 
@@ -65,7 +65,7 @@ Cross-organization event access returns `404`.
 | Parameter | Description |
 |-----------|-------------|
 | `action` | Stable audit action |
-| `resource_type` | `USER`, `ORGANIZATION`, `MEMBERSHIP`, `INVITATION` |
+| `resource_type` | `USER`, `ORGANIZATION`, `MEMBERSHIP`, `INVITATION`, `AUDIT_EVENT` |
 | `resource_id` | Resource UUID |
 | `actor_user_id` | Actor UUID |
 | `outcome` | `SUCCESS` or `FAILURE` |
@@ -107,7 +107,7 @@ Responses do not embed User, Organization, Membership, or Invitation DTOs.
 | Situation | Status | Code |
 |-----------|--------|------|
 | Missing or invalid token | `401` | authentication codes |
-| Missing `audit:read` | `403` | `permission_denied` |
+| Missing `audit:read` | `403` | `permission_denied` (creates `authorization.permission_denied` audit event when actor and tenant context exist) |
 | Event not found in scope | `404` | `audit_event_not_found` |
 | Invalid filters | `422` | validation error envelope |
 

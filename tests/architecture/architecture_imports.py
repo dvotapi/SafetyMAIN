@@ -211,3 +211,79 @@ def _matches_forbidden_prefix(
         imported_module == prefix or imported_module.startswith(f"{prefix}.")
         for prefix in forbidden_prefixes
     )
+
+
+@dataclass(frozen=True, slots=True)
+class RequirePermissionViolation:
+    source_file: Path
+    handler_name: str
+    call_count: int
+    rule: str
+
+
+_ROUTER_HTTP_METHODS = frozenset({"get", "post", "put", "patch", "delete", "head", "options"})
+
+
+def _is_router_route_decorator(decorator: ast.expr) -> bool:
+    if not isinstance(decorator, ast.Call):
+        return False
+    func = decorator.func
+    if not isinstance(func, ast.Attribute):
+        return False
+    if func.attr not in _ROUTER_HTTP_METHODS:
+        return False
+    return isinstance(func.value, ast.Name) and func.value.id == "router"
+
+
+def _count_require_permission_calls(function_node: ast.FunctionDef) -> int:
+    count = 0
+    for node in ast.walk(function_node):
+        if not isinstance(node, ast.Call):
+            continue
+        if isinstance(node.func, ast.Name) and node.func.id == "require_permission":
+            count += 1
+    return count
+
+
+def find_route_handlers_with_multiple_require_permission(
+    root: Path,
+) -> tuple[RequirePermissionViolation, ...]:
+    violations: list[RequirePermissionViolation] = []
+
+    for source_file in iter_python_files(root):
+        tree = ast.parse(source_file.read_text(encoding="utf-8"), filename=str(source_file))
+        for node in tree.body:
+            if not isinstance(node, ast.FunctionDef):
+                continue
+            if not any(_is_router_route_decorator(decorator) for decorator in node.decorator_list):
+                continue
+            call_count = _count_require_permission_calls(node)
+            if call_count > 1:
+                violations.append(
+                    RequirePermissionViolation(
+                        source_file=source_file,
+                        handler_name=node.name,
+                        call_count=call_count,
+                        rule=(
+                            "Each API route handler must use at most one "
+                            "require_permission() dependency to prevent duplicate "
+                            "permission-denial audit events."
+                        ),
+                    )
+                )
+
+    return tuple(violations)
+
+
+def assert_at_most_one_require_permission_per_route_handler(root: Path) -> None:
+    violations = find_route_handlers_with_multiple_require_permission(root)
+    if not violations:
+        return
+
+    formatted_violations = "\n".join(
+        f"- {violation.source_file}:{violation.handler_name} uses "
+        f"`require_permission()` {violation.call_count} times; "
+        f"{violation.rule}"
+        for violation in violations
+    )
+    raise AssertionError(f"Architecture dependency violations found:\n{formatted_violations}")

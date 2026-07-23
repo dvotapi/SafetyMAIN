@@ -128,6 +128,11 @@ Knowledge Object access continues to return `404` through existing Application
 validators — authorization failures for membership are distinct from resource
 masking.
 
+Administrative permission denials with trusted actor and tenant context create
+`authorization.permission_denied` audit events through centralized
+`require_permission()` (TASK-P6-001). Authentication and pre-permission tenant
+failures do not create administrative audit events.
+
 ---
 
 ## 8. Infrastructure

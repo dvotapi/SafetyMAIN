@@ -7,6 +7,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from backend.core.application.context.tenant_context import TenantContext
+from backend.core.application.audit.permission_denial_audit import PermissionDenialAuditSpec
 from backend.core.contracts.clock import ClockContract
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.entities.audit_event import AuditEvent
@@ -116,6 +117,50 @@ class AdministrativeAuditRecorder:
                     "authorization_organization_id": (
                         str(spec.context.authorization_organization_id.value)
                         if spec.context.authorization_organization_id
+                        else None
+                    ),
+                },
+            )
+
+    def record_permission_denial(self, spec: PermissionDenialAuditSpec) -> None:
+        from backend.core.application.audit.permission_denial_audit import (
+            PERMISSION_DENIED_FAILURE_CODE,
+        )
+        from backend.core.domain.value_objects.audit_action import AuditAction
+
+        audit_spec = AuditRecordSpec(
+            action=AuditAction.AUTHORIZATION_PERMISSION_DENIED,
+            context=AuditContext(
+                actor_user_id=spec.actor_user_id,
+                authorization_organization_id=spec.authorization_organization_id,
+            ),
+            resource_type=spec.resource_type,
+            resource_id=spec.resource_id,
+            target_organization_id=spec.target_organization_id,
+            metadata=spec.metadata(),
+            failure_code=PERMISSION_DENIED_FAILURE_CODE,
+        )
+        try:
+            with self._failure_uow_factory() as unit_of_work:
+                event = self._build_event(audit_spec, outcome=AuditOutcome.FAILURE)
+                unit_of_work.audit_events.add(event)
+                unit_of_work.commit()
+        except Exception:
+            logger.exception(
+                "Failed to persist permission-denial audit event.",
+                extra={
+                    "audit_action": AuditAction.AUTHORIZATION_PERMISSION_DENIED.value,
+                    "audit_failure_code": PERMISSION_DENIED_FAILURE_CODE,
+                    "actor_user_id": str(spec.actor_user_id.value),
+                    "authorization_organization_id": str(
+                        spec.authorization_organization_id.value
+                    ),
+                    "required_permission": spec.required_permission.value,
+                    "resource_type": spec.resource_type.value,
+                    "resource_id": str(spec.resource_id) if spec.resource_id else None,
+                    "target_organization_id": (
+                        str(spec.target_organization_id.value)
+                        if spec.target_organization_id
                         else None
                     ),
                 },

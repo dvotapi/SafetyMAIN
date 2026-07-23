@@ -1,8 +1,8 @@
 # Role-Based Authorization
 
 Status: Active  
-Date: 2026-07-21  
-Task: TASK-P3-006
+Date: 2026-07-23  
+Task: TASK-P3-006, TASK-P6-001
 
 Related documents:
 
@@ -205,6 +205,13 @@ permission matrix.
 capability. `OrganizationAccessDeniedError` indicates missing or inactive
 membership.
 
+When `AUTH_ENFORCEMENT=true` and the denied permission is an administrative system
+permission (`user:*`, `organization:*`, `membership:*`, `invitation:*`, `audit:read`),
+`require_permission()` records one `authorization.permission_denied` audit event if
+trusted actor and `TenantContext` were resolved before evaluation. Business permission
+denials are not written to the administrative audit log. Audit persistence failure does
+not change the `403 permission_denied` HTTP response.
+
 ---
 
 ## 9. Migration State
@@ -219,6 +226,7 @@ membership.
 | P5-001 | User Management API |
 | P5-002 | Organization Management API |
 | P5-003 | Membership Management API (this rollout) |
+| P6-001 | Administrative permission-denial auditing |
 
 See [UserManagement.md](UserManagement.md), [OrganizationManagement.md](OrganizationManagement.md),
 and [MembershipManagement.md](MembershipManagement.md).

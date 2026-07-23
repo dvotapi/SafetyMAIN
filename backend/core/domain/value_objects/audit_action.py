@@ -20,3 +20,4 @@ class AuditAction(str, Enum):
     INVITATION_REVOKE = "invitation.revoke"
     INVITATION_REISSUE = "invitation.reissue"
     INVITATION_ACCEPT = "invitation.accept"
+    AUTHORIZATION_PERMISSION_DENIED = "authorization.permission_denied"

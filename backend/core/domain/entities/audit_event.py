@@ -21,6 +21,12 @@ ALLOWED_METADATA_KEYS = frozenset(
         "new_status",
         "expiration_refreshed",
         "membership_id",
+        "required_permission",
+        "http_method",
+        "route_template",
+        "operation_id",
+        "target_identifier_present",
+        "permission_category",
     }
 )
 

@@ -1,8 +1,8 @@
 # Administrative Audit Log
 
 Status: Active  
-Date: 2026-07-21  
-Task: TASK-P5-005
+Date: 2026-07-23  
+Task: TASK-P5-005, TASK-P6-001
 
 Related documents:
 
@@ -42,7 +42,7 @@ They are append-only application records stored in the primary database.
 | `authorization_organization_id` | Organization whose membership authorized the action |
 | `target_organization_id` | Organization affected by the operation, when applicable |
 | `action` | Stable action identifier (`<resource>.<operation>`) |
-| `resource_type` | Stable resource type (`USER`, `ORGANIZATION`, `MEMBERSHIP`, `INVITATION`) |
+| `resource_type` | Stable resource type (`USER`, `ORGANIZATION`, `MEMBERSHIP`, `INVITATION`, `AUDIT_EVENT`) |
 | `resource_id` | Affected resource identifier, when available |
 | `outcome` | `SUCCESS` or `FAILURE` |
 | `failure_code` | Stable application code for expected failures |
@@ -61,8 +61,9 @@ Actions are centralized in `AuditAction`:
 - Organization: `organization.create`, `organization.update`, `organization.activate`, `organization.deactivate`
 - Membership: `membership.create`, `membership.role_change`, `membership.activate`, `membership.deactivate`
 - Invitation: `invitation.create`, `invitation.revoke`, `invitation.reissue`, `invitation.accept`
+- Authorization: `authorization.permission_denied`
 
-Handlers must not use arbitrary free-form action strings.
+Handlers and centralized authorization dependencies must not use arbitrary free-form action strings.
 
 ---
 
@@ -118,11 +119,73 @@ If failure-audit persistence also fails:
 - a safe application log entry is emitted;
 - audit infrastructure details are not exposed to clients.
 
-Permission denials before trusted actor context exists are not recorded in the audit table.
+---
+
+## 8. Permission-Denial Auditing (TASK-P6-001)
+
+Authenticated administrative permission denials are recorded when all of the following
+are true before the protected handler executes:
+
+- Bearer authentication succeeded and JWT validation completed;
+- a trusted `SecurityContext` exists with an active actor user;
+- `TenantContext` resolved an authorization organization;
+- active membership was verified through existing organization-access rules;
+- permission evaluation denied the required administrative permission.
+
+Integration point: centralized `require_permission()` in the API layer. The dependency
+calls `AdministrativeAuditRecorder.record_permission_denial()` with a
+`PermissionDenialAuditSpec` built from trusted security context and sanitized route
+metadata. Business endpoint denials (`knowledge_object:*`, `relation:*`) are not
+written to the administrative audit log in this task.
+
+### Eligibility exclusions
+
+Do **not** create permission-denial audit events for:
+
+- missing, malformed, expired, or invalid JWT authentication (`401`);
+- unresolved or conflicting organization context (`422`);
+- missing or inactive membership rejected before permission evaluation;
+- anonymous compatibility-mode requests when `AUTH_ENFORCEMENT=false`.
+
+### Event shape
+
+| Field | Value |
+|-------|-------|
+| `action` | `authorization.permission_denied` |
+| `outcome` | `FAILURE` |
+| `failure_code` | `permission_denied` |
+| `actor_user_id` | `SecurityContext.user_id` |
+| `authorization_organization_id` | `TenantContext.organization_id` |
+| `resource_type` | Mapped from required permission (`user:read` → `USER`, `audit:read` → `AUDIT_EVENT`, …) |
+| `resource_id` | Path UUID when safely available before handler execution; otherwise absent |
+| `target_organization_id` | Validated path/DTO organization when safely available; otherwise absent |
+
+Metadata allowlist for permission denial:
+
+- `required_permission`
+- `http_method`
+- `route_template` (normalized API prefix, not raw sensitive URLs)
+- `operation_id` (optional)
+- `target_identifier_present`
+- `permission_category`
+
+### Transaction model
+
+Permission denial occurs before any business mutation. The audit event is persisted in
+a dedicated failure Unit of Work through `record_permission_denial()` and committed
+independently. If audit persistence fails, the original `403 permission_denied` response
+is preserved and a safe operational log is emitted.
+
+Exactly one permission-denial audit attempt is made per denied request. The global HTTP
+exception mapper does not duplicate this work.
+
+Each API route handler must declare at most one `require_permission()` dependency.
+Multiple guards on the same handler would run separate permission checks and could emit
+duplicate permission-denial audit events.
 
 ---
 
-## 8. Immutable Persistence
+## 9. Immutable Persistence
 
 Repository ports support `add`, `get`, and `list_events` only.
 
@@ -132,7 +195,7 @@ There is no public audit-write permission or HTTP mutation endpoint.
 
 ---
 
-## 9. Query Scoping
+## 10. Query Scoping
 
 Read queries are scoped from trusted tenant context:
 
@@ -142,7 +205,7 @@ Read queries are scoped from trusted tenant context:
 
 ---
 
-## 10. Metadata Allowlisting
+## 11. Metadata Allowlisting
 
 Allowed metadata keys:
 
@@ -151,12 +214,14 @@ Allowed metadata keys:
 - `previous_status`, `new_status`
 - `expiration_refreshed`
 - `membership_id`
+- `required_permission`, `http_method`, `route_template`
+- `operation_id`, `target_identifier_present`, `permission_category`
 
 Metadata must not contain entity snapshots, request bodies, secrets, tokens, or raw exception text.
 
 ---
 
-## 11. Sensitive-Data Exclusions
+## 12. Sensitive-Data Exclusions
 
 Audit records must never contain:
 
@@ -169,22 +234,25 @@ Audit records must never contain:
 
 ---
 
-## 12. Supported Administrative Events
+## 13. Supported Administrative Events
 
 All P5 administrative write handlers record success events. Representative expected failures are mapped to stable codes in `AUDITABLE_ADMIN_FAILURES`.
+
+Permission-denial events (`authorization.permission_denied`) are recorded for authenticated administrative RBAC denials when trusted actor and tenant context exist.
 
 Invitation acceptance records `invitation.accept` with optional `membership_id` metadata and never stores token material.
 
 ---
 
-## 13. Known Limitations
+## 14. Known Limitations
 
-- Permission-denied auditing inside `require_permission()` is deferred.
+- Business endpoint permission denials are not recorded in the administrative audit log.
+- Authentication failures (`401`) and pre-permission tenant/membership failures are not administrative audit events.
 - No platform-wide cross-organization audit view for ordinary org admins.
 - No retention, export, signing, or external streaming integration.
 
 ---
 
-## 14. Future Considerations
+## 15. Future Considerations
 
-Follow-up work may include retention policies, export formats, platform administrator roles, and optional permission-denial auditing once authorization integration can remain narrow.
+Follow-up work may include business security-event auditing, retention policies, export formats, and platform administrator roles.

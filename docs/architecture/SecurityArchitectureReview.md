@@ -195,6 +195,7 @@ Permission denial (`403`) is distinct from cross-organization masking (`404`).
 | Authentication forbidden | 403 | `authentication_forbidden` | Yes |
 | Organization membership denied | 403 | `organization_access_denied` | Yes |
 | Permission denied | 403 | `permission_denied` | Yes |
+| Administrative permission denied (audit) | 403 | `permission_denied` | Yes (P6-001, scoped audit event when trusted context exists) |
 | Missing/ambiguous organization context | 422 | `organization_context_required` | Yes |
 | Conflicting organization contexts | 422 | `organization_context_required` | Yes |
 | Cross-organization resource access | 404 | domain codes | Yes |

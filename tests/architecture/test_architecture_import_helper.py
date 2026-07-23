@@ -5,8 +5,10 @@ from pathlib import Path
 import pytest
 
 from tests.architecture.architecture_imports import (
+    assert_at_most_one_require_permission_per_route_handler,
     assert_no_forbidden_imports,
     find_forbidden_imports,
+    find_route_handlers_with_multiple_require_permission,
 )
 
 
@@ -84,3 +86,43 @@ def test_helper_allows_valid_inward_dependencies(tmp_path: Path) -> None:
         forbidden_prefixes=("backend.core.infrastructure",),
         rule="valid inward dependencies should pass",
     )
+
+
+def test_helper_detects_multiple_require_permission_on_one_route_handler(
+    tmp_path: Path,
+) -> None:
+    source_file = tmp_path / "routes.py"
+    source_file.write_text(
+        """
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
+
+router = APIRouter()
+
+
+@router.get("")
+def list_items(
+    _read: Annotated[object, Depends(require_permission("a"))],
+    _write: Annotated[object, Depends(require_permission("b"))],
+) -> None:
+    return None
+
+
+def require_permission(_permission: str):
+    def _dependency() -> None:
+        return None
+
+    return _dependency
+""",
+        encoding="utf-8",
+    )
+
+    violations = find_route_handlers_with_multiple_require_permission(tmp_path)
+
+    assert len(violations) == 1
+    assert violations[0].handler_name == "list_items"
+    assert violations[0].call_count == 2
+
+    with pytest.raises(AssertionError):
+        assert_at_most_one_require_permission_per_route_handler(tmp_path)
