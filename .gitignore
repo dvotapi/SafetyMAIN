@@ -38,6 +38,12 @@ yarn-error.log*
 pnpm-debug.log*
 .next/
 .nuxt/
+storybook-static/
+coverage/
+playwright-report/
+test-results/
+frontend/.env
+frontend/.env*.local
 coverage/
 
 # Logs and runtime files

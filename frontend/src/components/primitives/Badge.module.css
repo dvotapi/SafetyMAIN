@@ -1,0 +1,115 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm-space-1);
+  height: 24px;
+  padding: 0 var(--sm-space-2);
+  border-radius: var(--sm-radius-sm);
+  border: 1px solid var(--sm-color-border-default);
+  background: var(--sm-color-bg-subtle);
+  color: var(--sm-color-text-secondary);
+  font-size: var(--sm-font-size-xs);
+  line-height: var(--sm-font-lineHeight-xs);
+  font-weight: var(--sm-font-weight-medium);
+  white-space: nowrap;
+}
+
+.status {
+  border-width: 1px;
+}
+
+.draft {
+  color: var(--sm-color-status-draft-fg);
+  background: var(--sm-color-status-draft-bg);
+  border-color: var(--sm-color-status-draft-border);
+}
+
+.under_review {
+  color: var(--sm-color-status-review-fg);
+  background: var(--sm-color-status-review-bg);
+  border-color: var(--sm-color-status-review-border);
+}
+
+.approved {
+  color: var(--sm-color-status-approved-fg);
+  background: var(--sm-color-status-approved-bg);
+  border-color: var(--sm-color-status-approved-border);
+}
+
+.rejected {
+  color: var(--sm-color-status-rejected-fg);
+  background: var(--sm-color-status-rejected-bg);
+  border-color: var(--sm-color-status-rejected-border);
+}
+
+.planned {
+  color: var(--sm-color-status-planned-fg);
+  background: var(--sm-color-status-planned-bg);
+  border-color: var(--sm-color-status-planned-border);
+}
+
+.active {
+  color: var(--sm-color-status-active-fg);
+  background: var(--sm-color-status-active-bg);
+  border-color: var(--sm-color-status-active-border);
+}
+
+.implemented {
+  color: var(--sm-color-status-implemented-fg);
+  background: var(--sm-color-status-implemented-bg);
+  border-color: var(--sm-color-status-implemented-border);
+}
+
+.verified_effective {
+  color: var(--sm-color-status-effective-fg);
+  background: var(--sm-color-status-effective-bg);
+  border-color: var(--sm-color-status-effective-border);
+}
+
+.verified_partially_effective {
+  color: var(--sm-color-status-partial-fg);
+  background: var(--sm-color-status-partial-bg);
+  border-color: var(--sm-color-status-partial-border);
+}
+
+.verified_ineffective {
+  color: var(--sm-color-status-ineffective-fg);
+  background: var(--sm-color-status-ineffective-bg);
+  border-color: var(--sm-color-status-ineffective-border);
+}
+
+.overdue {
+  color: var(--sm-color-status-overdue-fg);
+  background: var(--sm-color-status-overdue-bg);
+  border-color: var(--sm-color-status-overdue-border);
+}
+
+.superseded {
+  color: var(--sm-color-status-superseded-fg);
+  background: var(--sm-color-status-superseded-bg);
+  border-color: var(--sm-color-status-superseded-border);
+}
+
+.archived {
+  color: var(--sm-color-status-archived-fg);
+  background: var(--sm-color-status-archived-bg);
+  border-color: var(--sm-color-status-archived-border);
+}
+
+.cancelled {
+  color: var(--sm-color-status-cancelled-fg);
+  background: var(--sm-color-status-cancelled-bg);
+  border-color: var(--sm-color-status-cancelled-border);
+}
+
+.suspended {
+  color: var(--sm-color-status-suspended-fg);
+  background: var(--sm-color-status-suspended-bg);
+  border-color: var(--sm-color-status-suspended-border);
+}
+
+.in_implementation {
+  color: var(--sm-color-status-in-progress-fg);
+  background: var(--sm-color-status-in-progress-bg);
+  border-color: var(--sm-color-status-in-progress-border);
+}

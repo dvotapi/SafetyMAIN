@@ -1,0 +1,81 @@
+{
+  "name": "safetymain-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.11.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "next dev --turbopack -p 3100",
+    "build": "npm run tokens:build && next build",
+    "start": "next start -p 3100",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "tokens:build": "tsx scripts/build-tokens.ts",
+    "tokens:check": "tsx scripts/build-tokens.ts --check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "architecture:check": "depcruise --config .dependency-cruiser.cjs src",
+    "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6006",
+    "build-storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook build",
+    "verify": "npm run tokens:check && npm run format:check && npm run lint && npm run typecheck && npm run architecture:check && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.0.1",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@tanstack/react-query": "^5.80.7",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.514.0",
+    "next": "15.3.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.57.0",
+    "server-only": "^0.0.1",
+    "zod": "^3.25.56"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.52.0",
+    "@storybook/addon-a11y": "^8.6.18",
+    "@storybook/addon-essentials": "^8.6.18",
+    "@storybook/addon-interactions": "^8.6.18",
+    "@storybook/addon-links": "^8.6.18",
+    "@storybook/addon-themes": "^8.6.18",
+    "@storybook/addon-viewport": "^8.6.18",
+    "@storybook/blocks": "^8.6.18",
+    "@storybook/react": "^8.6.18",
+    "@storybook/react-vite": "^8.6.18",
+    "@storybook/test": "^8.6.18",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.5.2",
+    "@vitest/coverage-v8": "^3.2.3",
+    "dependency-cruiser": "^16.10.2",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.5",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-storybook": "^8.6.18",
+    "jsdom": "^26.1.0",
+    "msw": "^2.9.0",
+    "prettier": "^3.5.3",
+    "storybook": "^8.6.18",
+    "tsx": "^4.19.4",
+    "typescript": "^5",
+    "vitest": "^3.2.3",
+    "vitest-axe": "^0.1.0"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
+}

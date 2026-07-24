@@ -1,0 +1,15 @@
+.link {
+  color: var(--sm-color-text-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  color: var(--sm-color-interactive-hover);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--sm-color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--sm-radius-sm);
+}

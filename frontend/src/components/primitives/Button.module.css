@@ -1,0 +1,89 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sm-space-2);
+  border-radius: var(--sm-radius-md);
+  border: 1px solid transparent;
+  font-family: var(--sm-font-family-sans);
+  font-weight: var(--sm-font-weight-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--sm-motion-fast) ease-out,
+    border-color var(--sm-motion-fast) ease-out,
+    color var(--sm-motion-fast) ease-out;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--sm-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  background: var(--sm-color-disabled-bg);
+  color: var(--sm-color-disabled-text);
+  border-color: var(--sm-color-disabled-border);
+  cursor: not-allowed;
+}
+
+.sm {
+  height: var(--sm-size-control-sm);
+  padding: 0 var(--sm-space-3);
+  font-size: var(--sm-font-size-sm);
+  line-height: var(--sm-font-lineHeight-sm);
+}
+
+.md {
+  height: var(--sm-size-control-md);
+  padding: 0 var(--sm-space-4);
+  font-size: var(--sm-font-size-md);
+  line-height: var(--sm-font-lineHeight-md);
+}
+
+.lg {
+  height: var(--sm-size-control-lg);
+  padding: 0 var(--sm-space-5);
+  font-size: var(--sm-font-size-lg);
+  line-height: var(--sm-font-lineHeight-lg);
+}
+
+.primary {
+  background: var(--sm-color-interactive-default);
+  color: var(--sm-color-text-inverse);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--sm-color-interactive-hover);
+}
+
+.primary:active:not(:disabled) {
+  background: var(--sm-color-interactive-active);
+}
+
+.secondary {
+  background: var(--sm-color-bg-surface);
+  color: var(--sm-color-text-primary);
+  border-color: var(--sm-color-border-default);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--sm-color-bg-subtle);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--sm-color-text-primary);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--sm-color-bg-subtle);
+}
+
+.danger {
+  background: var(--sm-color-danger-fg);
+  color: var(--sm-color-text-inverse);
+}
+
+.danger:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
