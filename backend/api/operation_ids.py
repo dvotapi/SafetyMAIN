@@ -23,6 +23,7 @@ DELETE_KNOWLEDGE_OBJECT_RELATION = "delete_knowledge_object_relation"
 
 AUTH_LOGIN = "auth_login"
 AUTH_REFRESH = "auth_refresh"
+AUTH_LOGOUT = "auth_logout"
 
 CREATE_USER = "create_user"
 LIST_USERS = "list_users"
@@ -53,6 +54,7 @@ REISSUE_INVITATION = "reissue_invitation"
 ACCEPT_INVITATION = "accept_invitation"
 LIST_AUDIT_EVENTS = "list_audit_events"
 GET_AUDIT_EVENT = "get_audit_event"
+VERIFY_AUDIT_CHAIN_INTEGRITY = "verify_audit_chain_integrity"
 
 STABLE_OPERATION_IDS: frozenset[str] = frozenset(
     {
@@ -60,6 +62,7 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         READINESS,
         AUTH_LOGIN,
         AUTH_REFRESH,
+        AUTH_LOGOUT,
         CREATE_USER,
         LIST_USERS,
         GET_USER,
@@ -86,6 +89,7 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         ACCEPT_INVITATION,
         LIST_AUDIT_EVENTS,
         GET_AUDIT_EVENT,
+        VERIFY_AUDIT_CHAIN_INTEGRITY,
         CREATE_KNOWLEDGE_OBJECT,
         SEARCH_KNOWLEDGE_OBJECTS,
         GET_KNOWLEDGE_OBJECT,

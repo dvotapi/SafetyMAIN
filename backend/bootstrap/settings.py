@@ -17,6 +17,8 @@ JWT_SECRET_KEY_ENV = "JWT_SECRET_KEY"
 JWT_ALGORITHM_ENV = "JWT_ALGORITHM"
 JWT_ACCESS_TOKEN_TTL_SECONDS_ENV = "JWT_ACCESS_TOKEN_TTL_SECONDS"
 JWT_REFRESH_TOKEN_TTL_SECONDS_ENV = "JWT_REFRESH_TOKEN_TTL_SECONDS"
+JWT_REFRESH_ABSOLUTE_TTL_SECONDS_ENV = "JWT_REFRESH_ABSOLUTE_TTL_SECONDS"
+REFRESH_TOKEN_ROTATION_ENABLED_ENV = "REFRESH_TOKEN_ROTATION_ENABLED"
 JWT_ISSUER_ENV = "JWT_ISSUER"
 AUTH_ENFORCEMENT_ENV = "AUTH_ENFORCEMENT"
 DEFAULT_ORGANIZATION_ID_ENV = "DEFAULT_ORGANIZATION_ID"
@@ -28,6 +30,8 @@ DEFAULT_JWT_SECRET_KEY = "dev-insecure-change-me"
 DEFAULT_JWT_ALGORITHM = "HS256"
 DEFAULT_JWT_ACCESS_TOKEN_TTL_SECONDS = 3600
 DEFAULT_JWT_REFRESH_TOKEN_TTL_SECONDS = 604_800
+DEFAULT_JWT_REFRESH_ABSOLUTE_TTL_SECONDS = 7_776_000
+DEFAULT_REFRESH_TOKEN_ROTATION_ENABLED = True
 DEFAULT_JWT_ISSUER = "safetymain"
 
 
@@ -47,6 +51,8 @@ class AppSettings:
     jwt_algorithm: str = DEFAULT_JWT_ALGORITHM
     jwt_access_token_ttl_seconds: int = DEFAULT_JWT_ACCESS_TOKEN_TTL_SECONDS
     jwt_refresh_token_ttl_seconds: int = DEFAULT_JWT_REFRESH_TOKEN_TTL_SECONDS
+    jwt_refresh_absolute_ttl_seconds: int = DEFAULT_JWT_REFRESH_ABSOLUTE_TTL_SECONDS
+    refresh_token_rotation_enabled: bool = DEFAULT_REFRESH_TOKEN_ROTATION_ENABLED
     jwt_issuer: str | None = DEFAULT_JWT_ISSUER
     auth_enforcement: bool = False
     default_organization_id: OrganizationId | None = None
@@ -128,6 +134,20 @@ def load_settings(environment: Mapping[str, str] | None = None) -> AppSettings:
                 str(DEFAULT_JWT_REFRESH_TOKEN_TTL_SECONDS),
             ),
             default=DEFAULT_JWT_REFRESH_TOKEN_TTL_SECONDS,
+        ),
+        jwt_refresh_absolute_ttl_seconds=_read_positive_int(
+            source.get(
+                JWT_REFRESH_ABSOLUTE_TTL_SECONDS_ENV,
+                str(DEFAULT_JWT_REFRESH_ABSOLUTE_TTL_SECONDS),
+            ),
+            default=DEFAULT_JWT_REFRESH_ABSOLUTE_TTL_SECONDS,
+        ),
+        refresh_token_rotation_enabled=_read_bool(
+            source.get(
+                REFRESH_TOKEN_ROTATION_ENABLED_ENV,
+                "true" if DEFAULT_REFRESH_TOKEN_ROTATION_ENABLED else "false",
+            ),
+            default=DEFAULT_REFRESH_TOKEN_ROTATION_ENABLED,
         ),
         jwt_issuer=jwt_issuer,
         auth_enforcement=_read_bool(

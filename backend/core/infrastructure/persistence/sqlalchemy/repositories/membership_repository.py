@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.core.domain.entities.membership import Membership
@@ -10,6 +11,9 @@ from backend.core.domain.value_objects import MembershipId, OrganizationId, User
 from backend.core.domain.value_objects.membership_list_criteria import (
     MembershipListCriteria,
     MembershipListResult,
+)
+from backend.core.infrastructure.persistence.sqlalchemy.identity_constraint_errors import (
+    raise_mapped_identity_integrity_error,
 )
 from backend.core.infrastructure.persistence.sqlalchemy.mappers.membership_mapper import (
     apply_to_model,
@@ -27,6 +31,15 @@ class SQLAlchemyMembershipRepository(MembershipRepositoryContract):
 
     def add(self, membership: Membership) -> None:
         self._session.add(to_model(membership))
+        try:
+            self._session.flush()
+        except IntegrityError as error:
+            raise_mapped_identity_integrity_error(
+                error,
+                user_id=membership.user_id,
+                organization_id=membership.organization_id,
+                role=membership.role.value,
+            )
 
     def get(self, membership_id: MembershipId) -> Membership:
         model = self._session.get(MembershipModel, membership_id.value)
@@ -56,14 +69,6 @@ class SQLAlchemyMembershipRepository(MembershipRepositoryContract):
     def list_by_organization(self, organization_id: OrganizationId) -> tuple[Membership, ...]:
         statement = select(MembershipModel).where(
             MembershipModel.organization_id == organization_id.value
-        )
-        models = self._session.scalars(statement).all()
-        return tuple(to_domain(model) for model in models)
-
-    def list_active_by_user(self, user_id: UserId) -> tuple[Membership, ...]:
-        statement = select(MembershipModel).where(
-            MembershipModel.user_id == user_id.value,
-            MembershipModel.is_active.is_(True),
         )
         models = self._session.scalars(statement).all()
         return tuple(to_domain(model) for model in models)

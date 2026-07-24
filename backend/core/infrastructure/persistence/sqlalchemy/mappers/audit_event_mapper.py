@@ -4,6 +4,10 @@ from backend.core.domain.entities.audit_event import AuditEvent
 from backend.core.domain.value_objects import OrganizationId, UserId
 from backend.core.domain.value_objects.audit_action import AuditAction
 from backend.core.domain.value_objects.audit_event_id import AuditEventId
+from backend.core.domain.value_objects.audit_integrity import (
+    AuditIntegrityHash,
+    AuditIntegrityVersion,
+)
 from backend.core.domain.value_objects.audit_outcome import AuditOutcome
 from backend.core.domain.value_objects.audit_resource_type import AuditResourceType
 from backend.core.infrastructure.persistence.sqlalchemy.models.audit_event_model import (
@@ -30,6 +34,13 @@ def to_model(event: AuditEvent) -> AuditEventModel:
         failure_code=event.failure_code,
         metadata_json=event.metadata,
         occurred_at=event.occurred_at,
+        previous_integrity_hash=(
+            event.previous_integrity_hash.value if event.previous_integrity_hash else None
+        ),
+        integrity_hash=event.integrity_hash.value if event.integrity_hash else None,
+        integrity_version=(
+            event.integrity_version.value if event.integrity_version else None
+        ),
     )
 
 
@@ -54,4 +65,17 @@ def to_domain(model: AuditEventModel) -> AuditEvent:
         failure_code=model.failure_code,
         metadata=dict(model.metadata_json),
         occurred_at=model.occurred_at,
+        previous_integrity_hash=(
+            AuditIntegrityHash(value=model.previous_integrity_hash)
+            if model.previous_integrity_hash
+            else None
+        ),
+        integrity_hash=(
+            AuditIntegrityHash(value=model.integrity_hash) if model.integrity_hash else None
+        ),
+        integrity_version=(
+            AuditIntegrityVersion(value=model.integrity_version)
+            if model.integrity_version is not None
+            else None
+        ),
     )

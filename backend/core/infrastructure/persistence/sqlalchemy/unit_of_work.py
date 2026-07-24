@@ -12,6 +12,7 @@ from backend.core.domain.repositories import (
     KnowledgeObjectRepositoryContract,
     MembershipRepositoryContract,
     OrganizationRepositoryContract,
+    RefreshTokenSessionRepositoryContract,
     UserRepositoryContract,
 )
 from backend.core.infrastructure.persistence.sqlalchemy.repositories import (
@@ -21,6 +22,7 @@ from backend.core.infrastructure.persistence.sqlalchemy.repositories import (
     SQLAlchemyKnowledgeObjectRepository,
     SQLAlchemyMembershipRepository,
     SQLAlchemyOrganizationRepository,
+    SQLAlchemyRefreshTokenSessionRepository,
     SQLAlchemyUserRepository,
 )
 
@@ -36,6 +38,7 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._memberships: SQLAlchemyMembershipRepository | None = None
         self._invitations: SQLAlchemyInvitationRepository | None = None
         self._audit_events: SQLAlchemyAuditEventRepository | None = None
+        self._refresh_sessions: SQLAlchemyRefreshTokenSessionRepository | None = None
         self._committed = False
         self._rolled_back = False
 
@@ -95,6 +98,14 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
 
         return self._audit_events
 
+
+    @property
+    def refresh_sessions(self) -> RefreshTokenSessionRepositoryContract:
+        if self._refresh_sessions is None:
+            raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
+
+        return self._refresh_sessions
+
     def commit(self) -> None:
         if self._committed:
             return
@@ -120,6 +131,7 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._memberships = SQLAlchemyMembershipRepository(self._session)
         self._invitations = SQLAlchemyInvitationRepository(self._session)
         self._audit_events = SQLAlchemyAuditEventRepository(self._session)
+        self._refresh_sessions = SQLAlchemyRefreshTokenSessionRepository(self._session)
         self._committed = False
         self._rolled_back = False
         return self
@@ -144,5 +156,6 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
                 self._memberships = None
                 self._invitations = None
                 self._audit_events = None
+                self._refresh_sessions = None
 
         return False

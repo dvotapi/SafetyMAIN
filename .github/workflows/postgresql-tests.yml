@@ -1,0 +1,62 @@
+name: PostgreSQL Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  db-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: safetymain
+          POSTGRES_USER: safetymain
+          POSTGRES_PASSWORD: safetymain
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U safetymain -d safetymain"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql+psycopg://safetymain:safetymain@localhost:5432/safetymain
+      SAFETYMAIN_RUN_DB_TESTS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Apply migrations
+        run: python -m alembic upgrade head
+      - name: Run PostgreSQL-marked tests
+        run: python -m pytest -m db -q --tb=short -ra
+      - name: Assert no skipped DB tests
+        run: |
+          python - <<'PY'
+          import re
+          import subprocess
+          import sys
+
+          completed = subprocess.run(
+              [sys.executable, "-m", "pytest", "-m", "db", "-q", "-ra"],
+              check=False,
+              capture_output=True,
+              text=True,
+          )
+          sys.stdout.write(completed.stdout)
+          sys.stderr.write(completed.stderr)
+          summary = completed.stdout.strip().splitlines()[-1] if completed.stdout.strip() else ""
+          match = re.search(r"(\d+)\s+skipped", summary.lower())
+          skipped = int(match.group(1)) if match else 0
+          if skipped:
+              raise SystemExit(f"DB tests skipped unexpectedly under SAFETYMAIN_RUN_DB_TESTS=1: {summary}")
+          raise SystemExit(completed.returncode)
+          PY

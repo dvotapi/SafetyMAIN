@@ -59,6 +59,10 @@ def test_audit_event_accepts_allowlisted_metadata_keys() -> None:
             "operation_id": "list_users",
             "target_identifier_present": False,
             "permission_category": "user",
+            "request_id": "req-1",
+            "client_ip": "203.0.113.10",
+            "user_agent": "pytest",
+            "authentication_method": "password",
         }
     )
 
@@ -106,12 +110,20 @@ def test_audit_action_values_are_stable() -> None:
     assert AuditAction.USER_CREATE.value == "user.create"
     assert AuditAction.INVITATION_ACCEPT.value == "invitation.accept"
     assert AuditAction.AUTHORIZATION_PERMISSION_DENIED.value == "authorization.permission_denied"
+    assert AuditAction.AUTHENTICATION_LOGIN_SUCCEEDED.value == "authentication.login.succeeded"
+    assert AuditAction.AUTHENTICATION_LOGIN_FAILED.value == "authentication.login.failed"
+    assert (
+        AuditAction.AUTHENTICATION_REFRESH_SUCCEEDED.value
+        == "authentication.refresh.succeeded"
+    )
+    assert AuditAction.AUTHENTICATION_REFRESH_FAILED.value == "authentication.refresh.failed"
 
 
 def test_audit_resource_types_are_stable() -> None:
     assert AuditResourceType.USER.value == "USER"
     assert AuditResourceType.INVITATION.value == "INVITATION"
     assert AuditResourceType.AUDIT_EVENT.value == "AUDIT_EVENT"
+    assert AuditResourceType.SESSION.value == "SESSION"
 
 
 def test_audit_outcomes_are_success_and_failure_only() -> None:

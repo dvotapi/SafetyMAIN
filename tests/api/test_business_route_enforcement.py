@@ -12,7 +12,6 @@ from backend.api.knowledge_object_params import ORGANIZATION_ID_HEADER
 from backend.bootstrap.container import create_container
 from backend.bootstrap.settings import AppSettings
 from backend.core.application.commands.authenticate_user import AuthenticateUserCommand
-from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
 from backend.core.domain.entities.membership import Membership, MembershipStatus
 from backend.core.domain.entities.user import User, UserStatus
 from backend.core.domain.value_objects import MembershipId, OrganizationId, Role, UserId
@@ -28,6 +27,8 @@ from tests.api.contracts.assertions import assert_error_envelope
 from tests.api.knowledge_objects_helpers import create_object
 from tests.api.relations_helpers import create_relation, create_source_and_target
 from tests.security.conftest import build_enforced_client
+from tests.core.audit_test_support import make_authentication_security_event_recorder
+from tests.support.authenticate import build_authenticate_user_handler
 
 
 @pytest.fixture
@@ -85,11 +86,10 @@ def _register_user_with_role_in_org(
             updated_at=datetime.now(UTC),
         )
     )
-    authenticate_handler = AuthenticateUserHandler(
-        user_lookup=container.user_lookup,
-        user_credentials=container.user_credentials,
-        password_hasher=container.password_hasher,
-        token_service=container.token_service,
+    authenticate_handler = build_authenticate_user_handler(
+        container,
+        client.app.state.settings,
+        security_event_recorder=make_authentication_security_event_recorder()[0],
     )
     tokens = authenticate_handler.handle(
         AuthenticateUserCommand(email=email, password=password)
@@ -129,11 +129,10 @@ def _build_client_without_membership(
         user,
         container.password_hasher.hash_password("secret-password"),
     )
-    authenticate_handler = AuthenticateUserHandler(
-        user_lookup=container.user_lookup,
-        user_credentials=container.user_credentials,
-        password_hasher=container.password_hasher,
-        token_service=container.token_service,
+    authenticate_handler = build_authenticate_user_handler(
+        container,
+        settings,
+        security_event_recorder=make_authentication_security_event_recorder()[0],
     )
     tokens = authenticate_handler.handle(
         AuthenticateUserCommand(

@@ -155,6 +155,7 @@ Domain modules must not import Application, Infrastructure, API, or Bootstrap.
 | Task | Deliverable |
 |------|-------------|
 | **P4-001** | Identity persistence — see [IdentityPersistence.md](IdentityPersistence.md) |
+| **P7-001** | Production source-of-truth hardening — see [PersistentIdentityStores.md](PersistentIdentityStores.md) |
 
 See [AuthenticationArchitecture.md](AuthenticationArchitecture.md) for the full
 authentication roadmap.

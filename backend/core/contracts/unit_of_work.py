@@ -10,6 +10,7 @@ from backend.core.domain.repositories import (
     KnowledgeObjectRepositoryContract,
     MembershipRepositoryContract,
     OrganizationRepositoryContract,
+    RefreshTokenSessionRepositoryContract,
     UserRepositoryContract,
 )
 
@@ -43,6 +44,10 @@ class UnitOfWorkContract(Protocol):
 
     @property
     def audit_events(self) -> AuditEventRepositoryContract:
+        ...
+
+    @property
+    def refresh_sessions(self) -> RefreshTokenSessionRepositoryContract:
         ...
 
     def commit(self) -> None:

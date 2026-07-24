@@ -7,11 +7,15 @@ import pytest
 
 from backend.core.domain.entities.audit_event import AuditEvent
 from backend.core.domain.exceptions.audit_event import AuditEventNotFound
-from backend.core.domain.repositories.audit_event_repository import AuditEventRepositoryContract
+from backend.core.domain.repositories.audit_event_repository import (
+    AuditEventRepositoryContract,
+)
 from backend.core.domain.value_objects import OrganizationId, UserId
 from backend.core.domain.value_objects.audit_action import AuditAction
 from backend.core.domain.value_objects.audit_event_id import AuditEventId
-from backend.core.domain.value_objects.audit_event_list_criteria import AuditEventListCriteria
+from backend.core.domain.value_objects.audit_event_list_criteria import (
+    AuditEventListCriteria,
+)
 from backend.core.domain.value_objects.audit_outcome import AuditOutcome
 from backend.core.domain.value_objects.audit_resource_type import AuditResourceType
 
@@ -23,6 +27,7 @@ def build_audit_event(
     outcome: AuditOutcome = AuditOutcome.SUCCESS,
     actor_user_id: UserId | None = None,
     target_organization_id: OrganizationId | None = None,
+    resource_type: AuditResourceType = AuditResourceType.USER,
     resource_id: UUID | None = None,
     occurred_at: datetime | None = None,
     metadata: dict[str, object] | None = None,
@@ -33,7 +38,7 @@ def build_audit_event(
         authorization_organization_id=scope_organization_id,
         target_organization_id=target_organization_id,
         action=action,
-        resource_type=AuditResourceType.USER,
+        resource_type=resource_type,
         resource_id=resource_id or uuid4(),
         outcome=outcome,
         failure_code="duplicate_user_email" if outcome is AuditOutcome.FAILURE else None,
@@ -53,7 +58,13 @@ class AuditEventRepositoryContractSuite:
 
         repository.add(event)
 
-        assert repository.get(event.id) == event
+        stored = repository.get(event.id)
+        assert stored.id == event.id
+        assert stored.action == event.action
+        assert stored.integrity_hash is not None
+        assert stored.integrity_version is not None
+        assert stored.previous_integrity_hash is None
+        assert repository.get_latest_integrity_hash(scope) == stored.integrity_hash
 
     def test_get_missing_event_raises(self, repository: AuditEventRepositoryContract) -> None:
         missing_id = AuditEventId(value=uuid4())
@@ -142,14 +153,15 @@ class AuditEventRepositoryContractSuite:
                 offset=1,
                 limit=1,
                 occurred_from=base,
+                # Exclusive upper bound includes base+0 and base+1 only when set to +2.
                 occurred_to=base + timedelta(minutes=2),
                 sort_ascending=False,
             )
         )
 
-        assert result.total == 3
+        assert result.total == 2
         assert len(result.items) == 1
-        assert result.items[0].id == events[1].id
+        assert result.items[0].id == events[0].id
 
     def test_list_persists_metadata(self, repository: AuditEventRepositoryContract) -> None:
         scope = OrganizationId(value=uuid4())
@@ -165,6 +177,121 @@ class AuditEventRepositoryContractSuite:
         )
 
         assert listed.items[0].metadata == {"changed_fields": ["display_name"]}
+
+    def test_list_filters_by_actions_request_id_and_exclusive_upper_bound(
+        self,
+        repository: AuditEventRepositoryContract,
+    ) -> None:
+        scope = OrganizationId(value=uuid4())
+        other_scope = OrganizationId(value=uuid4())
+        actor = UserId(value=uuid4())
+        shared_request_id = "req-shared-collision"
+        base = datetime(2026, 7, 24, 12, 0, tzinfo=UTC)
+
+        matching = build_audit_event(
+            scope_organization_id=scope,
+            actor_user_id=actor,
+            action=AuditAction.AUTHENTICATION_LOGIN_FAILED,
+            outcome=AuditOutcome.FAILURE,
+            resource_type=AuditResourceType.SESSION,
+            occurred_at=base,
+            metadata={"request_id": shared_request_id},
+        )
+        other_action = build_audit_event(
+            scope_organization_id=scope,
+            action=AuditAction.AUTHENTICATION_LOGIN_SUCCEEDED,
+            outcome=AuditOutcome.SUCCESS,
+            resource_type=AuditResourceType.SESSION,
+            occurred_at=base + timedelta(minutes=1),
+            metadata={"request_id": shared_request_id},
+        )
+        other_org = build_audit_event(
+            scope_organization_id=other_scope,
+            action=AuditAction.AUTHENTICATION_LOGIN_FAILED,
+            outcome=AuditOutcome.FAILURE,
+            resource_type=AuditResourceType.SESSION,
+            occurred_at=base,
+            metadata={"request_id": shared_request_id},
+        )
+        outside_window = build_audit_event(
+            scope_organization_id=scope,
+            action=AuditAction.AUTHENTICATION_LOGIN_FAILED,
+            outcome=AuditOutcome.FAILURE,
+            resource_type=AuditResourceType.SESSION,
+            occurred_at=base + timedelta(minutes=5),
+            metadata={"request_id": shared_request_id},
+        )
+
+        repository.add(matching)
+        repository.add(other_action)
+        repository.add(other_org)
+        repository.add(outside_window)
+
+        result = repository.list_events(
+            AuditEventListCriteria(
+                scope_organization_id=scope,
+                offset=0,
+                limit=10,
+                actions=frozenset({AuditAction.AUTHENTICATION_LOGIN_FAILED}),
+                request_id=shared_request_id,
+                occurred_from=base,
+                occurred_to=base + timedelta(minutes=5),
+            )
+        )
+
+        assert result.total == 1
+        assert result.items[0].id == matching.id
+
+    def test_list_stable_pagination_with_equal_timestamps(
+        self,
+        repository: AuditEventRepositoryContract,
+    ) -> None:
+        scope = OrganizationId(value=uuid4())
+        occurred_at = datetime(2026, 7, 24, 15, 0, tzinfo=UTC)
+        event_ids = sorted(uuid4() for _ in range(4))
+        events = [
+            AuditEvent(
+                id=AuditEventId(value=event_id),
+                actor_user_id=UserId(value=uuid4()),
+                authorization_organization_id=scope,
+                target_organization_id=None,
+                action=AuditAction.USER_CREATE,
+                resource_type=AuditResourceType.USER,
+                resource_id=uuid4(),
+                outcome=AuditOutcome.SUCCESS,
+                failure_code=None,
+                metadata={},
+                occurred_at=occurred_at,
+            )
+            for event_id in event_ids
+        ]
+        for event in events:
+            repository.add(event)
+
+        page_one = repository.list_events(
+            AuditEventListCriteria(
+                scope_organization_id=scope,
+                offset=0,
+                limit=2,
+                sort_ascending=False,
+            )
+        )
+        page_two = repository.list_events(
+            AuditEventListCriteria(
+                scope_organization_id=scope,
+                offset=2,
+                limit=2,
+                sort_ascending=False,
+            )
+        )
+
+        assert page_one.total == 4
+        assert page_two.total == 4
+        ordered_ids = [item.id.value for item in page_one.items] + [
+            item.id.value for item in page_two.items
+        ]
+        assert ordered_ids == sorted(event_ids, reverse=True)
+        assert len(set(ordered_ids)) == 4
 
     def test_repository_has_no_update_or_delete_methods(
         self,

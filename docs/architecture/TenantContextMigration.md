@@ -8,6 +8,7 @@ Related documents:
 
 - [AuthenticationArchitecture.md](AuthenticationArchitecture.md)
 - [AuthorizationFoundation.md](AuthorizationFoundation.md)
+- [PersistentIdentityStores.md](PersistentIdentityStores.md)
 
 ---
 

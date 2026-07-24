@@ -3,14 +3,17 @@ from __future__ import annotations
 import inspect
 from pathlib import Path
 
-from backend.core.application.authorization.policies.resource_permissions import AUDIT_READ
-from backend.core.domain.repositories.audit_event_repository import AuditEventRepositoryContract
+from backend.core.application.authorization.policies.resource_permissions import (
+    AUDIT_READ,
+)
+from backend.core.domain.repositories.audit_event_repository import (
+    AuditEventRepositoryContract,
+)
 from backend.core.domain.value_objects.permission import SystemPermission
 from tests.architecture.architecture_imports import (
     assert_at_most_one_require_permission_per_route_handler,
     assert_no_forbidden_imports,
 )
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 APPLICATION_AUDIT_ROOT = PROJECT_ROOT / "backend" / "core" / "application" / "audit"
@@ -44,7 +47,14 @@ def test_audit_repository_contract_is_append_only() -> None:
         if not name.startswith("_")
     }
 
-    assert public_methods == {"add", "get", "list_events"}
+    assert public_methods == {
+        "add",
+        "get",
+        "list_events",
+        "get_latest_integrity_hash",
+        "get_chain_head",
+        "list_chain_events",
+    }
 
 
 def test_audit_read_permission_exists_without_audit_write() -> None:

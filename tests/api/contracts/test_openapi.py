@@ -11,6 +11,7 @@ EXPECTED_PATHS: dict[str, set[str]] = {
     "/api/v1/ready": {"get"},
     "/api/v1/auth/login": {"post"},
     "/api/v1/auth/refresh": {"post"},
+    "/api/v1/auth/logout": {"post"},
     "/api/v1/knowledge-objects": {"get", "post"},
     "/api/v1/knowledge-objects/{knowledge_object_id}": {"get", "put", "delete"},
     "/api/v1/knowledge-objects/{knowledge_object_id}/archive": {"post"},
@@ -39,6 +40,7 @@ EXPECTED_PATHS: dict[str, set[str]] = {
     "/api/v1/admin/invitations/{invitation_id}/revoke": {"post"},
     "/api/v1/admin/invitations/{invitation_id}/reissue": {"post"},
     "/api/v1/admin/audit-events": {"get"},
+    "/api/v1/admin/audit-events/integrity": {"get"},
     "/api/v1/admin/audit-events/{audit_event_id}": {"get"},
     "/api/v1/invitations/accept": {"post"},
 }

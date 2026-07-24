@@ -128,13 +128,13 @@ def test_security_matrix_expired_access_token_is_rejected() -> None:
         issuer="safetymain",
     )
     user_id = UserId(value=uuid4())
-    tokens = token_service.issue_tokens(user_id)
+    access_token = token_service.issue_access_token(user_id)
     import time
 
     time.sleep(2)
 
     with pytest.raises(TokenValidationError):
-        token_service.validate_access_token(tokens.access_token)
+        token_service.validate_access_token(access_token)
 
 
 def test_security_matrix_invalid_signature_is_rejected() -> None:
@@ -152,7 +152,7 @@ def test_security_matrix_invalid_signature_is_rejected() -> None:
         refresh_token_ttl_seconds=604800,
         issuer="safetymain",
     )
-    token = other_service.issue_tokens(UserId(value=uuid4())).access_token
+    token = other_service.issue_access_token(UserId(value=uuid4()))
 
     with pytest.raises(TokenValidationError):
         token_service.validate_access_token(token)
@@ -241,10 +241,10 @@ def test_security_matrix_conflicting_token_and_header_organizations(
             updated_at=datetime.now(UTC),
         )
     )
-    token_with_org = container.token_service.issue_tokens(
+    token_with_org = container.token_service.issue_access_token(
         user.id,
         organization_id=organization_id,
-    ).access_token
+    )
 
     from backend.api.app import create_app
 

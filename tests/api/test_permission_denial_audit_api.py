@@ -22,6 +22,7 @@ from backend.core.infrastructure.persistence.in_memory import (
     InMemoryUserRepository,
 )
 from tests.api.contracts.assertions import assert_error_envelope
+from tests.core.audit_test_support import make_authentication_security_event_recorder
 from tests.security.conftest import build_enforced_client
 
 
@@ -405,6 +406,8 @@ def test_denied_request_appends_exactly_one_audit_event(
         enforced_auth_settings,
         role=Role.member(),
     )
+    # Ignore authentication security events recorded while issuing the test token.
+    append_count = 0
 
     response = client.get(
         "/api/v1/admin/users",
@@ -567,10 +570,10 @@ def test_organization_context_mismatch_does_not_create_permission_denial_audit_e
             updated_at=datetime.now(UTC),
         )
     )
-    token_with_org = container.token_service.issue_tokens(
+    token_with_org = container.token_service.issue_access_token(
         user.id,
         organization_id=organization_id,
-    ).access_token
+    )
     container.uow_factory = lambda: InMemoryUnitOfWork(audit_events=audit_events)
     client = TestClient(create_app(settings=enforced_auth_settings, container=container))
 
@@ -653,12 +656,12 @@ def test_permission_denial_event_visible_through_audit_api(
     enforced_auth_settings: AppSettings,
 ) -> None:
     from backend.core.application.commands.authenticate_user import AuthenticateUserCommand
-    from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
     from backend.core.domain.entities.membership import Membership, MembershipStatus
     from backend.core.domain.entities.user import User, UserStatus
     from backend.core.domain.value_objects import MembershipId
     from backend.core.infrastructure.auth.in_memory_identity_store import InMemoryIdentityStore
     from backend.core.infrastructure.auth.in_memory_membership_store import InMemoryMembershipStore
+    from tests.support.authenticate import build_authenticate_user_handler
 
     client, organization_id, member_token, audit_events, member_user_id = _build_admin_audit_client(
         enforced_auth_settings,
@@ -691,11 +694,10 @@ def test_permission_denial_event_visible_through_audit_api(
             updated_at=datetime.now(UTC),
         )
     )
-    admin_token = AuthenticateUserHandler(
-        user_lookup=container.user_lookup,
-        user_credentials=container.user_credentials,
-        password_hasher=container.password_hasher,
-        token_service=container.token_service,
+    admin_token = build_authenticate_user_handler(
+        container,
+        enforced_auth_settings,
+        security_event_recorder=make_authentication_security_event_recorder()[0],
     ).handle(
         AuthenticateUserCommand(
             email="audit-reader@example.com",

@@ -16,6 +16,9 @@ from backend.core.infrastructure.persistence.sqlalchemy.repositories.membership_
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.organization_repository import (
     SQLAlchemyOrganizationRepository,
 )
+from backend.core.infrastructure.persistence.sqlalchemy.repositories.refresh_token_session_repository import (
+    SQLAlchemyRefreshTokenSessionRepository,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.user_repository import (
     SQLAlchemyUserRepository,
 )
@@ -27,5 +30,6 @@ __all__ = [
     "SQLAlchemyKnowledgeObjectRepository",
     "SQLAlchemyMembershipRepository",
     "SQLAlchemyOrganizationRepository",
+    "SQLAlchemyRefreshTokenSessionRepository",
     "SQLAlchemyUserRepository",
 ]

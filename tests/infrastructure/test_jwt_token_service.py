@@ -9,6 +9,7 @@ import pytest
 from backend.core.contracts.token_service import TokenValidationError
 from backend.core.domain.value_objects import OrganizationId, UserId
 from backend.core.infrastructure.auth.jwt_token_service import JwtTokenService
+from tests.support.token_issue import issue_test_tokens
 
 
 @pytest.fixture
@@ -27,7 +28,7 @@ def test_jwt_token_service_issues_and_validates_access_token(
 ) -> None:
     user_id = UserId(value=uuid4())
 
-    tokens = token_service.issue_tokens(user_id)
+    tokens = issue_test_tokens(token_service, user_id)
 
     assert token_service.validate_access_token(tokens.access_token) == user_id
 
@@ -36,19 +37,22 @@ def test_jwt_token_service_rejects_refresh_token_as_access_token(
     token_service: JwtTokenService,
 ) -> None:
     user_id = UserId(value=uuid4())
-    tokens = token_service.issue_tokens(user_id)
+    tokens = issue_test_tokens(token_service, user_id)
 
     with pytest.raises(TokenValidationError):
         token_service.validate_access_token(tokens.refresh_token)
 
 
-def test_jwt_token_service_refreshes_tokens(token_service: JwtTokenService) -> None:
+def test_jwt_token_service_decodes_refresh_claims(token_service: JwtTokenService) -> None:
     user_id = UserId(value=uuid4())
-    tokens = token_service.issue_tokens(user_id)
+    tokens = issue_test_tokens(token_service, user_id)
 
-    refreshed = token_service.refresh_tokens(tokens.refresh_token)
+    claims = token_service.decode_refresh_token(tokens.refresh_token)
 
-    assert token_service.validate_access_token(refreshed.access_token) == user_id
+    assert claims.user_id == user_id
+    assert claims.jti
+    assert claims.session_id.value
+    assert claims.family_id.value
 
 
 def test_jwt_token_service_exposes_optional_organization_claim(
@@ -56,7 +60,11 @@ def test_jwt_token_service_exposes_optional_organization_claim(
 ) -> None:
     user_id = UserId(value=uuid4())
     organization_id = OrganizationId(value=uuid4())
-    tokens = token_service.issue_tokens(user_id, organization_id=organization_id)
+    tokens = issue_test_tokens(
+        token_service,
+        user_id,
+        organization_id=organization_id,
+    )
 
     claims = token_service.validate_access_token_claims(tokens.access_token)
 

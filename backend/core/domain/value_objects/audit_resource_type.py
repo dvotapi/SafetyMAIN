@@ -9,3 +9,4 @@ class AuditResourceType(str, Enum):
     MEMBERSHIP = "MEMBERSHIP"
     INVITATION = "INVITATION"
     AUDIT_EVENT = "AUDIT_EVENT"
+    SESSION = "SESSION"

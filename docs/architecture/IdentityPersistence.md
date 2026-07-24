@@ -19,8 +19,13 @@ Related documents:
 ## 1. Purpose
 
 This document describes SQLAlchemy persistence for users, organizations, and
-memberships introduced in P4-001. The temporary in-memory identity adapters remain
-available when `DATABASE_URL` is not configured.
+memberships introduced in P4-001 and hardened for production source-of-truth
+behavior in P7-001. See [PersistentIdentityStores.md](PersistentIdentityStores.md)
+for the authoritative production wiring, uniqueness rules, constraint mapping,
+and guardrails.
+
+Temporary in-memory identity adapters remain available when `DATABASE_URL` is not
+configured **outside production** only.
 
 Authentication handlers, authorization services, and public API behavior remain
 unchanged.
@@ -119,9 +124,12 @@ memberships table
 `create_container()` selects adapters based on configuration:
 
 - `DATABASE_URL` configured → SQLAlchemy identity/membership adapters
-- no database → `InMemoryIdentityStore` / `InMemoryMembershipStore`
+- no database + non-production → `InMemoryIdentityStore` / `InMemoryMembershipStore`
+- `APP_ENV=production` → `DATABASE_URL` required; in-memory identity/membership
+  stores are rejected (no silent fallback)
 
-Tests may override stores explicitly through `create_container(...)` parameters.
+Tests may override stores explicitly through `create_container(...)` parameters in
+non-production environments only.
 
 ---
 

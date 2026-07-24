@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from backend.core.domain.entities.user import User
-from backend.core.domain.exceptions import UserNotFound
+from backend.core.domain.exceptions import DuplicateUserEmail, UserNotFound
 from backend.core.domain.repositories import UserRepositoryContract
 from backend.core.domain.value_objects import UserId
 from backend.core.domain.value_objects.user_list_criteria import (
@@ -16,6 +16,10 @@ class InMemoryUserRepository(UserRepositoryContract):
         self._users_by_email: dict[str, UserId] = {}
 
     def add(self, user: User) -> None:
+        if user.email in self._users_by_email:
+            raise DuplicateUserEmail(user.email)
+        if user.id in self._users_by_id:
+            raise DuplicateUserEmail(user.email)
         self._users_by_id[user.id] = user
         self._users_by_email[user.email] = user.id
 
@@ -34,6 +38,9 @@ class InMemoryUserRepository(UserRepositoryContract):
     def save(self, user: User) -> None:
         if user.id not in self._users_by_id:
             raise UserNotFound(user.id)
+        existing_id = self._users_by_email.get(user.email)
+        if existing_id is not None and existing_id != user.id:
+            raise DuplicateUserEmail(user.email)
         previous = self._users_by_id[user.id]
         if previous.email != user.email:
             del self._users_by_email[previous.email]

@@ -12,7 +12,6 @@ from backend.bootstrap.settings import AppSettings
 from backend.core.application.audit.administrative_audit_recorder import AuditContext
 from backend.core.application.commands.authenticate_user import AuthenticateUserCommand
 from backend.core.application.commands.invitation_lifecycle import CreateInvitationCommand
-from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
 from backend.core.application.handlers.create_invitation import CreateInvitationHandler
 from backend.core.domain.entities.membership import Membership, MembershipStatus
 from backend.core.domain.entities.organization import Organization, OrganizationStatus
@@ -32,6 +31,8 @@ from backend.core.infrastructure.persistence.in_memory import (
 from backend.core.infrastructure.time.utc_clock import UtcClock
 from tests.api.contracts.assertions import assert_error_envelope
 from tests.core.audit_test_support import make_admin_audit_stack
+from tests.core.audit_test_support import make_authentication_security_event_recorder
+from tests.support.authenticate import build_authenticate_user_handler
 
 
 @pytest.fixture
@@ -160,11 +161,10 @@ def _build_acceptance_client(
         )
     )
 
-    auth_handler = AuthenticateUserHandler(
-        user_lookup=container.user_lookup,
-        user_credentials=container.user_credentials,
-        password_hasher=container.password_hasher,
-        token_service=container.token_service,
+    auth_handler = build_authenticate_user_handler(
+        container,
+        settings,
+        security_event_recorder=make_authentication_security_event_recorder()[0],
     )
     invitee_tokens = auth_handler.handle(
         AuthenticateUserCommand(email=invitee.email, password="invitee-pass")

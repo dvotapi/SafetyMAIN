@@ -6,8 +6,8 @@ from uuid import uuid4
 import pytest
 
 from backend.core.domain.entities.membership import Membership, MembershipStatus
-from backend.core.domain.entities.user import User, UserStatus
 from backend.core.domain.entities.organization import Organization, OrganizationStatus
+from backend.core.domain.entities.user import User, UserStatus
 from backend.core.domain.repositories import (
     MembershipRepositoryContract,
     OrganizationRepositoryContract,
@@ -38,10 +38,40 @@ class UserRepositoryContractSuite:
         repository.add(user)
 
         assert repository.get_by_email(user.email) == user
+        assert repository.get_by_email(user.email.upper()) == user
         assert repository.get_by_email("missing@example.com") is None
 
+    def test_duplicate_email_is_rejected(self, repository: UserRepositoryContract) -> None:
+        from backend.core.domain.exceptions import DuplicateUserEmail
+
+        first = _create_user()
+        repository.add(first)
+        second = _create_user().model_copy(update={"email": first.email})
+
+        with pytest.raises(DuplicateUserEmail):
+            repository.add(second)
+
+    def test_inactive_user_remains_retrievable(
+        self,
+        repository: UserRepositoryContract,
+    ) -> None:
+        user = _create_user().model_copy(update={"status": UserStatus.DEACTIVATED})
+        repository.add(user)
+
+        loaded = repository.get(user.id)
+        assert loaded.is_active() is False
+        assert repository.get_by_email(user.email) == loaded
+
+    def test_missing_user_raises(self, repository: UserRepositoryContract) -> None:
+        from backend.core.domain.exceptions import UserNotFound
+
+        with pytest.raises(UserNotFound):
+            repository.get(UserId(value=uuid4()))
+
     def test_list_users_supports_filtering(self, repository: UserRepositoryContract) -> None:
-        from backend.core.domain.value_objects.user_list_criteria import UserListCriteria
+        from backend.core.domain.value_objects.user_list_criteria import (
+            UserListCriteria,
+        )
 
         active_user = _create_user()
         inactive_user = _create_user()
@@ -124,6 +154,50 @@ class MembershipRepositoryContractSuite:
             membership.organization_id,
         ) == membership
         assert repository.list_by_user(membership.user_id) == (membership,)
+
+    def test_duplicate_membership_is_rejected(
+        self,
+        repository: MembershipRepositoryContract,
+    ) -> None:
+        from backend.core.domain.exceptions import DuplicateMembership
+
+        membership = _create_membership()
+        repository.add(membership)
+        duplicate = _create_membership(
+            organization_id=membership.organization_id,
+        ).model_copy(update={"user_id": membership.user_id})
+
+        with pytest.raises(DuplicateMembership):
+            repository.add(duplicate)
+
+    def test_role_update_and_inactive_exclusion(
+        self,
+        repository: MembershipRepositoryContract,
+    ) -> None:
+        from backend.core.domain.value_objects.membership_list_criteria import (
+            MembershipListCriteria,
+        )
+
+        membership = _create_membership()
+        repository.add(membership)
+        updated = membership.model_copy(
+            update={"role": Role.admin(), "status": MembershipStatus.REVOKED}
+        )
+        repository.save(updated)
+
+        loaded = repository.get(membership.id)
+        assert loaded.role == Role.admin()
+        assert loaded.is_active() is False
+
+        active = repository.list_memberships(
+            MembershipListCriteria(
+                organization_id=membership.organization_id,
+                offset=0,
+                limit=10,
+                is_active=True,
+            )
+        )
+        assert active.total == 0
 
     def test_list_memberships_supports_filtering(
         self,

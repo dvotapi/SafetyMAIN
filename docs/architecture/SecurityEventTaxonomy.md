@@ -10,6 +10,10 @@ Related documents:
 - [AuthorizationFoundation.md](AuthorizationFoundation.md)
 - [RoleBasedAuthorization.md](RoleBasedAuthorization.md)
 - [AuthenticationArchitecture.md](AuthenticationArchitecture.md)
+- [AuthenticationSecurityEvents.md](AuthenticationSecurityEvents.md)
+- [SecurityEventInvestigation.md](SecurityEventInvestigation.md)
+- [AuditEventIntegrity.md](AuditEventIntegrity.md)
+- [SecurityOperationsArchitectureReview.md](SecurityOperationsArchitectureReview.md)
 - [SecurityArchitectureReview.md](SecurityArchitectureReview.md)
 
 ---
@@ -158,6 +162,7 @@ Current mappings:
 |--------------|---------------|----------|
 | Administrative Audit | `run_audited_admin_operation()` / handler boundary | `AdministrativeAuditRecorder` |
 | Authorization Permission Denial | `require_permission()` | `AdministrativeAuditRecorder.record_permission_denial()` |
+| Authentication Login / Refresh | `AuthenticateUserHandler` / `RefreshAuthenticationHandler` | `AuthenticationSecurityEventRecorder` |
 
 The recorder does not redefine event type identity or producer ownership.
 
@@ -227,6 +232,21 @@ All identifiers below are registered in `SECURITY_EVENT_REGISTRY` and published 
 |------------|----------------|----------|--------------|
 | `authorization.permission_denied` | `SECURITY_SYSTEM` | FAILURE | MEDIUM |
 
+### Authentication (`AUTHENTICATION` / `AUTHENTICATION`)
+
+| Event type | Subject domain | Outcomes | Significance |
+|------------|----------------|----------|--------------|
+| `authentication.login.succeeded` | `SESSION` | SUCCESS | INFORMATIONAL |
+| `authentication.login.failed` | `SESSION` | FAILURE | MEDIUM |
+| `authentication.refresh.succeeded` | `SESSION` | SUCCESS | INFORMATIONAL |
+| `authentication.refresh.failed` | `SESSION` | FAILURE | MEDIUM |
+| `authentication.logout.succeeded` | `SESSION` | SUCCESS | INFORMATIONAL |
+| `authentication.refresh.reused` | `SESSION` | FAILURE | HIGH |
+| `authentication.session.revoked` | `SESSION` | SUCCESS | MEDIUM |
+
+These identifiers follow the preferred `<category>.<subject>.<action>` convention and are
+not marked legacy. See [AuthenticationSecurityEvents.md](AuthenticationSecurityEvents.md).
+
 All current identifiers are registered as legacy-compatible because they predate the
 preferred `<category>.<subject>.<action>` naming convention.
 
@@ -245,6 +265,7 @@ Key modules:
 - `descriptor.py` — immutable `SecurityEventDescriptor`
 - `families/administrative.py` — administrative descriptors
 - `families/authorization.py` — authorization descriptors
+- `families/authentication.py` — authentication descriptors
 - `registry.py` — centralized immutable `SECURITY_EVENT_REGISTRY`
 - `validation.py` — registry validation
 - `naming.py` — preferred naming convention rules
@@ -265,8 +286,13 @@ Future event identifiers should follow:
 Examples:
 
 ```text
-authentication.credential.rejected
-authentication.session.created
+authentication.login.succeeded
+authentication.login.failed
+authentication.refresh.succeeded
+authentication.refresh.failed
+authentication.logout.succeeded
+authentication.refresh.reused
+authentication.session.revoked
 administrative.invitation.revoked
 security.audit.persistence_failed
 ```
@@ -308,13 +334,13 @@ Future event families must document compatibility-mode behavior explicitly.
 
 ## 16. Authentication Extension Compatibility
 
-Future Authentication Events may occur without actor user ID, organization ID,
-`SecurityContext`, or `TenantContext`. Actor and organization identity are therefore not
+Authentication Security Events (TASK-P6-003) may occur without actor user ID, organization
+ID, `SecurityContext`, or `TenantContext`. Actor and organization identity are therefore not
 universal mandatory taxonomy dimensions.
 
-P6-002 does not modify the persisted `AuditEvent` schema for actor-less events.
-`TASK-P6-003` will define authentication event production and persistence while
-conforming to this taxonomy.
+Authentication event production and persistence are defined in
+[AuthenticationSecurityEvents.md](AuthenticationSecurityEvents.md). Authentication events
+reuse `AuditEvent` with optional actor/organization fields and do not require schema changes.
 
 ---
 
@@ -323,7 +349,9 @@ conforming to this taxonomy.
 - Correlation identifiers are optional future metadata and are not introduced here.
 - `occurred_at` is the recorded event timestamp; global total ordering is not guaranteed.
 - Registry order is not event occurrence order.
-- Retention, export, archival, and integrity remain future tasks (P6-004 through P6-006).
+- Retention, export, archival, and integrity remain future tasks (P6-005 through P6-006).
+  Investigation query capability is delivered in TASK-P6-004
+  ([SecurityEventInvestigation.md](SecurityEventInvestigation.md)).
 
 Event records remain immutable after append.
 
@@ -355,7 +383,9 @@ A string constant alone is not sufficient.
 | Task | Scope |
 |------|-------|
 | P6-003 | Authentication Security Events production and persistence |
-| P6-004 | Audit Retention & Lifecycle |
+| P6-004 | Security Event Query and Investigation API |
+| P6-005 | Audit Export API |
+| P6-006 | Audit Integrity / Retention |
 | P6-005 | Audit Export API |
 | P6-006 | Audit Integrity |
 

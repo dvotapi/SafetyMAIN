@@ -10,6 +10,7 @@ Related documents:
 - [TenantContextMigration.md](TenantContextMigration.md)
 - [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md)
 - [IdentityDomain.md](IdentityDomain.md)
+- [PersistentIdentityStores.md](PersistentIdentityStores.md)
 
 ---
 
@@ -65,6 +66,10 @@ PermissionDeniedError when capability is missing
 
 Membership verification remains the first authorization step. Permission
 evaluation runs only after active membership is confirmed.
+
+Persistent membership state (PostgreSQL in production) is authoritative for the
+current role. JWT claims do not override membership role or active status. See
+[PersistentIdentityStores.md](PersistentIdentityStores.md).
 
 ---
 

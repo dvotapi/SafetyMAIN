@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.core.domain.entities.user import User
@@ -11,12 +12,17 @@ from backend.core.domain.value_objects.user_list_criteria import (
     UserListCriteria,
     UserListResult,
 )
+from backend.core.infrastructure.persistence.sqlalchemy.identity_constraint_errors import (
+    raise_mapped_identity_integrity_error,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.mappers.user_mapper import (
     apply_to_model,
     to_domain,
     to_model,
 )
-from backend.core.infrastructure.persistence.sqlalchemy.models.user_model import UserModel
+from backend.core.infrastructure.persistence.sqlalchemy.models.user_model import (
+    UserModel,
+)
 
 
 class SQLAlchemyUserRepository(UserRepositoryContract):
@@ -25,6 +31,10 @@ class SQLAlchemyUserRepository(UserRepositoryContract):
 
     def add(self, user: User) -> None:
         self._session.add(to_model(user, password_hash=""))
+        try:
+            self._session.flush()
+        except IntegrityError as error:
+            raise_mapped_identity_integrity_error(error, email=user.email)
 
     def get(self, user_id: UserId) -> User:
         model = self._session.get(UserModel, user_id.value)
@@ -45,6 +55,10 @@ class SQLAlchemyUserRepository(UserRepositoryContract):
         if model is None:
             raise UserNotFound(user.id)
         apply_to_model(model, user)
+        try:
+            self._session.flush()
+        except IntegrityError as error:
+            raise_mapped_identity_integrity_error(error, email=user.email)
 
     def list_users(self, criteria: UserListCriteria) -> UserListResult:
         filters: list[object] = []

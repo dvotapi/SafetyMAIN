@@ -6,25 +6,46 @@ from dataclasses import dataclass
 from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
-from backend.bootstrap.security_validation import validate_security_configuration
+from backend.bootstrap.security_validation import (
+    SecurityConfigurationError,
+    validate_security_configuration,
+)
 from backend.bootstrap.settings import AppSettings
-from backend.core.application.authorization.authorization_service import AuthorizationService
-from backend.core.application.tenant.tenant_context_resolver import TenantContextResolver
+from backend.core.application.authorization.authorization_service import (
+    AuthorizationService,
+)
+from backend.core.application.tenant.tenant_context_resolver import (
+    TenantContextResolver,
+)
+from backend.core.contracts.membership_lookup import MembershipLookupPort
+from backend.core.contracts.membership_verification import MembershipVerificationPort
 from backend.core.contracts.password_hasher import PasswordHasherContract
 from backend.core.contracts.token_service import TokenServiceContract
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
-from backend.core.contracts.membership_lookup import MembershipLookupPort
-from backend.core.contracts.membership_verification import MembershipVerificationPort
 from backend.core.contracts.user_credentials import UserCredentialsPort
 from backend.core.contracts.user_lookup import UserLookupPort
-from backend.core.infrastructure.auth.bcrypt_password_hasher import create_password_hasher
-from backend.core.infrastructure.auth.in_memory_identity_store import InMemoryIdentityStore
-from backend.core.infrastructure.auth.in_memory_membership_store import InMemoryMembershipStore
-from backend.core.infrastructure.auth.sqlalchemy_identity_adapter import SQLAlchemyIdentityAdapter
+from backend.core.infrastructure.auth.bcrypt_password_hasher import (
+    create_password_hasher,
+)
+from backend.core.infrastructure.auth.in_memory_identity_store import (
+    InMemoryIdentityStore,
+)
+from backend.core.infrastructure.auth.in_memory_membership_store import (
+    InMemoryMembershipStore,
+)
+from backend.core.infrastructure.auth.jwt_token_service import create_token_service
+from backend.core.infrastructure.auth.sqlalchemy_identity_adapter import (
+    SQLAlchemyIdentityAdapter,
+)
 from backend.core.infrastructure.auth.sqlalchemy_membership_adapter import (
     SQLAlchemyMembershipAdapter,
 )
-from backend.core.infrastructure.auth.jwt_token_service import create_token_service
+from backend.core.infrastructure.persistence.in_memory.refresh_token_session_repository import (
+    InMemoryRefreshTokenSessionRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.unit_of_work import (
+    InMemoryUnitOfWork,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.engine import (
     create_engine,
     create_session_factory,
@@ -32,6 +53,7 @@ from backend.core.infrastructure.persistence.sqlalchemy.engine import (
 from backend.core.infrastructure.persistence.sqlalchemy.unit_of_work import (
     SQLAlchemyUnitOfWork,
 )
+from backend.core.infrastructure.time.utc_clock import UtcClock
 
 UowFactory = Callable[[], UnitOfWorkContract]
 ReadinessCheck = Callable[[], None]
@@ -75,6 +97,11 @@ def create_container(
     """Assemble infrastructure dependencies without connecting to PostgreSQL.
 
     ``create_engine`` is lazy: no network I/O occurs until a connection is used.
+
+    Production always requires ``DATABASE_URL`` and never falls back to in-memory
+    identity or membership stores. Non-production environments may use in-memory
+    stores only when the database is intentionally unset or stores are injected
+    for tests.
     """
 
     validate_security_configuration(settings)
@@ -86,10 +113,29 @@ def create_container(
         engine = create_engine(settings.database_url)
         session_factory = create_session_factory(engine)
 
+    production = settings.app_env.strip().lower() == "production"
+    if production and session_factory is None:
+        raise SecurityConfigurationError(
+            "DATABASE_URL must be configured in production for persistent identity."
+        )
+    if production and (
+        isinstance(identity_store, InMemoryIdentityStore)
+        or isinstance(membership_store, InMemoryMembershipStore)
+    ):
+        raise SecurityConfigurationError(
+            "Production must not use in-memory identity or membership stores."
+        )
+
+    shared_refresh_sessions = InMemoryRefreshTokenSessionRepository()
+
     def uow_factory() -> UnitOfWorkContract:
-        if session_factory is None:
-            raise RuntimeError("Database is not configured.")
-        return SQLAlchemyUnitOfWork(session_factory)
+        if session_factory is not None:
+            return SQLAlchemyUnitOfWork(session_factory)
+        if production:
+            raise SecurityConfigurationError(
+                "Production refresh sessions require PostgreSQL persistence."
+            )
+        return InMemoryUnitOfWork(refresh_sessions=shared_refresh_sessions)
 
     def readiness_check() -> None:
         if engine is None:
@@ -102,6 +148,10 @@ def create_container(
         resolved_identity_store = identity_store
     elif session_factory is not None:
         resolved_identity_store = SQLAlchemyIdentityAdapter(session_factory)
+    elif production:
+        raise SecurityConfigurationError(
+            "Production identity lookup requires SQLAlchemy persistence."
+        )
     else:
         resolved_identity_store = InMemoryIdentityStore()
 
@@ -110,15 +160,21 @@ def create_container(
         resolved_membership_store = membership_store
     elif session_factory is not None:
         resolved_membership_store = SQLAlchemyMembershipAdapter(session_factory)
+    elif production:
+        raise SecurityConfigurationError(
+            "Production membership lookup requires SQLAlchemy persistence."
+        )
     else:
         resolved_membership_store = InMemoryMembershipStore()
     password_hasher = create_password_hasher()
+    clock = UtcClock()
     token_service = create_token_service(
         secret_key=settings.jwt_secret_key,
         algorithm=settings.jwt_algorithm,
         access_token_ttl_seconds=settings.jwt_access_token_ttl_seconds,
         refresh_token_ttl_seconds=settings.jwt_refresh_token_ttl_seconds,
         issuer=settings.jwt_issuer,
+        clock=clock,
     )
     authorization_service = AuthorizationService(
         membership_verification=resolved_membership_store,

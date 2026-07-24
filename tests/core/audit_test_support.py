@@ -7,6 +7,9 @@ from backend.core.application.audit.administrative_audit_recorder import (
     AdministrativeAuditRecorder,
     AuditContext,
 )
+from backend.core.application.audit.authentication_security_event_recorder import (
+    AuthenticationSecurityEventRecorder,
+)
 from backend.core.contracts.clock import ClockContract
 from backend.core.domain.value_objects import OrganizationId, UserId
 from backend.core.infrastructure.persistence.in_memory import (
@@ -50,3 +53,17 @@ def make_admin_audit_stack(
 
 def authenticated_audit_context(user_id: UserId) -> AuditContext:
     return AuditContext.for_authenticated_user(user_id)
+
+
+def make_authentication_security_event_recorder(
+    *,
+    audit_events: InMemoryAuditEventRepository | None = None,
+    clock: ClockContract | None = None,
+) -> tuple[AuthenticationSecurityEventRecorder, InMemoryAuditEventRepository]:
+    store = audit_events or InMemoryAuditEventRepository()
+    resolved_clock = clock or UtcClock()
+
+    def uow_factory() -> InMemoryUnitOfWork:
+        return InMemoryUnitOfWork(audit_events=store)
+
+    return AuthenticationSecurityEventRecorder(resolved_clock, uow_factory), store

@@ -12,6 +12,9 @@ Related documents:
 - [ArchitectureTesting.md](ArchitectureTesting.md) — dependency rules
 - [UserManagement.md](UserManagement.md) — administrative user API (P5-001)
 - [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md) — persisted security event taxonomy (P6-002)
+- [AuthenticationSecurityEvents.md](AuthenticationSecurityEvents.md) — authentication security events (P6-003)
+- [PersistentIdentityStores.md](PersistentIdentityStores.md) — production identity/membership persistence (P7-001)
+- [RefreshTokenSessions.md](RefreshTokenSessions.md) — persistent refresh sessions and rotation (P7-002)
 
 ---
 
@@ -276,9 +279,9 @@ Recommended approach for SafetyMAIN MVP implementation (P3-003+):
 | Format | Signed JWT access tokens |
 | Signing | Asymmetric keys (RS256 or EdDSA) |
 | Validation | Local signature + claims check (no introspection in MVP) |
-| Lifetime | Short-lived access token; refresh token in later phase |
-| Claims (minimum) | `sub` (user id), `exp`, `iat`, optional `org_id` |
-| Storage | Stateless at API layer; no server session store in MVP |
+| Lifetime | Short-lived access token; refresh token with sliding + absolute session lifetime (P7-002) |
+| Claims (minimum) | `sub` (user id), `exp`, `iat`, optional `org_id`; refresh also carries `jti`, `session_id`, `family_id`, `typ` |
+| Storage | Access tokens JWT-stateless; refresh validity is PostgreSQL-backed (`refresh_token_sessions`) |
 
 OIDC federation (Azure AD / corporate IdP) is a **future adapter** behind the same
 `AuthenticationService` port — not a separate architectural path.
@@ -621,13 +624,11 @@ See [ProductionSecurityConfiguration.md](ProductionSecurityConfiguration.md).
 Persisted security-relevant audit events are classified through the immutable Security
 Event Taxonomy Registry introduced in TASK-P6-002.
 
-Authentication failures and credential events are not yet persisted as auditable security
-events. Future Authentication Security Events (TASK-P6-003) will reuse the taxonomy
-defined in [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md), including support for
-events that may occur before `SecurityContext` or `TenantContext` exist.
+Authentication login and refresh outcomes are persisted as taxonomy-backed security events
+by TASK-P6-003. See [AuthenticationSecurityEvents.md](AuthenticationSecurityEvents.md).
 
-P6-002 does not change authentication runtime behavior, persisted audit schema, or Audit
-API contracts.
+Authentication API contracts, JWT validation, and token response schemas are unchanged.
+Audit recording is observational and must not affect credential or token decisions.
 
 ---
 

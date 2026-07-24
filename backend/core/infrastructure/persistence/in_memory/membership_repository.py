@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from backend.core.domain.entities.membership import Membership
-from backend.core.domain.exceptions import MembershipByIdNotFound, MembershipNotFound
+from backend.core.domain.exceptions import (
+    DuplicateMembership,
+    MembershipByIdNotFound,
+    MembershipNotFound,
+)
 from backend.core.domain.repositories import MembershipRepositoryContract
 from backend.core.domain.value_objects import MembershipId, OrganizationId, UserId
 from backend.core.domain.value_objects.membership_list_criteria import (
@@ -18,10 +22,14 @@ class InMemoryMembershipRepository(MembershipRepositoryContract):
         )
 
     def add(self, membership: Membership) -> None:
+        key = (membership.user_id, membership.organization_id)
+        if key in self._memberships_by_user_and_org or membership.id in self._memberships_by_id:
+            raise DuplicateMembership(
+                user_id=membership.user_id,
+                organization_id=membership.organization_id,
+            )
         self._memberships_by_id[membership.id] = membership
-        self._memberships_by_user_and_org[(membership.user_id, membership.organization_id)] = (
-            membership.id
-        )
+        self._memberships_by_user_and_org[key] = membership.id
 
     def get(self, membership_id: MembershipId) -> Membership:
         membership = self._memberships_by_id.get(membership_id)

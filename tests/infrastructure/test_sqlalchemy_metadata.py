@@ -9,7 +9,10 @@ from backend.core.infrastructure.persistence.sqlalchemy.models import (
     KnowledgeObjectModel,
     KnowledgeObjectRelationModel,
     KnowledgeObjectVersionModel,
+    MembershipModel,
 )
+
+assert MembershipModel.__tablename__ == "memberships"
 
 
 def test_metadata_contains_required_tables() -> None:
@@ -61,6 +64,20 @@ def test_identity_columns_exist() -> None:
         "created_at",
         "updated_at",
     }.issubset(set(memberships.keys()))
+
+    membership_table = Base.metadata.tables["memberships"]
+    unique_constraints = {
+        constraint.name
+        for constraint in membership_table.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    check_constraints = {
+        constraint.name
+        for constraint in membership_table.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
+    assert "uq_memberships_user_organization" in unique_constraints
+    assert "ck_memberships_role_system" in check_constraints
 
 
 def test_knowledge_object_version_columns_exist() -> None:

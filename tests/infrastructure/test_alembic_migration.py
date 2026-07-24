@@ -5,9 +5,10 @@ from importlib import util
 from pathlib import Path
 
 import pytest
-from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect
+
+from alembic import command
 
 
 def test_initial_alembic_migration_imports() -> None:
@@ -71,6 +72,10 @@ def test_apply_and_downgrade_initial_migration_when_database_available() -> None
         "invitations",
         "audit_events",
     }.issubset(inspector.get_table_names())
+    membership_checks = {
+        check["name"] for check in inspector.get_check_constraints("memberships")
+    }
+    assert "ck_memberships_role_system" in membership_checks
 
     command.downgrade(config, "base")
     inspector = inspect(engine)

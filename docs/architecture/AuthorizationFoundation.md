@@ -11,6 +11,7 @@ Related documents:
 - [AuthenticationAPI.md](../api/AuthenticationAPI.md)
 - [RoleBasedAuthorization.md](RoleBasedAuthorization.md)
 - [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md)
+- [PersistentIdentityStores.md](PersistentIdentityStores.md)
 
 ---
 

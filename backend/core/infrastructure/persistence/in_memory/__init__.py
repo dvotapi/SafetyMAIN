@@ -18,6 +18,9 @@ from backend.core.infrastructure.persistence.in_memory.membership_repository imp
 from backend.core.infrastructure.persistence.in_memory.organization_repository import (
     InMemoryOrganizationRepository,
 )
+from backend.core.infrastructure.persistence.in_memory.refresh_token_session_repository import (
+    InMemoryRefreshTokenSessionRepository,
+)
 from backend.core.infrastructure.persistence.in_memory.unit_of_work import InMemoryUnitOfWork
 from backend.core.infrastructure.persistence.in_memory.user_repository import (
     InMemoryUserRepository,
@@ -30,6 +33,7 @@ __all__ = [
     "InMemoryKnowledgeObjectRepository",
     "InMemoryMembershipRepository",
     "InMemoryOrganizationRepository",
+    "InMemoryRefreshTokenSessionRepository",
     "InMemoryUnitOfWork",
     "InMemoryUserRepository",
 ]

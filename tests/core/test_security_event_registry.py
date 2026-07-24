@@ -20,6 +20,9 @@ from backend.core.domain.security_events import (
 from backend.core.domain.security_events.families.administrative import (
     ADMINISTRATIVE_SECURITY_EVENT_DESCRIPTORS,
 )
+from backend.core.domain.security_events.families.authentication import (
+    AUTHENTICATION_SECURITY_EVENT_DESCRIPTORS,
+)
 from backend.core.domain.security_events.families.authorization import (
     AUTHORIZATION_SECURITY_EVENT_DESCRIPTORS,
 )
@@ -34,10 +37,11 @@ def test_registry_contains_every_published_audit_action() -> None:
     assert registered_types == published_actions
 
 
-def test_registry_has_seventeen_published_descriptors() -> None:
-    assert len(SECURITY_EVENT_REGISTRY) == 17
+def test_registry_has_twenty_four_published_descriptors() -> None:
+    assert len(SECURITY_EVENT_REGISTRY) == 24
     assert len(ADMINISTRATIVE_SECURITY_EVENT_DESCRIPTORS) == 16
     assert len(AUTHORIZATION_SECURITY_EVENT_DESCRIPTORS) == 1
+    assert len(AUTHENTICATION_SECURITY_EVENT_DESCRIPTORS) == 7
 
 
 def test_descriptor_immutability() -> None:
@@ -62,6 +66,28 @@ def test_event_type_uniqueness_validation_rejects_duplicates() -> None:
 
     with pytest.raises(ValueError, match="Duplicate security event type"):
         validate_security_event_registry(frozenset({original, duplicate}))
+
+
+def test_authentication_descriptors() -> None:
+    expected = {
+        "authentication.login.succeeded": AuditOutcome.SUCCESS,
+        "authentication.login.failed": AuditOutcome.FAILURE,
+        "authentication.refresh.succeeded": AuditOutcome.SUCCESS,
+        "authentication.refresh.failed": AuditOutcome.FAILURE,
+        "authentication.logout.succeeded": AuditOutcome.SUCCESS,
+        "authentication.refresh.reused": AuditOutcome.FAILURE,
+        "authentication.session.revoked": AuditOutcome.SUCCESS,
+    }
+    for event_type, outcome in expected.items():
+        descriptor = security_event_descriptor_for(event_type)
+        assert descriptor is not None
+        assert descriptor.category is SecurityEventCategory.AUTHENTICATION
+        assert descriptor.subject_domain is SecurityEventSubjectDomain.SESSION
+        assert descriptor.producer_owner is SecurityEventProducerOwner.AUTHENTICATION
+        assert descriptor.allowed_outcomes == frozenset({outcome})
+        assert descriptor.legacy_identifier is False
+
+        assert is_preferred_event_type_identifier(event_type) is True
 
 
 def test_authorization_permission_denied_descriptor() -> None:

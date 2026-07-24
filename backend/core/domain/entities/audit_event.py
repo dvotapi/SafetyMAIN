@@ -9,6 +9,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from backend.core.domain.value_objects import OrganizationId, UserId
 from backend.core.domain.value_objects.audit_action import AuditAction
 from backend.core.domain.value_objects.audit_event_id import AuditEventId
+from backend.core.domain.value_objects.audit_integrity import (
+    AuditIntegrityHash,
+    AuditIntegrityVersion,
+)
 from backend.core.domain.value_objects.audit_outcome import AuditOutcome
 from backend.core.domain.value_objects.audit_resource_type import AuditResourceType
 
@@ -27,6 +31,13 @@ ALLOWED_METADATA_KEYS = frozenset(
         "operation_id",
         "target_identifier_present",
         "permission_category",
+        "request_id",
+        "client_ip",
+        "user_agent",
+        "authentication_method",
+        "session_id",
+        "revocation_reason",
+        "revoked_session_count",
     }
 )
 
@@ -45,6 +56,9 @@ class AuditEvent(BaseModel):
     failure_code: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
     occurred_at: datetime
+    previous_integrity_hash: AuditIntegrityHash | None = None
+    integrity_hash: AuditIntegrityHash | None = None
+    integrity_version: AuditIntegrityVersion | None = None
 
     @field_validator("metadata")
     @classmethod

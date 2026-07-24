@@ -3,8 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, Index, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PostgreSQLUUID
+from sqlalchemy import DateTime, Index, Integer, String, text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.core.infrastructure.persistence.sqlalchemy.base import Base
@@ -20,6 +21,18 @@ class AuditEventModel(Base):
         Index("ix_audit_events_action", "action"),
         Index("ix_audit_events_resource_type_resource_id", "resource_type", "resource_id"),
         Index("ix_audit_events_outcome", "outcome"),
+        Index(
+            "ix_audit_events_auth_org_occurred_at",
+            "authorization_organization_id",
+            "occurred_at",
+        ),
+        Index(
+            "ix_audit_events_target_org_occurred_at",
+            "target_organization_id",
+            "occurred_at",
+        ),
+        Index("ix_audit_events_action_occurred_at", "action", "occurred_at"),
+        Index("ix_audit_events_actor_occurred_at", "actor_user_id", "occurred_at"),
     )
 
     id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True)
@@ -50,3 +63,26 @@ class AuditEventModel(Base):
         default=dict,
     )
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    previous_integrity_hash: Mapped[str | None] = mapped_column(String(length=64), nullable=True)
+    integrity_hash: Mapped[str] = mapped_column(String(length=64), nullable=False)
+    integrity_version: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class AuditChainHeadModel(Base):
+    __tablename__ = "audit_chain_heads"
+
+    organization_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        primary_key=True,
+    )
+    latest_audit_event_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        nullable=False,
+    )
+    latest_integrity_hash: Mapped[str] = mapped_column(String(length=64), nullable=False)
+    integrity_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )

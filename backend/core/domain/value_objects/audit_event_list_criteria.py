@@ -17,11 +17,13 @@ class AuditEventListCriteria:
     offset: int
     limit: int
     action: AuditAction | None = None
+    actions: frozenset[AuditAction] | None = None
     resource_type: AuditResourceType | None = None
     resource_id: UUID | None = None
     actor_user_id: UserId | None = None
     outcome: AuditOutcome | None = None
     target_organization_id: OrganizationId | None = None
+    request_id: str | None = None
     occurred_from: datetime | None = None
     occurred_to: datetime | None = None
     sort_ascending: bool = False
@@ -33,3 +35,13 @@ class AuditEventListResult:
     total: int
     offset: int
     limit: int
+
+
+def effective_actions(criteria: AuditEventListCriteria) -> frozenset[AuditAction] | None:
+    """Resolve single ``action`` and multi ``actions`` filters with AND semantics."""
+
+    combined = criteria.actions
+    if criteria.action is not None:
+        single = frozenset({criteria.action})
+        combined = single if combined is None else combined & single
+    return combined

@@ -11,102 +11,117 @@ from pydantic import ValidationError
 from backend.api.knowledge_object_params import ORGANIZATION_ID_HEADER
 from backend.api.middleware import get_request_id
 from backend.api.permission_denial_audit import build_permission_denial_audit_spec
+from backend.api.security import SecurityContext
 from backend.bootstrap.container import AppContainer, ReadinessCheck, UowFactory
 from backend.bootstrap.settings import AppSettings
+from backend.core.application.audit.administrative_audit_recorder import (
+    AdministrativeAuditRecorder,
+)
+from backend.core.application.audit.authentication_security_event_recorder import (
+    AuthenticationSecurityEventRecorder,
+)
+from backend.core.application.audit.permission_denial_audit import (
+    is_administrative_permission,
+)
+from backend.core.application.context.tenant_context import TenantContext
+from backend.core.application.exceptions.authentication import UnauthenticatedError
+from backend.core.application.exceptions.authorization import PermissionDeniedError
 from backend.core.application.handlers.archive_knowledge_object import (
     ArchiveKnowledgeObjectHandler,
 )
+from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
+from backend.core.application.handlers.create_invitation import CreateInvitationHandler
 from backend.core.application.handlers.create_knowledge_object import (
     CreateKnowledgeObjectHandler,
 )
+from backend.core.application.handlers.create_knowledge_object_relation import (
+    CreateKnowledgeObjectRelationHandler,
+)
+from backend.core.application.handlers.create_membership import CreateMembershipHandler
+from backend.core.application.handlers.create_organization import (
+    CreateOrganizationHandler,
+)
+from backend.core.application.handlers.create_user import CreateUserHandler
 from backend.core.application.handlers.delete_knowledge_object import (
     DeleteKnowledgeObjectHandler,
 )
+from backend.core.application.handlers.get_audit_event import GetAuditEventHandler
 from backend.core.application.handlers.get_connected_knowledge_objects import (
     GetConnectedKnowledgeObjectsHandler,
 )
 from backend.core.application.handlers.get_incoming_relations import (
     GetIncomingRelationsHandler,
 )
-from backend.core.application.handlers.get_outgoing_relations import (
-    GetOutgoingRelationsHandler,
-)
+from backend.core.application.handlers.get_invitation import GetInvitationHandler
 from backend.core.application.handlers.get_knowledge_object import (
     GetKnowledgeObjectHandler,
 )
 from backend.core.application.handlers.get_knowledge_object_history import (
     GetKnowledgeObjectHistoryHandler,
 )
-from backend.core.application.handlers.create_knowledge_object_relation import (
-    CreateKnowledgeObjectRelationHandler,
-)
 from backend.core.application.handlers.get_knowledge_object_relation import (
     GetKnowledgeObjectRelationHandler,
 )
-from backend.core.application.handlers.remove_knowledge_object_relation import (
-    RemoveKnowledgeObjectRelationHandler,
-)
-from backend.core.application.handlers.search_knowledge_objects import (
-    SearchKnowledgeObjectsHandler,
-)
-from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
-from backend.core.application.handlers.refresh_authentication import (
-    RefreshAuthenticationHandler,
-)
-from backend.core.application.handlers.restore_knowledge_object import (
-    RestoreKnowledgeObjectHandler,
-)
-from backend.core.application.handlers.update_knowledge_object import (
-    UpdateKnowledgeObjectHandler,
-)
-from backend.core.application.handlers.create_user import CreateUserHandler
-from backend.core.application.handlers.get_user import GetUserHandler
-from backend.core.application.handlers.list_users import ListUsersHandler
-from backend.core.application.handlers.update_user import UpdateUserHandler
-from backend.core.application.handlers.user_lifecycle import (
-    ActivateUserHandler,
-    DeactivateUserHandler,
-)
-from backend.core.application.handlers.create_organization import CreateOrganizationHandler
-from backend.core.application.handlers.get_organization import GetOrganizationHandler
-from backend.core.application.handlers.list_organizations import ListOrganizationsHandler
-from backend.core.application.handlers.update_organization import UpdateOrganizationHandler
-from backend.core.application.handlers.organization_lifecycle import (
-    ActivateOrganizationHandler,
-    DeactivateOrganizationHandler,
-)
-from backend.core.application.handlers.create_membership import CreateMembershipHandler
 from backend.core.application.handlers.get_membership import GetMembershipHandler
-from backend.core.application.handlers.list_memberships import ListMembershipsHandler
-from backend.core.application.handlers.update_membership_role import UpdateMembershipRoleHandler
-from backend.core.application.handlers.membership_lifecycle import (
-    ActivateMembershipHandler,
-    DeactivateMembershipHandler,
+from backend.core.application.handlers.get_organization import GetOrganizationHandler
+from backend.core.application.handlers.get_outgoing_relations import (
+    GetOutgoingRelationsHandler,
 )
-from backend.core.application.audit.administrative_audit_recorder import (
-    AdministrativeAuditRecorder,
-)
-from backend.core.application.handlers.get_audit_event import GetAuditEventHandler
-from backend.core.application.handlers.create_invitation import CreateInvitationHandler
-from backend.core.application.handlers.list_audit_events import ListAuditEventsHandler
-from backend.core.application.handlers.get_invitation import GetInvitationHandler
-from backend.core.application.handlers.list_invitations import ListInvitationsHandler
+from backend.core.application.handlers.get_user import GetUserHandler
 from backend.core.application.handlers.invitation_lifecycle import (
     AcceptInvitationHandler,
     ReissueInvitationHandler,
     RevokeInvitationHandler,
 )
+from backend.core.application.handlers.list_audit_events import ListAuditEventsHandler
+from backend.core.application.handlers.list_invitations import ListInvitationsHandler
+from backend.core.application.handlers.list_memberships import ListMembershipsHandler
+from backend.core.application.handlers.list_organizations import (
+    ListOrganizationsHandler,
+)
+from backend.core.application.handlers.list_users import ListUsersHandler
+from backend.core.application.handlers.logout import LogoutHandler
+from backend.core.application.handlers.membership_lifecycle import (
+    ActivateMembershipHandler,
+    DeactivateMembershipHandler,
+)
+from backend.core.application.handlers.organization_lifecycle import (
+    ActivateOrganizationHandler,
+    DeactivateOrganizationHandler,
+)
+from backend.core.application.handlers.refresh_authentication import (
+    RefreshAuthenticationHandler,
+)
+from backend.core.application.handlers.remove_knowledge_object_relation import (
+    RemoveKnowledgeObjectRelationHandler,
+)
+from backend.core.application.handlers.restore_knowledge_object import (
+    RestoreKnowledgeObjectHandler,
+)
+from backend.core.application.handlers.search_knowledge_objects import (
+    SearchKnowledgeObjectsHandler,
+)
+from backend.core.application.handlers.update_knowledge_object import (
+    UpdateKnowledgeObjectHandler,
+)
+from backend.core.application.handlers.update_membership_role import (
+    UpdateMembershipRoleHandler,
+)
+from backend.core.application.handlers.update_organization import (
+    UpdateOrganizationHandler,
+)
+from backend.core.application.handlers.update_user import UpdateUserHandler
+from backend.core.application.handlers.user_lifecycle import (
+    ActivateUserHandler,
+    DeactivateUserHandler,
+)
+from backend.core.application.handlers.verify_audit_chain import VerifyAuditChainHandler
 from backend.core.application.policies.membership_administration import (
     MembershipAuthorizationContext,
 )
 from backend.core.contracts.clock import ClockContract
-from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.contracts.token_service import TokenValidationError
-from backend.core.application.audit.permission_denial_audit import is_administrative_permission
-from backend.core.application.exceptions.authentication import UnauthenticatedError
-from backend.core.application.exceptions.authorization import PermissionDeniedError
-from backend.core.application.context.tenant_context import TenantContext
-from backend.core.domain.value_objects.audit_event_id import AuditEventId
+from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.value_objects import (
     InvitationId,
     KnowledgeObjectId,
@@ -115,9 +130,9 @@ from backend.core.domain.value_objects import (
     Permission,
     UserId,
 )
-from backend.core.infrastructure.time.utc_clock import UtcClock
+from backend.core.domain.value_objects.audit_event_id import AuditEventId
 from backend.core.domain.value_objects.permission import SystemPermission
-from backend.api.security import SecurityContext
+from backend.core.infrastructure.time.utc_clock import UtcClock
 
 
 def get_container(request: Request) -> AppContainer:
@@ -137,6 +152,13 @@ def get_administrative_audit_recorder(
     clock: ClockContract = Depends(get_clock),
 ) -> AdministrativeAuditRecorder:
     return AdministrativeAuditRecorder(clock, container.uow_factory)
+
+
+def get_authentication_security_event_recorder(
+    container: AppContainer = Depends(get_container),
+    clock: ClockContract = Depends(get_clock),
+) -> AuthenticationSecurityEventRecorder:
+    return AuthenticationSecurityEventRecorder(clock, container.uow_factory)
 
 
 def require_permission(
@@ -365,8 +387,11 @@ def get_activate_user_handler(
 def get_deactivate_user_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
     audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+    security_event_recorder: AuthenticationSecurityEventRecorder = Depends(
+        get_authentication_security_event_recorder
+    ),
 ) -> DeactivateUserHandler:
-    return DeactivateUserHandler(uow, audit)
+    return DeactivateUserHandler(uow, audit, security_event_recorder)
 
 
 def get_create_organization_handler(
@@ -431,7 +456,9 @@ def get_membership_authorization_context(
         tenant_context.organization_id,
     )
     if auth_membership is None:
-        from backend.core.application.exceptions.authorization import MembershipRequiredError
+        from backend.core.application.exceptions.authorization import (
+            MembershipRequiredError,
+        )
 
         raise MembershipRequiredError()
 
@@ -558,6 +585,12 @@ def get_list_audit_events_handler(
     return ListAuditEventsHandler(uow)
 
 
+def get_verify_audit_chain_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> VerifyAuditChainHandler:
+    return VerifyAuditChainHandler(uow)
+
+
 def get_create_knowledge_object_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
 ) -> CreateKnowledgeObjectHandler:
@@ -644,19 +677,53 @@ def get_search_knowledge_objects_handler(
 
 def get_authenticate_user_handler(
     container: AppContainer = Depends(get_container),
+    security_event_recorder: AuthenticationSecurityEventRecorder = Depends(
+        get_authentication_security_event_recorder
+    ),
+    clock: ClockContract = Depends(get_clock),
 ) -> AuthenticateUserHandler:
     return AuthenticateUserHandler(
         user_lookup=container.user_lookup,
         user_credentials=container.user_credentials,
         password_hasher=container.password_hasher,
         token_service=container.token_service,
+        security_event_recorder=security_event_recorder,
+        uow_factory=container.uow_factory,
+        clock=clock,
+        refresh_token_ttl_seconds=container.settings.jwt_refresh_token_ttl_seconds,
+        refresh_absolute_ttl_seconds=container.settings.jwt_refresh_absolute_ttl_seconds,
     )
 
 
 def get_refresh_authentication_handler(
     container: AppContainer = Depends(get_container),
+    security_event_recorder: AuthenticationSecurityEventRecorder = Depends(
+        get_authentication_security_event_recorder
+    ),
+    clock: ClockContract = Depends(get_clock),
 ) -> RefreshAuthenticationHandler:
-    return RefreshAuthenticationHandler(container.token_service)
+    return RefreshAuthenticationHandler(
+        token_service=container.token_service,
+        security_event_recorder=security_event_recorder,
+        uow_factory=container.uow_factory,
+        clock=clock,
+        refresh_token_ttl_seconds=container.settings.jwt_refresh_token_ttl_seconds,
+    )
+
+
+def get_logout_handler(
+    container: AppContainer = Depends(get_container),
+    security_event_recorder: AuthenticationSecurityEventRecorder = Depends(
+        get_authentication_security_event_recorder
+    ),
+    clock: ClockContract = Depends(get_clock),
+) -> LogoutHandler:
+    return LogoutHandler(
+        token_service=container.token_service,
+        security_event_recorder=security_event_recorder,
+        uow_factory=container.uow_factory,
+        clock=clock,
+    )
 
 
 def get_bearer_token(

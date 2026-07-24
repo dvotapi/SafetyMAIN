@@ -62,12 +62,37 @@ def test_authorization_permission_denied_producer_mapping() -> None:
 
 
 def test_administrative_events_use_administrative_audit_producer() -> None:
+    non_administrative = {
+        AuditAction.AUTHORIZATION_PERMISSION_DENIED,
+        AuditAction.AUTHENTICATION_LOGIN_SUCCEEDED,
+        AuditAction.AUTHENTICATION_LOGIN_FAILED,
+        AuditAction.AUTHENTICATION_REFRESH_SUCCEEDED,
+        AuditAction.AUTHENTICATION_REFRESH_FAILED,
+        AuditAction.AUTHENTICATION_LOGOUT_SUCCEEDED,
+        AuditAction.AUTHENTICATION_REFRESH_REUSE_DETECTED,
+        AuditAction.AUTHENTICATION_SESSION_REVOKED,
+    }
     for action in AuditAction:
-        if action is AuditAction.AUTHORIZATION_PERMISSION_DENIED:
+        if action in non_administrative:
             continue
         descriptor = security_event_descriptor_for(action.value)
         assert descriptor is not None
         assert descriptor.producer_owner is SecurityEventProducerOwner.ADMINISTRATIVE_AUDIT
+
+
+def test_authentication_events_use_authentication_producer() -> None:
+    for action in (
+        AuditAction.AUTHENTICATION_LOGIN_SUCCEEDED,
+        AuditAction.AUTHENTICATION_LOGIN_FAILED,
+        AuditAction.AUTHENTICATION_REFRESH_SUCCEEDED,
+        AuditAction.AUTHENTICATION_REFRESH_FAILED,
+        AuditAction.AUTHENTICATION_LOGOUT_SUCCEEDED,
+        AuditAction.AUTHENTICATION_REFRESH_REUSE_DETECTED,
+        AuditAction.AUTHENTICATION_SESSION_REVOKED,
+    ):
+        descriptor = security_event_descriptor_for(action.value)
+        assert descriptor is not None
+        assert descriptor.producer_owner is SecurityEventProducerOwner.AUTHENTICATION
 
 
 def test_routers_do_not_define_security_event_registry_entries() -> None:

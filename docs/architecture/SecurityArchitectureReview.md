@@ -13,6 +13,10 @@ Related documents:
 - [IdentityDomain.md](IdentityDomain.md)
 - [ArchitectureReviewV2.md](ArchitectureReviewV2.md)
 - [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md)
+- [AuthenticationSecurityEvents.md](AuthenticationSecurityEvents.md)
+- [SecurityEventInvestigation.md](SecurityEventInvestigation.md)
+- [AuditEventIntegrity.md](AuditEventIntegrity.md)
+- [SecurityOperationsArchitectureReview.md](SecurityOperationsArchitectureReview.md)
 
 ---
 
@@ -200,7 +204,14 @@ Permission denial (`403`) is distinct from cross-organization masking (`404`).
 
 Persisted security event type identity, category, subject domain, and producer ownership
 for current audit records are centralized in [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md)
-(TASK-P6-002). Runtime audit behavior is unchanged.
+(TASK-P6-002). Authentication login/refresh outcomes are produced by
+[AuthenticationSecurityEvents.md](AuthenticationSecurityEvents.md) (TASK-P6-003).
+Tenant investigation filters are documented in
+[SecurityEventInvestigation.md](SecurityEventInvestigation.md) (TASK-P6-004).
+Tamper-evident integrity chaining is documented in
+[AuditEventIntegrity.md](AuditEventIntegrity.md) (TASK-P6-005).
+Phase P6 closeout review: [SecurityOperationsArchitectureReview.md](SecurityOperationsArchitectureReview.md)
+(TASK-P6-006).
 
 | Missing/ambiguous organization context | 422 | `organization_context_required` | Yes |
 | Conflicting organization contexts | 422 | `organization_context_required` | Yes |
@@ -272,13 +283,14 @@ Database-marked tests skipped when PostgreSQL is unavailable (expected).
 
 ## 13. Known Limitations
 
-1. **In-memory identity and membership stores** — development/test adapters only.
+1. **In-memory identity and membership stores** — non-production / test adapters only;
+   production requires PostgreSQL (P7-001). See [PersistentIdentityStores.md](PersistentIdentityStores.md).
 2. **Compatibility mode default** — `AUTH_ENFORCEMENT=false` preserves legacy
    header-only clients.
 3. **OpenAPI describes enforced contract statically** — see SecurityEnforcementRollout.md.
 4. **Production configuration must be set explicitly** — startup validation rejects unsafe production settings (P4-003).
 5. **HS256 dev secret default** — not production-safe without configuration.
-6. **No audit logging** — out of Phase P3 scope.
+6. **Administrative audit / security events** — delivered in Phase P5/P6; integrity chains in P6-005.
 7. **No OIDC / external IdP** — future adapter track.
 
 ---
@@ -287,7 +299,7 @@ Database-marked tests skipped when PostgreSQL is unavailable (expected).
 
 | Priority | Task |
 |----------|------|
-| High | Persist identity and membership (SQLAlchemy adapters) |
+| Done | Persist identity and membership (P4-001 / P7-001) |
 | High | Deploy with validated production security configuration (P4-003) |
 | Medium | Enable `AUTH_ENFORCEMENT=true` in production after client migration |
 | Low | Retire compatibility mode when all clients use Bearer tokens |
@@ -326,10 +338,11 @@ The following invariants must be preserved:
 
 ## Temporary Adapters (Bootstrap)
 
-| Adapter | Replacement target |
-|---------|-------------------|
-| `InMemoryIdentityStore` | SQLAlchemy user/credential repository |
-| `InMemoryMembershipStore` | SQLAlchemy membership repository |
+| Adapter | Replacement |
+|---------|-------------|
+| `InMemoryIdentityStore` | `SQLAlchemyIdentityAdapter` (production when `DATABASE_URL` is set) |
+| `InMemoryMembershipStore` | `SQLAlchemyMembershipAdapter` (production when `DATABASE_URL` is set) |
 
-Both implement the correct Contracts ports and are wired explicitly in
-`AppContainer`.
+In-memory adapters implement the correct Contracts ports for tests and non-production
+unset-database workflows. Production wiring forbids silent in-memory fallback
+(P7-001). See [PersistentIdentityStores.md](PersistentIdentityStores.md).

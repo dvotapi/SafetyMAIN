@@ -11,6 +11,8 @@ MIN_ACCESS_TOKEN_TTL_SECONDS = 60
 MAX_ACCESS_TOKEN_TTL_SECONDS = 86_400
 MIN_REFRESH_TOKEN_TTL_SECONDS = 300
 MAX_REFRESH_TOKEN_TTL_SECONDS = 7_776_000
+MIN_REFRESH_ABSOLUTE_TTL_SECONDS = 300
+MAX_REFRESH_ABSOLUTE_TTL_SECONDS = 15_552_000
 
 MIN_PRODUCTION_JWT_SECRET_LENGTH = 32
 
@@ -38,7 +40,9 @@ def validate_security_configuration(settings: AppSettings) -> None:
     _validate_token_lifetimes(
         access_token_ttl_seconds=settings.jwt_access_token_ttl_seconds,
         refresh_token_ttl_seconds=settings.jwt_refresh_token_ttl_seconds,
+        refresh_absolute_ttl_seconds=settings.jwt_refresh_absolute_ttl_seconds,
     )
+    _validate_refresh_rotation(settings.refresh_token_rotation_enabled)
     _validate_jwt_issuer(settings.jwt_issuer)
     _validate_auth_enforcement(settings.auth_enforcement)
 
@@ -66,6 +70,7 @@ def _validate_token_lifetimes(
     *,
     access_token_ttl_seconds: int,
     refresh_token_ttl_seconds: int,
+    refresh_absolute_ttl_seconds: int,
 ) -> None:
     if access_token_ttl_seconds < MIN_ACCESS_TOKEN_TTL_SECONDS:
         raise SecurityConfigurationError(
@@ -91,6 +96,33 @@ def _validate_token_lifetimes(
         raise SecurityConfigurationError(
             "JWT_REFRESH_TOKEN_TTL_SECONDS must be greater than "
             "JWT_ACCESS_TOKEN_TTL_SECONDS."
+        )
+    if refresh_absolute_ttl_seconds < MIN_REFRESH_ABSOLUTE_TTL_SECONDS:
+        raise SecurityConfigurationError(
+            "JWT_REFRESH_ABSOLUTE_TTL_SECONDS must be at least "
+            f"{MIN_REFRESH_ABSOLUTE_TTL_SECONDS} seconds."
+        )
+    if refresh_absolute_ttl_seconds > MAX_REFRESH_ABSOLUTE_TTL_SECONDS:
+        raise SecurityConfigurationError(
+            "JWT_REFRESH_ABSOLUTE_TTL_SECONDS must not exceed "
+            f"{MAX_REFRESH_ABSOLUTE_TTL_SECONDS} seconds."
+        )
+    if refresh_token_ttl_seconds > refresh_absolute_ttl_seconds:
+        raise SecurityConfigurationError(
+            "JWT_REFRESH_TOKEN_TTL_SECONDS must not exceed "
+            "JWT_REFRESH_ABSOLUTE_TTL_SECONDS."
+        )
+
+
+def _validate_refresh_rotation(refresh_token_rotation_enabled: bool) -> None:
+    if not isinstance(refresh_token_rotation_enabled, bool):
+        raise SecurityConfigurationError(
+            "REFRESH_TOKEN_ROTATION_ENABLED must resolve to a boolean value."
+        )
+    if not refresh_token_rotation_enabled:
+        raise SecurityConfigurationError(
+            "REFRESH_TOKEN_ROTATION_ENABLED must be true; "
+            "stateless refresh validation is not supported."
         )
 
 

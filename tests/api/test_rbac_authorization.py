@@ -19,13 +19,14 @@ from backend.core.application.authorization.policies.resource_permissions import
     KNOWLEDGE_OBJECT_WRITE,
 )
 from backend.core.application.commands.authenticate_user import AuthenticateUserCommand
-from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
 from backend.core.domain.entities.membership import Membership, MembershipStatus
 from backend.core.domain.entities.user import User, UserStatus
 from backend.core.domain.value_objects import MembershipId, OrganizationId, Role, UserId
 from backend.core.infrastructure.auth.in_memory_identity_store import InMemoryIdentityStore
 from backend.core.infrastructure.auth.in_memory_membership_store import InMemoryMembershipStore
 from tests.api.contracts.assertions import assert_error_envelope
+from tests.core.audit_test_support import make_authentication_security_event_recorder
+from tests.support.authenticate import build_authenticate_user_handler
 
 
 @pytest.fixture
@@ -80,11 +81,10 @@ def _build_permission_protected_client(
             updated_at=datetime.now(UTC),
         )
     )
-    authenticate_handler = AuthenticateUserHandler(
-        user_lookup=container.user_lookup,
-        user_credentials=container.user_credentials,
-        password_hasher=container.password_hasher,
-        token_service=container.token_service,
+    authenticate_handler = build_authenticate_user_handler(
+        container,
+        settings,
+        security_event_recorder=make_authentication_security_event_recorder()[0],
     )
     tokens = authenticate_handler.handle(
         AuthenticateUserCommand(

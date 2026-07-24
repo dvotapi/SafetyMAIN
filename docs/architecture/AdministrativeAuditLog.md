@@ -2,7 +2,7 @@
 
 Status: Active  
 Date: 2026-07-24  
-Task: TASK-P5-005, TASK-P6-001, TASK-P6-002
+Task: TASK-P5-005, TASK-P6-001, TASK-P6-002, TASK-P6-005
 
 Related documents:
 
@@ -13,6 +13,9 @@ Related documents:
 - [InvitationWorkflow.md](InvitationWorkflow.md)
 - [AdminAuditAPI.md](../api/AdminAuditAPI.md)
 - [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md)
+- [SecurityEventInvestigation.md](SecurityEventInvestigation.md)
+- [AuditEventIntegrity.md](AuditEventIntegrity.md)
+- [SecurityOperationsArchitectureReview.md](SecurityOperationsArchitectureReview.md)
 
 ---
 
@@ -27,8 +30,10 @@ The audit log supports:
 - investigation of rejected administrative attempts with stable failure codes;
 - scoped read access for organization administrators and auditors.
 
-Audit events are not a SIEM, legal-hold system, or cryptographic tamper-evidence chain.
-They are append-only application records stored in the primary database.
+Audit events are not a SIEM or legal-hold system. They are append-only application
+records stored in the primary database. TASK-P6-005 adds a per-organization
+tamper-evident integrity hash chain; see [AuditEventIntegrity.md](AuditEventIntegrity.md)
+for guarantees and limitations.
 
 ---
 
@@ -43,12 +48,15 @@ They are append-only application records stored in the primary database.
 | `authorization_organization_id` | Organization whose membership authorized the action |
 | `target_organization_id` | Organization affected by the operation, when applicable |
 | `action` | Stable action identifier (`<resource>.<operation>`) |
-| `resource_type` | Stable resource type (`USER`, `ORGANIZATION`, `MEMBERSHIP`, `INVITATION`, `AUDIT_EVENT`) |
+| `resource_type` | Stable resource type (`USER`, `ORGANIZATION`, `MEMBERSHIP`, `INVITATION`, `AUDIT_EVENT`, `SESSION`) |
 | `resource_id` | Affected resource identifier, when available |
 | `outcome` | `SUCCESS` or `FAILURE` |
 | `failure_code` | Stable application code for expected failures |
 | `metadata` | Allowlisted JSON-compatible fields |
 | `occurred_at` | UTC timestamp |
+| `previous_integrity_hash` | Prior event hash in the organization chain, or `null` for genesis |
+| `integrity_hash` | SHA-256 hex integrity commitment |
+| `integrity_version` | Integrity algorithm version |
 
 Audit events have no update, delete, activate, or deactivate lifecycle.
 
@@ -63,11 +71,15 @@ Actions are centralized in `AuditAction`:
 - Membership: `membership.create`, `membership.role_change`, `membership.activate`, `membership.deactivate`
 - Invitation: `invitation.create`, `invitation.revoke`, `invitation.reissue`, `invitation.accept`
 - Authorization: `authorization.permission_denied`
+- Authentication: `authentication.login.succeeded`, `authentication.login.failed`,
+  `authentication.refresh.succeeded`, `authentication.refresh.failed`
 
 Handlers and centralized authorization dependencies must not use arbitrary free-form action strings.
 
 All published administrative audit action identifiers are registered in the immutable
 Security Event Taxonomy Registry. See [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md).
+Authentication event production is documented in
+[AuthenticationSecurityEvents.md](AuthenticationSecurityEvents.md).
 
 ---
 
@@ -220,6 +232,7 @@ Allowed metadata keys:
 - `membership_id`
 - `required_permission`, `http_method`, `route_template`
 - `operation_id`, `target_identifier_present`, `permission_category`
+- `request_id`, `client_ip`, `user_agent`, `authentication_method`
 
 Metadata must not contain entity snapshots, request bodies, secrets, tokens, or raw exception text.
 
@@ -251,7 +264,10 @@ Invitation acceptance records `invitation.accept` with optional `membership_id` 
 ## 14. Known Limitations
 
 - Business endpoint permission denials are not recorded in the administrative audit log.
-- Authentication failures (`401`) and pre-permission tenant/membership failures are not administrative audit events.
+- Authentication login/refresh outcomes are recorded as authentication security events
+  (see [AuthenticationSecurityEvents.md](AuthenticationSecurityEvents.md)) but are not
+  visible through the organization-scoped Admin Audit API when organization context is
+  absent.
 - No platform-wide cross-organization audit view for ordinary org admins.
 - No retention, export, signing, or external streaming integration.
 

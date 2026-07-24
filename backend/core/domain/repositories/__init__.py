@@ -16,6 +16,9 @@ from backend.core.domain.repositories.membership_repository import (
 from backend.core.domain.repositories.organization_repository import (
     OrganizationRepositoryContract,
 )
+from backend.core.domain.repositories.refresh_token_session_repository import (
+    RefreshTokenSessionRepositoryContract,
+)
 from backend.core.domain.repositories.user_repository import UserRepositoryContract
 
 __all__ = [
@@ -25,5 +28,6 @@ __all__ = [
     "KnowledgeObjectRepositoryContract",
     "MembershipRepositoryContract",
     "OrganizationRepositoryContract",
+    "RefreshTokenSessionRepositoryContract",
     "UserRepositoryContract",
 ]

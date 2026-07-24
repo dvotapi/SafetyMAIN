@@ -131,11 +131,9 @@ pytest -q
 
 ## Deferred Work
 
-- TASK-P6-003 — Authentication Security Events production and persistence;
-- TASK-P6-004 — Audit Retention & Lifecycle;
 - TASK-P6-005 — Audit Export API;
 - TASK-P6-006 — Audit Integrity;
-- runtime registry lookup integration in recorders (not required for P6-002);
+- runtime registry lookup integration in administrative recorders;
 - persisted category/subject/significance columns.
 
 ---

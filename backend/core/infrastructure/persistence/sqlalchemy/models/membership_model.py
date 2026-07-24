@@ -3,7 +3,15 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -17,6 +25,10 @@ class MembershipModel(Base):
             "user_id",
             "organization_id",
             name="uq_memberships_user_organization",
+        ),
+        CheckConstraint(
+            "role IN ('admin', 'member', 'auditor')",
+            name="ck_memberships_role_system",
         ),
         Index("ix_memberships_user_id", "user_id"),
         Index("ix_memberships_organization_id", "organization_id"),

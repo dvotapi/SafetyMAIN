@@ -10,6 +10,7 @@ from backend.core.domain.repositories import (
     KnowledgeObjectRepositoryContract,
     MembershipRepositoryContract,
     OrganizationRepositoryContract,
+    RefreshTokenSessionRepositoryContract,
     UserRepositoryContract,
 )
 from backend.core.infrastructure.persistence.in_memory.audit_event_repository import (
@@ -18,17 +19,20 @@ from backend.core.infrastructure.persistence.in_memory.audit_event_repository im
 from backend.core.infrastructure.persistence.in_memory.invitation_repository import (
     InMemoryInvitationRepository,
 )
-from backend.core.infrastructure.persistence.in_memory.knowledge_object_repository import (
-    InMemoryKnowledgeObjectRepository,
-)
 from backend.core.infrastructure.persistence.in_memory.knowledge_object_relation_repository import (
     InMemoryKnowledgeObjectRelationRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.knowledge_object_repository import (
+    InMemoryKnowledgeObjectRepository,
 )
 from backend.core.infrastructure.persistence.in_memory.membership_repository import (
     InMemoryMembershipRepository,
 )
 from backend.core.infrastructure.persistence.in_memory.organization_repository import (
     InMemoryOrganizationRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.refresh_token_session_repository import (
+    InMemoryRefreshTokenSessionRepository,
 )
 from backend.core.infrastructure.persistence.in_memory.user_repository import (
     InMemoryUserRepository,
@@ -45,6 +49,7 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         memberships: MembershipRepositoryContract | None = None,
         invitations: InvitationRepositoryContract | None = None,
         audit_events: AuditEventRepositoryContract | None = None,
+        refresh_sessions: RefreshTokenSessionRepositoryContract | None = None,
     ) -> None:
         self._knowledge_objects = knowledge_objects or InMemoryKnowledgeObjectRepository()
         self._relations = relations or InMemoryKnowledgeObjectRelationRepository()
@@ -53,6 +58,7 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._memberships = memberships or InMemoryMembershipRepository()
         self._invitations = invitations or InMemoryInvitationRepository()
         self._audit_events = audit_events or InMemoryAuditEventRepository()
+        self._refresh_sessions = refresh_sessions or InMemoryRefreshTokenSessionRepository()
         self._knowledge_objects_snapshot: object | None = None
         self._relations_snapshot: object | None = None
         self._users_snapshot: object | None = None
@@ -60,6 +66,7 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._memberships_snapshot: object | None = None
         self._invitations_snapshot: object | None = None
         self._audit_events_snapshot: object | None = None
+        self._refresh_sessions_snapshot: object | None = None
         self._snapshots_taken = False
         self._context_depth = 0
         self.committed = False
@@ -92,6 +99,10 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
     @property
     def audit_events(self) -> AuditEventRepositoryContract:
         return self._audit_events
+
+    @property
+    def refresh_sessions(self) -> RefreshTokenSessionRepositoryContract:
+        return self._refresh_sessions
 
     def begin(self) -> None:
         if self._context_depth == 0:
@@ -149,6 +160,8 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
             self._invitations_snapshot = self._invitations.snapshot()
         if hasattr(self._audit_events, "snapshot"):
             self._audit_events_snapshot = self._audit_events.snapshot()
+        if hasattr(self._refresh_sessions, "snapshot"):
+            self._refresh_sessions_snapshot = self._refresh_sessions.snapshot()
         self._snapshots_taken = True
 
     def _restore_snapshots(self) -> None:
@@ -172,6 +185,8 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
             self._invitations.restore(self._invitations_snapshot)
         if self._audit_events_snapshot is not None and hasattr(self._audit_events, "restore"):
             self._audit_events.restore(self._audit_events_snapshot)
+        if self._refresh_sessions_snapshot is not None and hasattr(self._refresh_sessions, "restore"):
+            self._refresh_sessions.restore(self._refresh_sessions_snapshot)
 
     def _release_snapshots(self) -> None:
         self._snapshots_taken = False
@@ -182,3 +197,4 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._memberships_snapshot = None
         self._invitations_snapshot = None
         self._audit_events_snapshot = None
+        self._refresh_sessions_snapshot = None
