@@ -56,6 +56,41 @@ LIST_AUDIT_EVENTS = "list_audit_events"
 GET_AUDIT_EVENT = "get_audit_event"
 VERIFY_AUDIT_CHAIN_INTEGRITY = "verify_audit_chain_integrity"
 
+CREATE_HAZARD = "create_hazard"
+LIST_HAZARDS = "list_hazards"
+GET_HAZARD = "get_hazard"
+UPDATE_HAZARD = "update_hazard"
+ACTIVATE_HAZARD = "activate_hazard"
+ARCHIVE_HAZARD = "archive_hazard"
+RESTORE_HAZARD = "restore_hazard"
+
+CREATE_RISK_ASSESSMENT = "create_risk_assessment"
+LIST_RISK_ASSESSMENTS = "list_risk_assessments"
+GET_RISK_ASSESSMENT = "get_risk_assessment"
+UPDATE_RISK_ASSESSMENT = "update_risk_assessment"
+APPROVE_RISK_ASSESSMENT = "approve_risk_assessment"
+ARCHIVE_RISK_ASSESSMENT = "archive_risk_assessment"
+
+CREATE_RISK_CONTROL = "create_risk_control"
+LIST_RISK_CONTROLS = "list_risk_controls"
+GET_RISK_CONTROL = "get_risk_control"
+UPDATE_RISK_CONTROL = "update_risk_control"
+ASSIGN_RISK_CONTROL_OWNER = "assign_risk_control_owner"
+PLAN_RISK_CONTROL = "plan_risk_control"
+START_RISK_CONTROL_IMPLEMENTATION = "start_risk_control_implementation"
+UPDATE_RISK_CONTROL_PROGRESS = "update_risk_control_progress"
+ADD_RISK_CONTROL_EVIDENCE = "add_risk_control_evidence"
+COMPLETE_RISK_CONTROL_IMPLEMENTATION = "complete_risk_control_implementation"
+RECORD_RISK_CONTROL_VERIFICATION = "record_risk_control_verification"
+SCHEDULE_RISK_CONTROL_REVIEW = "schedule_risk_control_review"
+COMPLETE_RISK_CONTROL_REVIEW = "complete_risk_control_review"
+SUSPEND_RISK_CONTROL = "suspend_risk_control"
+RESUME_RISK_CONTROL = "resume_risk_control"
+SUPERSEDE_RISK_CONTROL = "supersede_risk_control"
+ARCHIVE_RISK_CONTROL = "archive_risk_control"
+CANCEL_RISK_CONTROL = "cancel_risk_control"
+MATERIALIZE_RISK_ASSESSMENT_CONTROLS = "materialize_risk_assessment_controls"
+
 STABLE_OPERATION_IDS: frozenset[str] = frozenset(
     {
         HEALTH,
@@ -90,6 +125,38 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         LIST_AUDIT_EVENTS,
         GET_AUDIT_EVENT,
         VERIFY_AUDIT_CHAIN_INTEGRITY,
+        CREATE_HAZARD,
+        LIST_HAZARDS,
+        GET_HAZARD,
+        UPDATE_HAZARD,
+        ACTIVATE_HAZARD,
+        ARCHIVE_HAZARD,
+        RESTORE_HAZARD,
+        CREATE_RISK_ASSESSMENT,
+        LIST_RISK_ASSESSMENTS,
+        GET_RISK_ASSESSMENT,
+        UPDATE_RISK_ASSESSMENT,
+        APPROVE_RISK_ASSESSMENT,
+        ARCHIVE_RISK_ASSESSMENT,
+        CREATE_RISK_CONTROL,
+        LIST_RISK_CONTROLS,
+        GET_RISK_CONTROL,
+        UPDATE_RISK_CONTROL,
+        ASSIGN_RISK_CONTROL_OWNER,
+        PLAN_RISK_CONTROL,
+        START_RISK_CONTROL_IMPLEMENTATION,
+        UPDATE_RISK_CONTROL_PROGRESS,
+        ADD_RISK_CONTROL_EVIDENCE,
+        COMPLETE_RISK_CONTROL_IMPLEMENTATION,
+        RECORD_RISK_CONTROL_VERIFICATION,
+        SCHEDULE_RISK_CONTROL_REVIEW,
+        COMPLETE_RISK_CONTROL_REVIEW,
+        SUSPEND_RISK_CONTROL,
+        RESUME_RISK_CONTROL,
+        SUPERSEDE_RISK_CONTROL,
+        ARCHIVE_RISK_CONTROL,
+        CANCEL_RISK_CONTROL,
+        MATERIALIZE_RISK_ASSESSMENT_CONTROLS,
         CREATE_KNOWLEDGE_OBJECT,
         SEARCH_KNOWLEDGE_OBJECTS,
         GET_KNOWLEDGE_OBJECT,

@@ -5,6 +5,9 @@ from types import TracebackType
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.repositories import (
     AuditEventRepositoryContract,
+    HazardRepositoryContract,
+    RiskAssessmentRepositoryContract,
+    RiskControlRepositoryContract,
     InvitationRepositoryContract,
     KnowledgeObjectRelationRepositoryContract,
     KnowledgeObjectRepositoryContract,
@@ -15,6 +18,15 @@ from backend.core.domain.repositories import (
 )
 from backend.core.infrastructure.persistence.in_memory.audit_event_repository import (
     InMemoryAuditEventRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.hazard_repository import (
+    InMemoryHazardRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.risk_assessment_repository import (
+    InMemoryRiskAssessmentRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.risk_control_repository import (
+    InMemoryRiskControlRepository,
 )
 from backend.core.infrastructure.persistence.in_memory.invitation_repository import (
     InMemoryInvitationRepository,
@@ -48,6 +60,9 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         organizations: OrganizationRepositoryContract | None = None,
         memberships: MembershipRepositoryContract | None = None,
         invitations: InvitationRepositoryContract | None = None,
+        hazards: HazardRepositoryContract | None = None,
+        risk_assessments: RiskAssessmentRepositoryContract | None = None,
+        risk_controls: RiskControlRepositoryContract | None = None,
         audit_events: AuditEventRepositoryContract | None = None,
         refresh_sessions: RefreshTokenSessionRepositoryContract | None = None,
     ) -> None:
@@ -57,6 +72,9 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._organizations = organizations or InMemoryOrganizationRepository()
         self._memberships = memberships or InMemoryMembershipRepository()
         self._invitations = invitations or InMemoryInvitationRepository()
+        self._hazards = hazards or InMemoryHazardRepository()
+        self._risk_assessments = risk_assessments or InMemoryRiskAssessmentRepository()
+        self._risk_controls = risk_controls or InMemoryRiskControlRepository()
         self._audit_events = audit_events or InMemoryAuditEventRepository()
         self._refresh_sessions = refresh_sessions or InMemoryRefreshTokenSessionRepository()
         self._knowledge_objects_snapshot: object | None = None
@@ -65,6 +83,9 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._organizations_snapshot: object | None = None
         self._memberships_snapshot: object | None = None
         self._invitations_snapshot: object | None = None
+        self._hazards_snapshot: object | None = None
+        self._risk_assessments_snapshot: object | None = None
+        self._risk_controls_snapshot: object | None = None
         self._audit_events_snapshot: object | None = None
         self._refresh_sessions_snapshot: object | None = None
         self._snapshots_taken = False
@@ -95,6 +116,18 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
     @property
     def invitations(self) -> InvitationRepositoryContract:
         return self._invitations
+
+    @property
+    def hazards(self) -> HazardRepositoryContract:
+        return self._hazards
+
+    @property
+    def risk_assessments(self) -> RiskAssessmentRepositoryContract:
+        return self._risk_assessments
+
+    @property
+    def risk_controls(self) -> RiskControlRepositoryContract:
+        return self._risk_controls
 
     @property
     def audit_events(self) -> AuditEventRepositoryContract:
@@ -158,6 +191,12 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
             self._memberships_snapshot = self._memberships.snapshot()
         if hasattr(self._invitations, "snapshot"):
             self._invitations_snapshot = self._invitations.snapshot()
+        if hasattr(self._hazards, "snapshot"):
+            self._hazards_snapshot = self._hazards.snapshot()
+        if hasattr(self._risk_assessments, "snapshot"):
+            self._risk_assessments_snapshot = self._risk_assessments.snapshot()
+        if hasattr(self._risk_controls, "snapshot"):
+            self._risk_controls_snapshot = self._risk_controls.snapshot()
         if hasattr(self._audit_events, "snapshot"):
             self._audit_events_snapshot = self._audit_events.snapshot()
         if hasattr(self._refresh_sessions, "snapshot"):
@@ -183,6 +222,12 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
             self._memberships.restore(self._memberships_snapshot)
         if self._invitations_snapshot is not None and hasattr(self._invitations, "restore"):
             self._invitations.restore(self._invitations_snapshot)
+        if self._hazards_snapshot is not None and hasattr(self._hazards, "restore"):
+            self._hazards.restore(self._hazards_snapshot)
+        if self._risk_assessments_snapshot is not None and hasattr(self._risk_assessments, "restore"):
+            self._risk_assessments.restore(self._risk_assessments_snapshot)
+        if self._risk_controls_snapshot is not None and hasattr(self._risk_controls, "restore"):
+            self._risk_controls.restore(self._risk_controls_snapshot)
         if self._audit_events_snapshot is not None and hasattr(self._audit_events, "restore"):
             self._audit_events.restore(self._audit_events_snapshot)
         if self._refresh_sessions_snapshot is not None and hasattr(self._refresh_sessions, "restore"):
@@ -196,5 +241,8 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._organizations_snapshot = None
         self._memberships_snapshot = None
         self._invitations_snapshot = None
+        self._hazards_snapshot = None
+        self._risk_assessments_snapshot = None
+        self._risk_controls_snapshot = None
         self._audit_events_snapshot = None
         self._refresh_sessions_snapshot = None

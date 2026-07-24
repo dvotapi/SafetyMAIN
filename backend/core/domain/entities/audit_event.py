@@ -38,6 +38,23 @@ ALLOWED_METADATA_KEYS = frozenset(
         "session_id",
         "revocation_reason",
         "revoked_session_count",
+        "hazard_id",
+        "hazard_code",
+        "category",
+        "safety_directions",
+        "reason",
+        "risk_id",
+        "risk_code",
+        "assessment_profile",
+        "inherent_level",
+        "residual_level",
+        "control_id",
+        "control_code",
+        "owner_reference",
+        "effectiveness_result",
+        "source_control_reference",
+        "expected_version",
+        "resulting_version",
     }
 )
 

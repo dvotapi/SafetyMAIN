@@ -16,3 +16,6 @@ class SecurityEventSubjectDomain(str, Enum):
     API_KEY = "API_KEY"
     AUDIT_EVENT = "AUDIT_EVENT"
     SECURITY_SYSTEM = "SECURITY_SYSTEM"
+    HAZARD = "HAZARD"
+    RISK = "RISK"
+    RISK_CONTROL = "RISK_CONTROL"

@@ -10,12 +10,16 @@ from backend.core.domain.security_events.families.authentication import (
 from backend.core.domain.security_events.families.authorization import (
     AUTHORIZATION_SECURITY_EVENT_DESCRIPTORS,
 )
+from backend.core.domain.security_events.families.safety import (
+    SAFETY_SECURITY_EVENT_DESCRIPTORS,
+)
 from backend.core.domain.security_events.validation import validate_security_event_registry
 
 _ALL_DESCRIPTORS: tuple[SecurityEventDescriptor, ...] = (
     *ADMINISTRATIVE_SECURITY_EVENT_DESCRIPTORS,
     *AUTHORIZATION_SECURITY_EVENT_DESCRIPTORS,
     *AUTHENTICATION_SECURITY_EVENT_DESCRIPTORS,
+    *SAFETY_SECURITY_EVENT_DESCRIPTORS,
 )
 
 SECURITY_EVENT_REGISTRY: frozenset[SecurityEventDescriptor] = frozenset(_ALL_DESCRIPTORS)

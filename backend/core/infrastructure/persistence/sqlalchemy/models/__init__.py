@@ -2,6 +2,15 @@ from backend.core.infrastructure.persistence.sqlalchemy.models.audit_event_model
     AuditChainHeadModel,
     AuditEventModel,
 )
+from backend.core.infrastructure.persistence.sqlalchemy.models.hazard_model import (
+    HazardModel,
+)
+from backend.core.infrastructure.persistence.sqlalchemy.models.risk_assessment_model import (
+    RiskAssessmentModel,
+)
+from backend.core.infrastructure.persistence.sqlalchemy.models.risk_control_model import (
+    RiskControlModel,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.models.knowledge_object_model import (
     KnowledgeObjectModel,
 )
@@ -27,6 +36,9 @@ from backend.core.infrastructure.persistence.sqlalchemy.models.user_model import
 __all__ = [
     "AuditChainHeadModel",
     "AuditEventModel",
+    "HazardModel",
+    "RiskAssessmentModel",
+    "RiskControlModel",
     "KnowledgeObjectModel",
     "KnowledgeObjectRelationModel",
     "KnowledgeObjectVersionModel",

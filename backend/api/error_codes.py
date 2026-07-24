@@ -12,6 +12,50 @@ from backend.core.application.exceptions.authorization import (
     OrganizationContextMismatchError,
     PermissionDeniedError,
 )
+from backend.core.domain.exceptions.risk_control import (
+    DuplicateRiskControlCode,
+    InvalidRiskControlTransition,
+    RiskControlAlreadyMaterialized,
+    RiskControlCannotBeModified,
+    RiskControlNotFound,
+    RiskControlReasonRequired,
+    RiskControlValidationError,
+    RiskControlVersionConflict,
+)
+from backend.core.domain.exceptions.risk_assessment import (
+    DuplicateRiskAssessmentCode,
+    InvalidAssessmentProfile,
+    InvalidRiskAssessmentTransition,
+    InvalidRiskEvaluation,
+    RiskAssessmentAcceptanceRequired,
+    RiskAssessmentAlreadyApproved,
+    RiskAssessmentAlreadyArchived,
+    RiskAssessmentArchiveReasonRequired,
+    RiskAssessmentCannotBeModified,
+    RiskAssessmentHazardNotActive,
+    RiskAssessmentInherentRiskRequired,
+    RiskAssessmentNotFound,
+    RiskAssessmentVersionConflict,
+)
+from backend.core.domain.exceptions.hazard import (
+    DuplicateHazardCode,
+    HazardAlreadyActive,
+    HazardAlreadyArchived,
+    HazardArchiveReasonRequired,
+    HazardCannotBeModified,
+    HazardCategoryRequired,
+    HazardNotArchived,
+    HazardNotFound,
+    HazardRestoreReasonRequired,
+    HazardSafetyDirectionRequired,
+    HazardTitleRequired,
+    HazardVersionConflict,
+    InvalidAffectedSubject,
+    InvalidHazardCategory,
+    InvalidHazardSource,
+    InvalidHazardTransition,
+    InvalidSafetyDirection,
+)
 from backend.core.domain.exceptions import (
     CrossOrganizationKnowledgeObjectRelation,
     DuplicateKnowledgeObject,
@@ -107,6 +151,46 @@ INVITATION_TOKEN_INVALID = "invitation_token_invalid"
 INVITATION_EMAIL_MISMATCH = "invitation_email_mismatch"
 AUDIT_EVENT_NOT_FOUND = "audit_event_not_found"
 
+HAZARD_NOT_FOUND = "hazard_not_found"
+DUPLICATE_HAZARD_CODE = "duplicate_hazard_code"
+HAZARD_VERSION_CONFLICT = "hazard_version_conflict"
+HAZARD_ALREADY_ACTIVE = "hazard_already_active"
+HAZARD_ALREADY_ARCHIVED = "hazard_already_archived"
+HAZARD_NOT_ARCHIVED = "hazard_not_archived"
+INVALID_HAZARD_TRANSITION = "invalid_hazard_transition"
+HAZARD_CANNOT_BE_MODIFIED = "hazard_cannot_be_modified"
+HAZARD_TITLE_REQUIRED = "hazard_title_required"
+HAZARD_CATEGORY_REQUIRED = "hazard_category_required"
+HAZARD_SAFETY_DIRECTION_REQUIRED = "hazard_safety_direction_required"
+INVALID_HAZARD_CATEGORY = "invalid_hazard_category"
+INVALID_SAFETY_DIRECTION = "invalid_safety_direction"
+INVALID_HAZARD_SOURCE = "invalid_hazard_source"
+INVALID_AFFECTED_SUBJECT = "invalid_affected_subject"
+HAZARD_ARCHIVE_REASON_REQUIRED = "hazard_archive_reason_required"
+HAZARD_RESTORE_REASON_REQUIRED = "hazard_restore_reason_required"
+
+RISK_ASSESSMENT_NOT_FOUND = "risk_assessment_not_found"
+DUPLICATE_RISK_ASSESSMENT_CODE = "duplicate_risk_assessment_code"
+RISK_ASSESSMENT_VERSION_CONFLICT = "risk_assessment_version_conflict"
+INVALID_RISK_ASSESSMENT_TRANSITION = "invalid_risk_assessment_transition"
+RISK_ASSESSMENT_CANNOT_BE_MODIFIED = "risk_assessment_cannot_be_modified"
+RISK_ASSESSMENT_HAZARD_NOT_ACTIVE = "risk_assessment_hazard_not_active"
+RISK_ASSESSMENT_INHERENT_RISK_REQUIRED = "risk_assessment_inherent_risk_required"
+RISK_ASSESSMENT_ACCEPTANCE_REQUIRED = "risk_assessment_acceptance_required"
+INVALID_ASSESSMENT_PROFILE = "invalid_assessment_profile"
+INVALID_RISK_EVALUATION = "invalid_risk_evaluation"
+RISK_ASSESSMENT_ALREADY_APPROVED = "risk_assessment_already_approved"
+RISK_ASSESSMENT_ALREADY_ARCHIVED = "risk_assessment_already_archived"
+RISK_ASSESSMENT_ARCHIVE_REASON_REQUIRED = "risk_assessment_archive_reason_required"
+RISK_CONTROL_NOT_FOUND = "risk_control_not_found"
+DUPLICATE_RISK_CONTROL_CODE = "duplicate_risk_control_code"
+RISK_CONTROL_VERSION_CONFLICT = "risk_control_version_conflict"
+RISK_CONTROL_ALREADY_MATERIALIZED = "risk_control_already_materialized"
+INVALID_RISK_CONTROL_TRANSITION = "invalid_risk_control_transition"
+RISK_CONTROL_VALIDATION_ERROR = "risk_control_validation_error"
+RISK_CONTROL_CANNOT_BE_MODIFIED = "risk_control_cannot_be_modified"
+RISK_CONTROL_REASON_REQUIRED = "risk_control_reason_required"
+
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
 SERVICE_NOT_READY = "service_not_ready"
@@ -158,6 +242,44 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         INVITATION_TOKEN_INVALID,
         INVITATION_EMAIL_MISMATCH,
         AUDIT_EVENT_NOT_FOUND,
+        HAZARD_NOT_FOUND,
+        DUPLICATE_HAZARD_CODE,
+        HAZARD_VERSION_CONFLICT,
+        HAZARD_ALREADY_ACTIVE,
+        HAZARD_ALREADY_ARCHIVED,
+        HAZARD_NOT_ARCHIVED,
+        INVALID_HAZARD_TRANSITION,
+        HAZARD_CANNOT_BE_MODIFIED,
+        HAZARD_TITLE_REQUIRED,
+        HAZARD_CATEGORY_REQUIRED,
+        HAZARD_SAFETY_DIRECTION_REQUIRED,
+        INVALID_HAZARD_CATEGORY,
+        INVALID_SAFETY_DIRECTION,
+        INVALID_HAZARD_SOURCE,
+        INVALID_AFFECTED_SUBJECT,
+        HAZARD_ARCHIVE_REASON_REQUIRED,
+        HAZARD_RESTORE_REASON_REQUIRED,
+        RISK_ASSESSMENT_NOT_FOUND,
+        DUPLICATE_RISK_ASSESSMENT_CODE,
+        RISK_ASSESSMENT_VERSION_CONFLICT,
+        INVALID_RISK_ASSESSMENT_TRANSITION,
+        RISK_ASSESSMENT_CANNOT_BE_MODIFIED,
+        RISK_ASSESSMENT_HAZARD_NOT_ACTIVE,
+        RISK_ASSESSMENT_INHERENT_RISK_REQUIRED,
+        RISK_ASSESSMENT_ACCEPTANCE_REQUIRED,
+        INVALID_ASSESSMENT_PROFILE,
+        INVALID_RISK_EVALUATION,
+        RISK_ASSESSMENT_ALREADY_APPROVED,
+        RISK_ASSESSMENT_ALREADY_ARCHIVED,
+        RISK_ASSESSMENT_ARCHIVE_REASON_REQUIRED,
+        RISK_CONTROL_NOT_FOUND,
+        DUPLICATE_RISK_CONTROL_CODE,
+        RISK_CONTROL_VERSION_CONFLICT,
+        RISK_CONTROL_ALREADY_MATERIALIZED,
+        INVALID_RISK_CONTROL_TRANSITION,
+        RISK_CONTROL_VALIDATION_ERROR,
+        RISK_CONTROL_CANNOT_BE_MODIFIED,
+        RISK_CONTROL_REASON_REQUIRED,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -202,6 +324,44 @@ DOMAIN_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
     InvitationTokenInvalid: 400,
     InvitationEmailMismatch: 403,
     AuditEventNotFound: 404,
+    HazardNotFound: 404,
+    DuplicateHazardCode: 409,
+    HazardVersionConflict: 409,
+    HazardAlreadyActive: 409,
+    HazardAlreadyArchived: 409,
+    HazardNotArchived: 422,
+    InvalidHazardTransition: 422,
+    HazardCannotBeModified: 422,
+    HazardTitleRequired: 422,
+    HazardCategoryRequired: 422,
+    HazardSafetyDirectionRequired: 422,
+    InvalidHazardCategory: 422,
+    InvalidSafetyDirection: 422,
+    InvalidHazardSource: 422,
+    InvalidAffectedSubject: 422,
+    HazardArchiveReasonRequired: 422,
+    HazardRestoreReasonRequired: 422,
+    RiskAssessmentNotFound: 404,
+    DuplicateRiskAssessmentCode: 409,
+    RiskAssessmentVersionConflict: 409,
+    InvalidRiskAssessmentTransition: 422,
+    RiskAssessmentCannotBeModified: 422,
+    RiskAssessmentHazardNotActive: 422,
+    RiskAssessmentInherentRiskRequired: 422,
+    RiskAssessmentAcceptanceRequired: 422,
+    InvalidAssessmentProfile: 422,
+    InvalidRiskEvaluation: 422,
+    RiskAssessmentAlreadyApproved: 409,
+    RiskAssessmentAlreadyArchived: 409,
+    RiskAssessmentArchiveReasonRequired: 422,
+    RiskControlNotFound: 404,
+    DuplicateRiskControlCode: 409,
+    RiskControlVersionConflict: 409,
+    RiskControlAlreadyMaterialized: 409,
+    InvalidRiskControlTransition: 422,
+    RiskControlValidationError: 422,
+    RiskControlCannotBeModified: 422,
+    RiskControlReasonRequired: 422,
 }
 
 DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
@@ -242,6 +402,44 @@ DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
     InvitationTokenInvalid: INVITATION_TOKEN_INVALID,
     InvitationEmailMismatch: INVITATION_EMAIL_MISMATCH,
     AuditEventNotFound: AUDIT_EVENT_NOT_FOUND,
+    HazardNotFound: HAZARD_NOT_FOUND,
+    DuplicateHazardCode: DUPLICATE_HAZARD_CODE,
+    HazardVersionConflict: HAZARD_VERSION_CONFLICT,
+    HazardAlreadyActive: HAZARD_ALREADY_ACTIVE,
+    HazardAlreadyArchived: HAZARD_ALREADY_ARCHIVED,
+    HazardNotArchived: HAZARD_NOT_ARCHIVED,
+    InvalidHazardTransition: INVALID_HAZARD_TRANSITION,
+    HazardCannotBeModified: HAZARD_CANNOT_BE_MODIFIED,
+    HazardTitleRequired: HAZARD_TITLE_REQUIRED,
+    HazardCategoryRequired: HAZARD_CATEGORY_REQUIRED,
+    HazardSafetyDirectionRequired: HAZARD_SAFETY_DIRECTION_REQUIRED,
+    InvalidHazardCategory: INVALID_HAZARD_CATEGORY,
+    InvalidSafetyDirection: INVALID_SAFETY_DIRECTION,
+    InvalidHazardSource: INVALID_HAZARD_SOURCE,
+    InvalidAffectedSubject: INVALID_AFFECTED_SUBJECT,
+    HazardArchiveReasonRequired: HAZARD_ARCHIVE_REASON_REQUIRED,
+    HazardRestoreReasonRequired: HAZARD_RESTORE_REASON_REQUIRED,
+    RiskAssessmentNotFound: RISK_ASSESSMENT_NOT_FOUND,
+    DuplicateRiskAssessmentCode: DUPLICATE_RISK_ASSESSMENT_CODE,
+    RiskAssessmentVersionConflict: RISK_ASSESSMENT_VERSION_CONFLICT,
+    InvalidRiskAssessmentTransition: INVALID_RISK_ASSESSMENT_TRANSITION,
+    RiskAssessmentCannotBeModified: RISK_ASSESSMENT_CANNOT_BE_MODIFIED,
+    RiskAssessmentHazardNotActive: RISK_ASSESSMENT_HAZARD_NOT_ACTIVE,
+    RiskAssessmentInherentRiskRequired: RISK_ASSESSMENT_INHERENT_RISK_REQUIRED,
+    RiskAssessmentAcceptanceRequired: RISK_ASSESSMENT_ACCEPTANCE_REQUIRED,
+    InvalidAssessmentProfile: INVALID_ASSESSMENT_PROFILE,
+    InvalidRiskEvaluation: INVALID_RISK_EVALUATION,
+    RiskAssessmentAlreadyApproved: RISK_ASSESSMENT_ALREADY_APPROVED,
+    RiskAssessmentAlreadyArchived: RISK_ASSESSMENT_ALREADY_ARCHIVED,
+    RiskAssessmentArchiveReasonRequired: RISK_ASSESSMENT_ARCHIVE_REASON_REQUIRED,
+    RiskControlNotFound: RISK_CONTROL_NOT_FOUND,
+    DuplicateRiskControlCode: DUPLICATE_RISK_CONTROL_CODE,
+    RiskControlVersionConflict: RISK_CONTROL_VERSION_CONFLICT,
+    RiskControlAlreadyMaterialized: RISK_CONTROL_ALREADY_MATERIALIZED,
+    InvalidRiskControlTransition: INVALID_RISK_CONTROL_TRANSITION,
+    RiskControlValidationError: RISK_CONTROL_VALIDATION_ERROR,
+    RiskControlCannotBeModified: RISK_CONTROL_CANNOT_BE_MODIFIED,
+    RiskControlReasonRequired: RISK_CONTROL_REASON_REQUIRED,
 }
 
 DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
@@ -294,6 +492,44 @@ DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     InvitationTokenInvalid: "Invitation token is invalid.",
     InvitationEmailMismatch: "Authenticated user email does not match the invitation.",
     AuditEventNotFound: "Audit event was not found.",
+    HazardNotFound: "Hazard was not found.",
+    DuplicateHazardCode: "Hazard code already exists.",
+    HazardVersionConflict: "Hazard version conflict.",
+    HazardAlreadyActive: "Hazard is already active.",
+    HazardAlreadyArchived: "Hazard is already archived.",
+    HazardNotArchived: "Hazard is not archived.",
+    InvalidHazardTransition: "Invalid hazard lifecycle transition.",
+    HazardCannotBeModified: "Hazard cannot be modified.",
+    HazardTitleRequired: "Hazard title is required.",
+    HazardCategoryRequired: "Hazard category is required.",
+    HazardSafetyDirectionRequired: "At least one safety direction is required.",
+    InvalidHazardCategory: "Invalid hazard category.",
+    InvalidSafetyDirection: "Invalid safety direction.",
+    InvalidHazardSource: "Invalid hazard source.",
+    InvalidAffectedSubject: "Invalid affected subject.",
+    HazardArchiveReasonRequired: "Archive reason is required.",
+    HazardRestoreReasonRequired: "Restore reason is required.",
+    RiskAssessmentNotFound: "Risk assessment was not found.",
+    DuplicateRiskAssessmentCode: "Risk assessment code already exists.",
+    RiskAssessmentVersionConflict: "Risk assessment version conflict.",
+    InvalidRiskAssessmentTransition: "Invalid risk assessment lifecycle transition.",
+    RiskAssessmentCannotBeModified: "Risk assessment cannot be modified.",
+    RiskAssessmentHazardNotActive: "Risk assessments require an active hazard.",
+    RiskAssessmentInherentRiskRequired: "Inherent risk evaluation is required.",
+    RiskAssessmentAcceptanceRequired: "Risk acceptance decision is required.",
+    InvalidAssessmentProfile: "Invalid assessment profile.",
+    InvalidRiskEvaluation: "Invalid risk evaluation.",
+    RiskAssessmentAlreadyApproved: "Risk assessment is already approved.",
+    RiskAssessmentAlreadyArchived: "Risk assessment is already archived.",
+    RiskAssessmentArchiveReasonRequired: "Archive reason is required.",
+    RiskControlNotFound: "Risk control was not found.",
+    DuplicateRiskControlCode: "Risk control code already exists.",
+    RiskControlVersionConflict: "Risk control version conflict.",
+    RiskControlAlreadyMaterialized: "Risk control already materialized for source reference.",
+    InvalidRiskControlTransition: "Invalid risk control lifecycle transition.",
+    RiskControlValidationError: "Risk control validation failed.",
+    RiskControlCannotBeModified: "Risk control cannot be modified.",
+    RiskControlReasonRequired: "A reason is required for this risk control action.",
 }
 
 APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {

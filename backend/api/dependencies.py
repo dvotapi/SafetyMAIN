@@ -30,6 +30,33 @@ from backend.core.application.handlers.archive_knowledge_object import (
     ArchiveKnowledgeObjectHandler,
 )
 from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
+from backend.core.application.handlers.create_hazard import CreateHazardHandler
+from backend.core.application.handlers.create_risk_assessment import CreateRiskAssessmentHandler
+from backend.core.application.handlers.create_risk_control import CreateRiskControlHandler
+from backend.core.application.handlers.get_list_risk_controls import (
+    GetRiskControlHandler,
+    ListRiskControlsHandler,
+)
+from backend.core.application.handlers.materialize_risk_controls import (
+    MaterializeRiskAssessmentControlsHandler,
+)
+from backend.core.application.handlers.risk_control_lifecycle import (
+    AddRiskControlEvidenceHandler,
+    ArchiveRiskControlHandler,
+    AssignRiskControlOwnerHandler,
+    CancelRiskControlHandler,
+    CompleteRiskControlImplementationHandler,
+    CompleteRiskControlReviewHandler,
+    PlanRiskControlHandler,
+    RecordRiskControlVerificationHandler,
+    ResumeRiskControlHandler,
+    ScheduleRiskControlReviewHandler,
+    StartRiskControlImplementationHandler,
+    SupersedeRiskControlHandler,
+    SuspendRiskControlHandler,
+    UpdateRiskControlHandler,
+    UpdateRiskControlProgressHandler,
+)
 from backend.core.application.handlers.create_invitation import CreateInvitationHandler
 from backend.core.application.handlers.create_knowledge_object import (
     CreateKnowledgeObjectHandler,
@@ -62,12 +89,29 @@ from backend.core.application.handlers.get_knowledge_object_history import (
 from backend.core.application.handlers.get_knowledge_object_relation import (
     GetKnowledgeObjectRelationHandler,
 )
+from backend.core.application.handlers.get_list_hazards import (
+    GetHazardHandler,
+    ListHazardsHandler,
+)
+from backend.core.application.handlers.get_list_risk_assessments import (
+    GetRiskAssessmentHandler,
+    ListRiskAssessmentsHandler,
+)
 from backend.core.application.handlers.get_membership import GetMembershipHandler
 from backend.core.application.handlers.get_organization import GetOrganizationHandler
 from backend.core.application.handlers.get_outgoing_relations import (
     GetOutgoingRelationsHandler,
 )
 from backend.core.application.handlers.get_user import GetUserHandler
+from backend.core.application.handlers.hazard_lifecycle import (
+    ActivateHazardHandler,
+    ArchiveHazardHandler,
+    RestoreHazardHandler,
+)
+from backend.core.application.handlers.risk_assessment_lifecycle import (
+    ApproveRiskAssessmentHandler,
+    ArchiveRiskAssessmentHandler,
+)
 from backend.core.application.handlers.invitation_lifecycle import (
     AcceptInvitationHandler,
     ReissueInvitationHandler,
@@ -101,6 +145,8 @@ from backend.core.application.handlers.restore_knowledge_object import (
 from backend.core.application.handlers.search_knowledge_objects import (
     SearchKnowledgeObjectsHandler,
 )
+from backend.core.application.handlers.update_hazard import UpdateHazardHandler
+from backend.core.application.handlers.update_risk_assessment import UpdateRiskAssessmentHandler
 from backend.core.application.handlers.update_knowledge_object import (
     UpdateKnowledgeObjectHandler,
 )
@@ -132,6 +178,7 @@ from backend.core.domain.value_objects import (
 )
 from backend.core.domain.value_objects.audit_event_id import AuditEventId
 from backend.core.domain.value_objects.permission import SystemPermission
+from backend.core.domain.value_objects.safety_ids import HazardId, RiskAssessmentId, RiskControlId
 from backend.core.infrastructure.time.utc_clock import UtcClock
 
 
@@ -758,3 +805,274 @@ def get_security_context(
         authentication_method="bearer_jwt",
         request_id=get_request_id(request),
     )
+
+def get_hazard_id(
+    hazard_id: Annotated[UUID, Path()],
+) -> HazardId:
+    try:
+        return HazardId(value=hazard_id)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
+def get_create_hazard_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CreateHazardHandler:
+    return CreateHazardHandler(uow, clock, audit)
+
+
+def get_get_hazard_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> GetHazardHandler:
+    return GetHazardHandler(uow)
+
+
+def get_list_hazards_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ListHazardsHandler:
+    return ListHazardsHandler(uow)
+
+
+def get_update_hazard_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> UpdateHazardHandler:
+    return UpdateHazardHandler(uow, clock, audit)
+
+
+def get_activate_hazard_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ActivateHazardHandler:
+    return ActivateHazardHandler(uow, clock, audit)
+
+
+def get_archive_hazard_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ArchiveHazardHandler:
+    return ArchiveHazardHandler(uow, clock, audit)
+
+
+def get_restore_hazard_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> RestoreHazardHandler:
+    return RestoreHazardHandler(uow, clock, audit)
+
+def get_risk_assessment_id(
+    risk_assessment_id: Annotated[UUID, Path()],
+) -> RiskAssessmentId:
+    try:
+        return RiskAssessmentId(value=risk_assessment_id)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
+def get_create_risk_assessment_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CreateRiskAssessmentHandler:
+    return CreateRiskAssessmentHandler(uow, clock, audit)
+
+
+def get_get_risk_assessment_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> GetRiskAssessmentHandler:
+    return GetRiskAssessmentHandler(uow)
+
+
+def get_list_risk_assessments_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ListRiskAssessmentsHandler:
+    return ListRiskAssessmentsHandler(uow)
+
+
+def get_update_risk_assessment_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> UpdateRiskAssessmentHandler:
+    return UpdateRiskAssessmentHandler(uow, clock, audit)
+
+
+def get_approve_risk_assessment_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ApproveRiskAssessmentHandler:
+    return ApproveRiskAssessmentHandler(uow, clock, audit)
+
+
+def get_archive_risk_assessment_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ArchiveRiskAssessmentHandler:
+    return ArchiveRiskAssessmentHandler(uow, clock, audit)
+
+
+
+def get_risk_control_id(
+    control_id: Annotated[UUID, Path()],
+) -> RiskControlId:
+    try:
+        return RiskControlId(value=control_id)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
+def get_create_risk_control_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CreateRiskControlHandler:
+    return CreateRiskControlHandler(uow, clock, audit)
+
+
+def get_get_risk_control_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> GetRiskControlHandler:
+    return GetRiskControlHandler(uow)
+
+
+def get_list_risk_controls_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> ListRiskControlsHandler:
+    return ListRiskControlsHandler(uow, clock)
+
+
+def get_update_risk_control_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> UpdateRiskControlHandler:
+    return UpdateRiskControlHandler(uow, clock, audit)
+
+
+def get_assign_risk_control_owner_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> AssignRiskControlOwnerHandler:
+    return AssignRiskControlOwnerHandler(uow, clock, audit)
+
+
+def get_plan_risk_control_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> PlanRiskControlHandler:
+    return PlanRiskControlHandler(uow, clock, audit)
+
+
+def get_start_risk_control_implementation_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> StartRiskControlImplementationHandler:
+    return StartRiskControlImplementationHandler(uow, clock, audit)
+
+
+def get_update_risk_control_progress_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> UpdateRiskControlProgressHandler:
+    return UpdateRiskControlProgressHandler(uow, clock, audit)
+
+
+def get_add_risk_control_evidence_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> AddRiskControlEvidenceHandler:
+    return AddRiskControlEvidenceHandler(uow, clock, audit)
+
+
+def get_complete_risk_control_implementation_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CompleteRiskControlImplementationHandler:
+    return CompleteRiskControlImplementationHandler(uow, clock, audit)
+
+
+def get_record_risk_control_verification_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> RecordRiskControlVerificationHandler:
+    return RecordRiskControlVerificationHandler(uow, clock, audit)
+
+
+def get_schedule_risk_control_review_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ScheduleRiskControlReviewHandler:
+    return ScheduleRiskControlReviewHandler(uow, clock, audit)
+
+
+def get_complete_risk_control_review_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CompleteRiskControlReviewHandler:
+    return CompleteRiskControlReviewHandler(uow, clock, audit)
+
+
+def get_suspend_risk_control_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> SuspendRiskControlHandler:
+    return SuspendRiskControlHandler(uow, clock, audit)
+
+
+def get_resume_risk_control_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ResumeRiskControlHandler:
+    return ResumeRiskControlHandler(uow, clock, audit)
+
+
+def get_supersede_risk_control_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> SupersedeRiskControlHandler:
+    return SupersedeRiskControlHandler(uow, clock, audit)
+
+
+def get_archive_risk_control_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ArchiveRiskControlHandler:
+    return ArchiveRiskControlHandler(uow, clock, audit)
+
+
+def get_cancel_risk_control_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CancelRiskControlHandler:
+    return CancelRiskControlHandler(uow, clock, audit)
+
+
+def get_materialize_risk_controls_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> MaterializeRiskAssessmentControlsHandler:
+    return MaterializeRiskAssessmentControlsHandler(uow, clock, audit)

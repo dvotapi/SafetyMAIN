@@ -1,6 +1,15 @@
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.audit_event_repository import (
     SQLAlchemyAuditEventRepository,
 )
+from backend.core.infrastructure.persistence.sqlalchemy.repositories.hazard_repository import (
+    SQLAlchemyHazardRepository,
+)
+from backend.core.infrastructure.persistence.sqlalchemy.repositories.risk_assessment_repository import (
+    SQLAlchemyRiskAssessmentRepository,
+)
+from backend.core.infrastructure.persistence.sqlalchemy.repositories.risk_control_repository import (
+    SQLAlchemyRiskControlRepository,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.invitation_repository import (
     SQLAlchemyInvitationRepository,
 )
@@ -25,6 +34,9 @@ from backend.core.infrastructure.persistence.sqlalchemy.repositories.user_reposi
 
 __all__ = [
     "SQLAlchemyAuditEventRepository",
+    "SQLAlchemyHazardRepository",
+    "SQLAlchemyRiskAssessmentRepository",
+    "SQLAlchemyRiskControlRepository",
     "SQLAlchemyInvitationRepository",
     "SQLAlchemyKnowledgeObjectRelationRepository",
     "SQLAlchemyKnowledgeObjectRepository",

@@ -5,6 +5,9 @@ from typing import Protocol, Self
 
 from backend.core.domain.repositories import (
     AuditEventRepositoryContract,
+    HazardRepositoryContract,
+    RiskAssessmentRepositoryContract,
+    RiskControlRepositoryContract,
     InvitationRepositoryContract,
     KnowledgeObjectRelationRepositoryContract,
     KnowledgeObjectRepositoryContract,
@@ -40,6 +43,18 @@ class UnitOfWorkContract(Protocol):
 
     @property
     def invitations(self) -> InvitationRepositoryContract:
+        ...
+
+    @property
+    def hazards(self) -> HazardRepositoryContract:
+        ...
+
+    @property
+    def risk_assessments(self) -> RiskAssessmentRepositoryContract:
+        ...
+
+    @property
+    def risk_controls(self) -> RiskControlRepositoryContract:
         ...
 
     @property

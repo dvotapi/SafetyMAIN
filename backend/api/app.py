@@ -17,6 +17,9 @@ from backend.api.routers import admin_memberships as admin_memberships_router
 from backend.api.routers import admin_organizations as admin_organizations_router
 from backend.api.routers import admin_users as admin_users_router
 from backend.api.routers import auth as auth_router
+from backend.api.routers import hazards as hazards_router
+from backend.api.routers import risk_assessments as risk_assessments_router
+from backend.api.routers import risk_controls as risk_controls_router
 from backend.api.routers import invitations as invitations_router
 from backend.api.routers import knowledge_objects as knowledge_objects_router
 from backend.api.routers import relations as relations_router
@@ -105,6 +108,10 @@ def create_app(
     api_v1 = APIRouter(prefix=API_V1_PREFIX)
     api_v1.include_router(system_router.router)
     api_v1.include_router(auth_router.router)
+    api_v1.include_router(hazards_router.router)
+    api_v1.include_router(risk_assessments_router.router)
+    api_v1.include_router(risk_controls_router.router)
+    api_v1.include_router(risk_controls_router.materialize_router)
     api_v1.include_router(knowledge_objects_router.router)
     api_v1.include_router(relations_router.router)
     api_v1.include_router(admin_users_router.router)

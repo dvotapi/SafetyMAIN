@@ -26,6 +26,9 @@ from backend.core.domain.security_events.families.authentication import (
 from backend.core.domain.security_events.families.authorization import (
     AUTHORIZATION_SECURITY_EVENT_DESCRIPTORS,
 )
+from backend.core.domain.security_events.families.safety import (
+    SAFETY_SECURITY_EVENT_DESCRIPTORS,
+)
 from backend.core.domain.value_objects.audit_action import AuditAction
 from backend.core.domain.value_objects.audit_outcome import AuditOutcome
 
@@ -37,12 +40,12 @@ def test_registry_contains_every_published_audit_action() -> None:
     assert registered_types == published_actions
 
 
-def test_registry_has_twenty_four_published_descriptors() -> None:
-    assert len(SECURITY_EVENT_REGISTRY) == 24
+def test_registry_has_expected_published_descriptors() -> None:
+    assert len(SECURITY_EVENT_REGISTRY) == 56
     assert len(ADMINISTRATIVE_SECURITY_EVENT_DESCRIPTORS) == 16
     assert len(AUTHORIZATION_SECURITY_EVENT_DESCRIPTORS) == 1
     assert len(AUTHENTICATION_SECURITY_EVENT_DESCRIPTORS) == 7
-
+    assert len(SAFETY_SECURITY_EVENT_DESCRIPTORS) == 32
 
 def test_descriptor_immutability() -> None:
     descriptor = security_event_descriptor_for("user.create")

@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session, sessionmaker
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.repositories import (
     AuditEventRepositoryContract,
+    HazardRepositoryContract,
+    RiskAssessmentRepositoryContract,
+    RiskControlRepositoryContract,
     InvitationRepositoryContract,
     KnowledgeObjectRelationRepositoryContract,
     KnowledgeObjectRepositoryContract,
@@ -17,6 +20,9 @@ from backend.core.domain.repositories import (
 )
 from backend.core.infrastructure.persistence.sqlalchemy.repositories import (
     SQLAlchemyAuditEventRepository,
+    SQLAlchemyHazardRepository,
+    SQLAlchemyRiskAssessmentRepository,
+    SQLAlchemyRiskControlRepository,
     SQLAlchemyInvitationRepository,
     SQLAlchemyKnowledgeObjectRelationRepository,
     SQLAlchemyKnowledgeObjectRepository,
@@ -37,6 +43,9 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._organizations: SQLAlchemyOrganizationRepository | None = None
         self._memberships: SQLAlchemyMembershipRepository | None = None
         self._invitations: SQLAlchemyInvitationRepository | None = None
+        self._hazards: SQLAlchemyHazardRepository | None = None
+        self._risk_assessments: SQLAlchemyRiskAssessmentRepository | None = None
+        self._risk_controls: SQLAlchemyRiskControlRepository | None = None
         self._audit_events: SQLAlchemyAuditEventRepository | None = None
         self._refresh_sessions: SQLAlchemyRefreshTokenSessionRepository | None = None
         self._committed = False
@@ -92,6 +101,27 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         return self._invitations
 
     @property
+    def hazards(self) -> HazardRepositoryContract:
+        if self._hazards is None:
+            raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
+
+        return self._hazards
+
+    @property
+    def risk_assessments(self) -> RiskAssessmentRepositoryContract:
+        if self._risk_assessments is None:
+            raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
+
+        return self._risk_assessments
+
+    @property
+    def risk_controls(self) -> RiskControlRepositoryContract:
+        if self._risk_controls is None:
+            raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
+
+        return self._risk_controls
+
+    @property
     def audit_events(self) -> AuditEventRepositoryContract:
         if self._audit_events is None:
             raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
@@ -130,6 +160,9 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._organizations = SQLAlchemyOrganizationRepository(self._session)
         self._memberships = SQLAlchemyMembershipRepository(self._session)
         self._invitations = SQLAlchemyInvitationRepository(self._session)
+        self._hazards = SQLAlchemyHazardRepository(self._session)
+        self._risk_assessments = SQLAlchemyRiskAssessmentRepository(self._session)
+        self._risk_controls = SQLAlchemyRiskControlRepository(self._session)
         self._audit_events = SQLAlchemyAuditEventRepository(self._session)
         self._refresh_sessions = SQLAlchemyRefreshTokenSessionRepository(self._session)
         self._committed = False
@@ -155,6 +188,9 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
                 self._organizations = None
                 self._memberships = None
                 self._invitations = None
+                self._hazards = None
+                self._risk_assessments = None
+                self._risk_controls = None
                 self._audit_events = None
                 self._refresh_sessions = None
 

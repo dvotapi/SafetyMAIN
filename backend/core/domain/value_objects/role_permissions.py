@@ -10,6 +10,19 @@ SYSTEM_ROLE_PERMISSIONS: dict[SystemRole, frozenset[SystemPermission]] = {
             SystemPermission.KNOWLEDGE_OBJECT_READ,
             SystemPermission.KNOWLEDGE_OBJECT_WRITE,
             SystemPermission.RELATION_MANAGE,
+            SystemPermission.HAZARD_READ,
+            SystemPermission.HAZARD_CREATE,
+            SystemPermission.HAZARD_UPDATE,
+            SystemPermission.RISK_READ,
+            SystemPermission.RISK_CREATE,
+            SystemPermission.RISK_UPDATE,
+            SystemPermission.RISK_CONTROL_READ,
+            SystemPermission.RISK_CONTROL_CREATE,
+            SystemPermission.RISK_CONTROL_UPDATE,
+            SystemPermission.RISK_CONTROL_ASSIGN,
+            SystemPermission.RISK_CONTROL_IMPLEMENT,
+            SystemPermission.RISK_CONTROL_REVIEW,
+            SystemPermission.RISK_CONTROL_MATERIALIZE,
         }
     ),
     SystemRole.AUDITOR: frozenset(
@@ -20,6 +33,9 @@ SYSTEM_ROLE_PERMISSIONS: dict[SystemRole, frozenset[SystemPermission]] = {
             SystemPermission.USER_READ,
             SystemPermission.INVITATION_READ,
             SystemPermission.AUDIT_READ,
+            SystemPermission.HAZARD_READ,
+            SystemPermission.RISK_READ,
+            SystemPermission.RISK_CONTROL_READ,
         }
     ),
 }
