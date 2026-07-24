@@ -12,6 +12,7 @@ Related documents:
 - [RoleBasedAuthorization.md](RoleBasedAuthorization.md)
 - [IdentityDomain.md](IdentityDomain.md)
 - [ArchitectureReviewV2.md](ArchitectureReviewV2.md)
+- [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md)
 
 ---
 
@@ -196,6 +197,11 @@ Permission denial (`403`) is distinct from cross-organization masking (`404`).
 | Organization membership denied | 403 | `organization_access_denied` | Yes |
 | Permission denied | 403 | `permission_denied` | Yes |
 | Administrative permission denied (audit) | 403 | `permission_denied` | Yes (P6-001, scoped audit event when trusted context exists) |
+
+Persisted security event type identity, category, subject domain, and producer ownership
+for current audit records are centralized in [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md)
+(TASK-P6-002). Runtime audit behavior is unchanged.
+
 | Missing/ambiguous organization context | 422 | `organization_context_required` | Yes |
 | Conflicting organization contexts | 422 | `organization_context_required` | Yes |
 | Cross-organization resource access | 404 | domain codes | Yes |

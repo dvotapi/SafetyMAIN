@@ -8,6 +8,7 @@ Related documents:
 
 - [AuthorizationFoundation.md](AuthorizationFoundation.md)
 - [TenantContextMigration.md](TenantContextMigration.md)
+- [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md)
 - [IdentityDomain.md](IdentityDomain.md)
 
 ---
@@ -227,6 +228,7 @@ not change the `403 permission_denied` HTTP response.
 | P5-002 | Organization Management API |
 | P5-003 | Membership Management API (this rollout) |
 | P6-001 | Administrative permission-denial auditing |
+| P6-002 | Security Event Taxonomy & Registry |
 
 See [UserManagement.md](UserManagement.md), [OrganizationManagement.md](OrganizationManagement.md),
 and [MembershipManagement.md](MembershipManagement.md).

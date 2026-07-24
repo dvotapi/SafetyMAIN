@@ -11,6 +11,7 @@ Related documents:
 - [APIFoundation.md](../api/APIFoundation.md) — request ID and error envelope
 - [ArchitectureTesting.md](ArchitectureTesting.md) — dependency rules
 - [UserManagement.md](UserManagement.md) — administrative user API (P5-001)
+- [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md) — persisted security event taxonomy (P6-002)
 
 ---
 
@@ -615,7 +616,22 @@ See [ProductionSecurityConfiguration.md](ProductionSecurityConfiguration.md).
 
 ---
 
-## 13. Summary
+## 13. Security Event Taxonomy Compatibility
+
+Persisted security-relevant audit events are classified through the immutable Security
+Event Taxonomy Registry introduced in TASK-P6-002.
+
+Authentication failures and credential events are not yet persisted as auditable security
+events. Future Authentication Security Events (TASK-P6-003) will reuse the taxonomy
+defined in [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md), including support for
+events that may occur before `SecurityContext` or `TenantContext` exist.
+
+P6-002 does not change authentication runtime behavior, persisted audit schema, or Audit
+API contracts.
+
+---
+
+## 14. Summary
 
 SafetyMAIN adopts a **fail-closed, organization-scoped** authentication model:
 

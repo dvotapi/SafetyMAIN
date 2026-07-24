@@ -1,8 +1,8 @@
 # Administrative Audit Log
 
 Status: Active  
-Date: 2026-07-23  
-Task: TASK-P5-005, TASK-P6-001
+Date: 2026-07-24  
+Task: TASK-P5-005, TASK-P6-001, TASK-P6-002
 
 Related documents:
 
@@ -12,6 +12,7 @@ Related documents:
 - [MembershipManagement.md](MembershipManagement.md)
 - [InvitationWorkflow.md](InvitationWorkflow.md)
 - [AdminAuditAPI.md](../api/AdminAuditAPI.md)
+- [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md)
 
 ---
 
@@ -64,6 +65,9 @@ Actions are centralized in `AuditAction`:
 - Authorization: `authorization.permission_denied`
 
 Handlers and centralized authorization dependencies must not use arbitrary free-form action strings.
+
+All published administrative audit action identifiers are registered in the immutable
+Security Event Taxonomy Registry. See [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md).
 
 ---
 

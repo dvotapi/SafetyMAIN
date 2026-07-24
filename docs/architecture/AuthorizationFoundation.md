@@ -10,6 +10,7 @@ Related documents:
 - [IdentityDomain.md](IdentityDomain.md)
 - [AuthenticationAPI.md](../api/AuthenticationAPI.md)
 - [RoleBasedAuthorization.md](RoleBasedAuthorization.md)
+- [SecurityEventTaxonomy.md](SecurityEventTaxonomy.md)
 
 ---
 
@@ -132,6 +133,9 @@ Administrative permission denials with trusted actor and tenant context create
 `authorization.permission_denied` audit events through centralized
 `require_permission()` (TASK-P6-001). Authentication and pre-permission tenant
 failures do not create administrative audit events.
+
+The published identifier and taxonomy classification for this event are defined in
+[SecurityEventTaxonomy.md](SecurityEventTaxonomy.md) (TASK-P6-002).
 
 ---
 
