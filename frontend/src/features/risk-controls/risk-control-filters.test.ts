@@ -108,6 +108,29 @@ describe("registryStateToListParams", () => {
     );
     expect(params).toEqual({ offset: 0, limit: 25 });
   });
+
+  it("drops malformed date filter values instead of forwarding them to the API", () => {
+    const bogusBefore = registryStateToListParams({
+      ...DEFAULT_RISK_CONTROL_REGISTRY_STATE,
+      reviewDueBefore: "bogus",
+    });
+    expect(bogusBefore.review_due_before).toBeUndefined();
+
+    const shapeInvalidAfter = registryStateToListParams({
+      ...DEFAULT_RISK_CONTROL_REGISTRY_STATE,
+      reviewDueAfter: "2027-13-99",
+    });
+    // Matches the risk-assessments precedent: shape-only regex guard, not full
+    // calendar validation. "2027-13-99" matches YYYY-MM-DD shape, so it is
+    // still forwarded (the backend is responsible for semantic date validation).
+    expect(shapeInvalidAfter.review_due_after).toBe("2027-13-99T00:00:00Z");
+
+    const bogusAfter = registryStateToListParams({
+      ...DEFAULT_RISK_CONTROL_REGISTRY_STATE,
+      reviewDueAfter: "not-a-date",
+    });
+    expect(bogusAfter.review_due_after).toBeUndefined();
+  });
 });
 
 describe("hasActiveRiskControlRegistryFilters", () => {

@@ -97,7 +97,11 @@ function parsePositiveInt(value: string | null, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-function dateOnlyToApiDatetime(dateOnly: string): string {
+/** URL filter values are expected as YYYY-MM-DD; malformed values are dropped rather than forwarded to the API. */
+function dateOnlyToApiDatetime(dateOnly: string): string | undefined {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+    return undefined;
+  }
   return `${dateOnly}T00:00:00Z`;
 }
 
@@ -229,10 +233,16 @@ export function registryStateToListParams(
     params.include_terminal = state.includeTerminal;
   }
   if (state.reviewDueBefore) {
-    params.review_due_before = dateOnlyToApiDatetime(state.reviewDueBefore);
+    const reviewDueBefore = dateOnlyToApiDatetime(state.reviewDueBefore);
+    if (reviewDueBefore) {
+      params.review_due_before = reviewDueBefore;
+    }
   }
   if (state.reviewDueAfter) {
-    params.review_due_after = dateOnlyToApiDatetime(state.reviewDueAfter);
+    const reviewDueAfter = dateOnlyToApiDatetime(state.reviewDueAfter);
+    if (reviewDueAfter) {
+      params.review_due_after = reviewDueAfter;
+    }
   }
   return params;
 }
