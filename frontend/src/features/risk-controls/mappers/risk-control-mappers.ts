@@ -48,9 +48,7 @@ function readStringArray(value: unknown): string[] {
 }
 
 /** Backend wraps some ids as {"value": uuid} and leaves others flat. */
-export function readWrappedId(
-  value: WrappedIdDto | undefined,
-): string | null {
+export function readWrappedId(value: WrappedIdDto | undefined): string | null {
   if (value === null || value === undefined) {
     return null;
   }

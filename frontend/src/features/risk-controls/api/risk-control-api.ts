@@ -36,7 +36,8 @@ export async function listRiskControls(
   if (params.latest_effectiveness_result) {
     query.latest_effectiveness_result = params.latest_effectiveness_result;
   }
-  if (params.review_due_before) query.review_due_before = params.review_due_before;
+  if (params.review_due_before)
+    query.review_due_before = params.review_due_before;
   if (params.review_due_after) query.review_due_after = params.review_due_after;
   if (params.overdue_only) query.overdue_only = true;
   if (params.awaiting_verification) query.awaiting_verification = true;

@@ -24,11 +24,16 @@ const sampleDto: RiskControlDto = {
     assessment_version: 4,
     assessment_approved_at: "2026-07-01T00:00:00Z",
     residual_level: "medium",
-    snapshot: { control_type: "engineering", description: "Install guard rail" },
+    snapshot: {
+      control_type: "engineering",
+      description: "Install guard rail",
+    },
   },
   hazard_id: "44444444-4444-4444-4444-444444444444",
   risk_assessment_id: "33333333-3333-3333-3333-333333333333",
-  scope: [{ scope_type: "hazard", reference: "44444444-4444-4444-4444-444444444444" }],
+  scope: [
+    { scope_type: "hazard", reference: "44444444-4444-4444-4444-444444444444" },
+  ],
   owner: {
     owner_type: "employee",
     owner_reference: "EMP-7",

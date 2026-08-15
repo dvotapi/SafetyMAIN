@@ -25,7 +25,9 @@ describe("parseRiskControlRegistrySearchParams", () => {
 
   it("accepts known enum values", () => {
     expect(parse("status=implemented").status).toBe("implemented");
-    expect(parse("hierarchyLevel=engineering").hierarchyLevel).toBe("engineering");
+    expect(parse("hierarchyLevel=engineering").hierarchyLevel).toBe(
+      "engineering",
+    );
     expect(parse("effectiveness=partially_effective").effectiveness).toBe(
       "partially_effective",
     );

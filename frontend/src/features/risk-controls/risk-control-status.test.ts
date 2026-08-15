@@ -13,10 +13,16 @@ describe("riskControlStatusToVisual", () => {
   it("maps every backend status to an existing VisualStatus", () => {
     expect(riskControlStatusToVisual("draft")).toBe("draft");
     expect(riskControlStatusToVisual("planned")).toBe("planned");
-    expect(riskControlStatusToVisual("in_implementation")).toBe("in_implementation");
+    expect(riskControlStatusToVisual("in_implementation")).toBe(
+      "in_implementation",
+    );
     expect(riskControlStatusToVisual("implemented")).toBe("implemented");
-    expect(riskControlStatusToVisual("verified_effective")).toBe("verified_effective");
-    expect(riskControlStatusToVisual("verified_ineffective")).toBe("verified_ineffective");
+    expect(riskControlStatusToVisual("verified_effective")).toBe(
+      "verified_effective",
+    );
+    expect(riskControlStatusToVisual("verified_ineffective")).toBe(
+      "verified_ineffective",
+    );
     expect(riskControlStatusToVisual("suspended")).toBe("suspended");
     expect(riskControlStatusToVisual("superseded")).toBe("superseded");
     expect(riskControlStatusToVisual("archived")).toBe("archived");
@@ -54,10 +60,20 @@ describe("effectiveness", () => {
 
 describe("implementationStateLabel", () => {
   it("describes implementation independently of lifecycle status", () => {
-    expect(implementationStateLabel({ status: "draft", progress: 0, actualCompletionDate: null }))
-      .toBe("Not planned");
-    expect(implementationStateLabel({ status: "planned", progress: 0, actualCompletionDate: null }))
-      .toBe("Planned");
+    expect(
+      implementationStateLabel({
+        status: "draft",
+        progress: 0,
+        actualCompletionDate: null,
+      }),
+    ).toBe("Not planned");
+    expect(
+      implementationStateLabel({
+        status: "planned",
+        progress: 0,
+        actualCompletionDate: null,
+      }),
+    ).toBe("Planned");
     expect(
       implementationStateLabel({
         status: "in_implementation",

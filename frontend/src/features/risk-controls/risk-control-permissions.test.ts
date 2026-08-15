@@ -23,7 +23,9 @@ describe("mapRiskControlCapabilities", () => {
   });
 
   it("denies verify, suspend, supersede, archive and cancel to a member", () => {
-    const caps = mapRiskControlCapabilities(withPermissions(MEMBER_PERMISSIONS));
+    const caps = mapRiskControlCapabilities(
+      withPermissions(MEMBER_PERMISSIONS),
+    );
     expect(caps.canRead).toBe(true);
     expect(caps.canImplement).toBe(true);
     expect(caps.canReview).toBe(true);
@@ -46,7 +48,9 @@ describe("mapRiskControlCapabilities", () => {
   });
 
   it("requires exact permission strings — no wildcard expansion", () => {
-    const caps = mapRiskControlCapabilities(withPermissions(["risk_control:*"]));
+    const caps = mapRiskControlCapabilities(
+      withPermissions(["risk_control:*"]),
+    );
     expect(caps.canRead).toBe(false);
   });
 

@@ -8,7 +8,9 @@ describe("riskControlKeys", () => {
   it("scopes every key by organization so caches cannot cross tenants", () => {
     expect(riskControlKeys.all(ORG)).toEqual(["risk-controls", ORG]);
     expect(riskControlKeys.all(null)).toEqual(["risk-controls", "none"]);
-    expect(riskControlKeys.all("other-org")).not.toEqual(riskControlKeys.all(ORG));
+    expect(riskControlKeys.all("other-org")).not.toEqual(
+      riskControlKeys.all(ORG),
+    );
   });
 
   it("nests lists and details under the org root", () => {

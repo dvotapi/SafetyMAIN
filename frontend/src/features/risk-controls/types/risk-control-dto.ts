@@ -13,11 +13,7 @@ export type RiskControlStatusDto =
   | "cancelled";
 
 export type ControlTypeDto =
-  | "elimination"
-  | "substitution"
-  | "engineering"
-  | "administrative"
-  | "ppe";
+  "elimination" | "substitution" | "engineering" | "administrative" | "ppe";
 
 export type ControlNatureDto =
   "preventive" | "detective" | "mitigating" | "recovery";
@@ -34,11 +30,7 @@ export type VerifiableEffectivenessResultDto =
   "effective" | "partially_effective" | "ineffective";
 
 export type OwnerTypeDto =
-  | "user"
-  | "employee"
-  | "role"
-  | "organizational_unit"
-  | "external_party";
+  "user" | "employee" | "role" | "organizational_unit" | "external_party";
 
 export type EvidenceTypeDto =
   | "document"

@@ -193,6 +193,8 @@ export function implementationStateLabel(input: {
     case "verified_ineffective":
       return "Implemented";
     default:
-      return input.progress > 0 ? `In progress — ${input.progress}%` : "Not started";
+      return input.progress > 0
+        ? `In progress — ${input.progress}%`
+        : "Not started";
   }
 }

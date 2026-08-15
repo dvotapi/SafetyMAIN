@@ -274,8 +274,8 @@ export function RiskControlRegistryPage() {
         title="Risk Controls"
         description={
           <Text tone="secondary">
-            Operational risk controls for the active organization. Ordering
-            is fixed by the server (newest first).
+            Operational risk controls for the active organization. Ordering is
+            fixed by the server (newest first).
           </Text>
         }
       />
