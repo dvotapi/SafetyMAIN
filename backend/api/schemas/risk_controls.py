@@ -236,6 +236,7 @@ class RiskControlResponse(BaseModel):
     lifecycle_status: RiskControlStatusValue
     latest_effectiveness_result: str | None
     next_review_date: datetime | None
+    is_overdue: bool
     verification_method_requirement: str
     version: int
     created_at: datetime

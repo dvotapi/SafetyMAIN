@@ -724,3 +724,39 @@ def test_openapi_has_no_delete_for_risk_controls(
         "/api/v1/risk-assessments/{assessment_id}/materialize-controls" in paths
         or any("materialize-controls" in path for path in paths)
     )
+
+
+def test_risk_control_response_exposes_is_overdue(
+    enforced_auth_settings: AppSettings,
+) -> None:
+    client, org, token, _, _hazard, *_ = _build_client(
+        enforced_auth_settings,
+        role=Role.admin(),
+    )
+    headers = _headers(org, token)
+    created = client.post(
+        "/api/v1/risk-controls", json=_create_payload(code="RC-OVD-1"), headers=headers
+    ).json()
+    assert created["is_overdue"] is False
+
+    scheduled = client.post(
+        f"/api/v1/risk-controls/{created['id']}/schedule-review",
+        json={
+            "expected_version": created["version"],
+            "schedule": {
+                "review_required": True,
+                "review_frequency_days": 365,
+                "next_review_date": "2020-01-01T00:00:00Z",
+                "review_basis": "fixed_interval",
+            },
+        },
+        headers=headers,
+    ).json()
+    assert scheduled["is_overdue"] is True
+
+    cancelled = client.post(
+        f"/api/v1/risk-controls/{created['id']}/cancel",
+        json={"expected_version": scheduled["version"], "reason": "Superseded by policy."},
+        headers=headers,
+    ).json()
+    assert cancelled["is_overdue"] is False

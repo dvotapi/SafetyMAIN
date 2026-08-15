@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from backend.api.schemas.knowledge_objects import PaginationResponse
 from backend.api.schemas.risk_controls import (
@@ -193,6 +193,7 @@ def to_risk_control_response(control: RiskControl) -> RiskControlResponse:
         lifecycle_status=control.lifecycle_status.value,  # type: ignore[arg-type]
         latest_effectiveness_result=None if latest is None else latest.value,
         next_review_date=control.next_review_date,
+        is_overdue=control.is_overdue_for_review(as_of=datetime.now(UTC)),
         verification_method_requirement=control.verification_method_requirement,
         version=control.version,
         created_at=control.created_at,
