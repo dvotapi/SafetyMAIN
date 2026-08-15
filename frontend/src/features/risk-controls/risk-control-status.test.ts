@@ -5,7 +5,6 @@ import {
   effectivenessToVisual,
   formatRiskControlEnumLabel,
   implementationStateLabel,
-  riskControlStatusLabel,
   riskControlStatusToVisual,
   VERIFIABLE_RESULTS,
 } from "@/features/risk-controls/utils/risk-control-status";
