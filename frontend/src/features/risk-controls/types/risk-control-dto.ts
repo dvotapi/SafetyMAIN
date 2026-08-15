@@ -246,3 +246,123 @@ export interface RiskControlListParams {
   include_terminal?: boolean;
   search?: string;
 }
+
+/* ----------------------------------------------------------------------
+ * Lifecycle command request DTOs — snake_case, mirror the request models
+ * in backend/api/schemas/risk_controls.py for the lifecycle endpoints.
+ * ---------------------------------------------------------------------- */
+
+export interface AssignOwnerDto {
+  expected_version: number;
+  owner: {
+    owner_type: OwnerTypeDto | string;
+    owner_reference: string;
+    display_name_snapshot: string;
+  };
+  reason?: string;
+}
+
+export interface PlanRiskControlDto {
+  expected_version: number;
+  implementation: {
+    target_start_date?: string | null;
+    target_completion_date?: string | null;
+    implementation_method?: string;
+    progress?: number;
+    summary?: string;
+    evidence_waiver_reason?: string | null;
+    milestones?: Record<string, unknown>[];
+    dependencies?: string[];
+    resource_notes?: string;
+    evidence_requirements?: string[];
+  };
+  verification_method_requirement?: string | null;
+}
+
+/** Shared by start-implementation and resume — no fields besides the version. */
+export interface VersionOnlyDto {
+  expected_version: number;
+}
+
+export interface ProgressDto {
+  expected_version: number;
+  progress: number;
+  summary?: string | null;
+}
+
+export interface EvidenceRequestDto {
+  expected_version: number;
+  evidence_type: EvidenceTypeDto | string;
+  external_reference: string;
+  title: string;
+  description?: string;
+  checksum?: string | null;
+  metadata?: Record<string, string>;
+  allow_after_implemented?: boolean;
+}
+
+export interface CompleteImplementationDto {
+  expected_version: number;
+  summary: string;
+  evidence_waiver_reason?: string | null;
+  allow_incomplete_milestones?: boolean;
+}
+
+export interface VerificationRequestDto {
+  expected_version: number;
+  verification_type?: VerificationTypeDto | string;
+  method: string;
+  criteria?: string;
+  result: VerifiableEffectivenessResultDto | string;
+  rating?: string | null;
+  findings?: string;
+  evidence_refs?: string[];
+  next_action?: string | null;
+  next_review_date?: string | null;
+  profile_key?: string;
+  profile_version?: string;
+}
+
+export interface ScheduleReviewDto {
+  expected_version: number;
+  schedule: {
+    review_required?: boolean;
+    review_frequency_days?: number | null;
+    next_review_date?: string | null;
+    review_basis?: ReviewBasisDto | string;
+    no_review_reason?: string | null;
+    escalation_policy_ref?: string | null;
+  };
+}
+
+/** Nested verification inside complete-review still requires a version field
+ *  that the backend validates and then ignores. Send the control's version. */
+export interface CompleteReviewDto {
+  expected_version: number;
+  next_review_date?: string | null;
+  verification?: VerificationRequestDto | null;
+}
+
+export interface SuspendDto {
+  expected_version: number;
+  reason: string;
+  expected_resolution_date?: string | null;
+}
+
+export interface SupersedeDto {
+  expected_version: number;
+  replacement_control_id: string;
+  reason: string;
+}
+
+/** Shared by archive and cancel — a version plus a mandatory reason. */
+export interface ReasonVersionDto {
+  expected_version: number;
+  reason: string;
+}
+
+/** Materialization is the only mutation with no optimistic-concurrency field. */
+export interface MaterializeControlsDto {
+  control_ids?: string[] | null;
+  allow_under_review?: boolean;
+}
