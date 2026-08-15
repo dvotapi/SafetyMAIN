@@ -674,6 +674,44 @@ def test_invalid_transition_returns_422(
     assert started.status_code == 422
 
 
+def test_list_risk_controls_include_terminal_exposes_archived(
+    enforced_auth_settings: AppSettings,
+) -> None:
+    client, org, token, _, hazard, *_ = _build_client(
+        enforced_auth_settings,
+        role=Role.admin(),
+    )
+    headers = _headers(org, token)
+    created = client.post(
+        "/api/v1/risk-controls",
+        headers=headers,
+        json=_create_payload(code="RC-TERM-1", hazard_id=str(hazard.id.value)),
+    ).json()
+    archived = client.post(
+        f"/api/v1/risk-controls/{created['id']}/archive",
+        headers=headers,
+        json={"expected_version": created["version"], "reason": "No longer needed."},
+    )
+    assert archived.status_code == 200
+
+    hidden = client.get("/api/v1/risk-controls", headers=headers).json()
+    assert all(item["id"] != created["id"] for item in hidden["items"])
+
+    shown = client.get(
+        "/api/v1/risk-controls",
+        headers=headers,
+        params={"include_terminal": "true"},
+    ).json()
+    assert any(item["id"] == created["id"] for item in shown["items"])
+
+    filtered = client.get(
+        "/api/v1/risk-controls",
+        headers=headers,
+        params={"include_terminal": "true", "status": "archived"},
+    ).json()
+    assert [item["id"] for item in filtered["items"]] == [created["id"]]
+
+
 def test_openapi_has_no_delete_for_risk_controls(
     enforced_auth_settings: AppSettings,
 ) -> None:
