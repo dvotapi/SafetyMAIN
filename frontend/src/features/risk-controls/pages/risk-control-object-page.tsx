@@ -14,16 +14,19 @@ import {
   Text,
 } from "@/components";
 import { PageContainer } from "@/components/patterns/Page";
+import { useAssignRiskControlOwnerMutation } from "@/features/risk-controls/api/risk-control-mutations";
 import {
   useRiskControlActivityQuery,
   useRiskControlAssessmentQuery,
   useRiskControlDetailQuery,
   useRiskControlHazardQuery,
 } from "@/features/risk-controls/api/risk-control-queries";
+import { ControlOwnerSection } from "@/features/risk-controls/components/control-owner-section";
 import { EffectivenessSummary } from "@/features/risk-controls/components/effectiveness-summary";
 import { EvidenceList } from "@/features/risk-controls/components/evidence-list";
 import { ImplementationSummary } from "@/features/risk-controls/components/implementation-summary";
 import { RiskControlActivity } from "@/features/risk-controls/components/risk-control-activity";
+import { RiskControlConflictDialog } from "@/features/risk-controls/components/risk-control-conflict-dialog";
 import { RiskControlRelationships } from "@/features/risk-controls/components/risk-control-relationships";
 import {
   RiskControlProperties,
@@ -31,8 +34,10 @@ import {
 } from "@/features/risk-controls/components/risk-control-summary";
 import { SourceSnapshot } from "@/features/risk-controls/components/source-snapshot";
 import { VerificationHistory } from "@/features/risk-controls/components/verification-history";
+import { useRiskControlCommand } from "@/features/risk-controls/hooks/use-risk-control-command";
 import { mapRiskControlCapabilities } from "@/features/risk-controls/hooks/use-risk-control-permissions";
 import { latestVerification } from "@/features/risk-controls/mappers/risk-control-mappers";
+import { ownerFormValuesToRequest } from "@/features/risk-controls/schemas/owner-schema";
 import {
   effectivenessLabel,
   effectivenessToVisual,
@@ -71,6 +76,17 @@ export function RiskControlObjectPage({
   );
 
   const [tab, setTab] = useState("overview");
+  const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
+
+  const assignOwnerMutation = useAssignRiskControlOwnerMutation(riskControlId);
+  const {
+    runCommand,
+    busyAction,
+    commandError,
+    conflictOpen,
+    setConflictOpen,
+    conflictVariant,
+  } = useRiskControlCommand();
 
   useEffect(() => {
     if (control) {
@@ -230,6 +246,29 @@ export function RiskControlObjectPage({
 
       {tab === "overview" ? (
         <div style={{ display: "grid", gap: "var(--sm-space-6)" }}>
+          <ControlOwnerSection
+            owner={control.owner}
+            status={control.status}
+            version={control.version}
+            capabilities={capabilities}
+            open={ownerDialogOpen}
+            onOpenChange={setOwnerDialogOpen}
+            loading={busyAction === "assign_owner"}
+            errorMessage={commandError}
+            onAssign={async (values) => {
+              const succeeded = await runCommand(
+                "assign_owner",
+                () =>
+                  assignOwnerMutation.mutateAsync(
+                    ownerFormValuesToRequest(values, control.version),
+                  ),
+                "Owner assigned",
+              );
+              if (succeeded) {
+                setOwnerDialogOpen(false);
+              }
+            }}
+          />
           <RiskControlProperties
             control={control}
             hazard={hazard.data}
@@ -280,6 +319,14 @@ export function RiskControlObjectPage({
           canView={capabilities.canViewActivity}
         />
       ) : null}
+
+      <RiskControlConflictDialog
+        open={conflictOpen}
+        onOpenChange={setConflictOpen}
+        onReload={() => void detail.refetch()}
+        loading={detail.isFetching}
+        variant={conflictVariant}
+      />
     </PageContainer>
   );
 }
