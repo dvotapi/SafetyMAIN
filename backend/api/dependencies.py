@@ -102,6 +102,7 @@ from backend.core.application.handlers.get_organization import GetOrganizationHa
 from backend.core.application.handlers.get_outgoing_relations import (
     GetOutgoingRelationsHandler,
 )
+from backend.core.application.handlers.get_auth_session import GetAuthSessionHandler
 from backend.core.application.handlers.get_user import GetUserHandler
 from backend.core.application.handlers.hazard_lifecycle import (
     ActivateHazardHandler,
@@ -771,6 +772,12 @@ def get_logout_handler(
         uow_factory=container.uow_factory,
         clock=clock,
     )
+
+
+def get_auth_session_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> GetAuthSessionHandler:
+    return GetAuthSessionHandler(uow)
 
 
 def get_bearer_token(

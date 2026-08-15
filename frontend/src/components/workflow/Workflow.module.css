@@ -1,0 +1,125 @@
+.stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sm-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--sm-space-2);
+  flex: 1 1 auto;
+  min-width: 120px;
+}
+
+.stepMarker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--sm-radius-full);
+  border: 2px solid var(--sm-color-border-default);
+  background: var(--sm-color-bg-surface);
+  font-size: var(--sm-font-size-xs);
+  font-weight: var(--sm-font-weight-medium);
+  flex-shrink: 0;
+}
+
+.stepComplete .stepMarker {
+  border-color: var(--sm-color-success-fg);
+  background: var(--sm-color-success-bg, var(--sm-color-bg-subtle));
+  color: var(--sm-color-success-fg);
+}
+
+.stepCurrent .stepMarker {
+  border-color: var(--sm-color-border-focus);
+  background: var(--sm-color-bg-subtle);
+}
+
+.stepLabel {
+  font-size: var(--sm-font-size-sm);
+  color: var(--sm-color-text-secondary);
+}
+
+.stepCurrent .stepLabel {
+  color: var(--sm-color-text-primary);
+  font-weight: var(--sm-font-weight-medium);
+}
+
+.timeline {
+  display: grid;
+  gap: var(--sm-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timelineItem {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: var(--sm-space-3);
+}
+
+.timelineRail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.timelineDot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--sm-radius-full);
+  background: var(--sm-color-border-focus);
+  margin-top: var(--sm-space-1);
+}
+
+.timelineLine {
+  position: absolute;
+  top: 18px;
+  bottom: calc(-1 * var(--sm-space-4));
+  width: 2px;
+  background: var(--sm-color-border-default);
+}
+
+.timelineContent {
+  display: grid;
+  gap: var(--sm-space-1);
+}
+
+.approvalStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--sm-space-2);
+}
+
+.nextAction {
+  display: grid;
+  gap: var(--sm-space-2);
+}
+
+.blockingReason {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sm-space-2);
+  padding: var(--sm-space-3);
+  border-radius: var(--sm-radius-md);
+  border: 1px solid
+    var(--sm-color-warning-border, var(--sm-color-border-default));
+  background: var(--sm-color-warning-bg, var(--sm-color-bg-subtle));
+}
+
+.reviewBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm-space-3);
+  padding: var(--sm-space-3) var(--sm-space-4);
+  border-radius: var(--sm-radius-md);
+  border: 1px solid var(--sm-color-border-default);
+  background: var(--sm-color-bg-subtle);
+}

@@ -7,12 +7,17 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from backend.api.authentication_audit import build_authentication_audit_context
 from backend.api.dependencies import (
     get_authenticate_user_handler,
+    get_auth_session_handler,
+    get_authenticated_user,
     get_logout_handler,
     get_refresh_authentication_handler,
 )
 from backend.api.openapi import AUTH_ERROR_RESPONSES, success_response
-from backend.api.operation_ids import AUTH_LOGIN, AUTH_LOGOUT, AUTH_REFRESH
+from backend.api.operation_ids import AUTH_LOGIN, AUTH_LOGOUT, AUTH_REFRESH, AUTH_SESSION
 from backend.api.schemas.auth import (
+    AuthSessionMembership,
+    AuthSessionResponse,
+    AuthSessionUser,
     LoginRequest,
     LogoutRequest,
     RefreshTokenRequest,
@@ -24,11 +29,14 @@ from backend.core.application.commands.refresh_authentication import (
     RefreshAuthenticationCommand,
 )
 from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
+from backend.core.application.handlers.get_auth_session import GetAuthSessionHandler
 from backend.core.application.handlers.logout import LogoutHandler
 from backend.core.application.handlers.refresh_authentication import (
     RefreshAuthenticationHandler,
 )
+from backend.core.application.queries.get_auth_session import AuthSession, GetAuthSessionQuery
 from backend.core.contracts.token_service import AuthenticationTokens
+from backend.core.domain.value_objects import UserId
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -39,6 +47,27 @@ def _to_token_response(tokens: AuthenticationTokens) -> TokenResponse:
         refresh_token=tokens.refresh_token,
         token_type=tokens.token_type,
         expires_in=tokens.expires_in,
+    )
+
+
+def _to_auth_session_response(session: AuthSession) -> AuthSessionResponse:
+    return AuthSessionResponse(
+        user=AuthSessionUser(
+            id=session.user_id.value,
+            email=session.email,
+            display_name=session.display_name,
+            status=session.status,
+        ),
+        memberships=[
+            AuthSessionMembership(
+                organization_id=membership.organization_id.value,
+                organization_name=membership.organization_name,
+                role=membership.role.value,
+                status=membership.status.value,
+                permissions=list(membership.permissions),
+            )
+            for membership in session.memberships
+        ],
     )
 
 
@@ -66,6 +95,28 @@ def login(
         )
     )
     return _to_token_response(tokens)
+
+
+@router.get(
+    "/session",
+    response_model=AuthSessionResponse,
+    status_code=status.HTTP_200_OK,
+    operation_id=AUTH_SESSION,
+    summary="Bootstrap the authenticated session",
+    responses={
+        **success_response(
+            model=AuthSessionResponse,
+            description="Authenticated session context.",
+        ),
+        **AUTH_ERROR_RESPONSES,
+    },
+)
+def get_session(
+    user_id: Annotated[UserId, Depends(get_authenticated_user)],
+    handler: Annotated[GetAuthSessionHandler, Depends(get_auth_session_handler)],
+) -> AuthSessionResponse:
+    session = handler.handle(GetAuthSessionQuery(user_id=user_id))
+    return _to_auth_session_response(session)
 
 
 @router.post(

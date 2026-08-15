@@ -27,10 +27,13 @@ from backend.core.application.audit.authentication_security_event_recorder impor
 )
 from backend.core.application.commands.authenticate_user import AuthenticateUserCommand
 from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
+from backend.core.domain.entities.membership import Membership, MembershipStatus
+from backend.core.domain.entities.organization import Organization, OrganizationStatus
 from backend.core.domain.entities.user import User, UserStatus
-from backend.core.domain.value_objects import UserId
+from backend.core.domain.value_objects import MembershipId, OrganizationId, Role, UserId
 from backend.core.domain.value_objects.audit_action import AuditAction
 from backend.core.domain.value_objects.audit_outcome import AuditOutcome
+from backend.core.domain.value_objects.role_permissions import permissions_for_role
 from backend.core.infrastructure.auth.in_memory_identity_store import (
     InMemoryIdentityStore,
 )
@@ -38,8 +41,11 @@ from backend.core.infrastructure.persistence.in_memory import (
     InMemoryAuditEventRepository,
     InMemoryKnowledgeObjectRelationRepository,
     InMemoryKnowledgeObjectRepository,
+    InMemoryMembershipRepository,
+    InMemoryOrganizationRepository,
     InMemoryRefreshTokenSessionRepository,
     InMemoryUnitOfWork,
+    InMemoryUserRepository,
 )
 from backend.core.infrastructure.time.utc_clock import UtcClock
 from tests.api.contracts.assertions import (
@@ -485,3 +491,102 @@ def test_refresh_reuse_returns_normalized_error(
     )
     assert second.status_code == 401
     assert_error_envelope(second, status_code=401, code="invalid_refresh_token")
+
+
+def _build_session_client(
+    auth_settings: AppSettings,
+) -> tuple[TestClient, str, UserId, OrganizationId, Role]:
+    identity_store = InMemoryIdentityStore()
+    users = InMemoryUserRepository()
+    organizations = InMemoryOrganizationRepository()
+    memberships = InMemoryMembershipRepository()
+    refresh_sessions = InMemoryRefreshTokenSessionRepository()
+    container = create_container(auth_settings, identity_store=identity_store)
+    user = User(
+        id=UserId(value=uuid4()),
+        display_name="Safety Operator",
+        email="operator@example.com",
+        status=UserStatus.ACTIVE,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    organization_id = OrganizationId(value=uuid4())
+    role = Role.admin()
+    identity_store.register_user(
+        user,
+        container.password_hasher.hash_password("secret-password"),
+    )
+    users.add(user)
+    organizations.add(
+        Organization(
+            id=organization_id,
+            name="Acme Safety",
+            status=OrganizationStatus.ACTIVE,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+    )
+    memberships.add(
+        Membership(
+            id=MembershipId(value=uuid4()),
+            user_id=user.id,
+            organization_id=organization_id,
+            status=MembershipStatus.ACTIVE,
+            role=role,
+            joined_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+    )
+
+    def uow_factory() -> InMemoryUnitOfWork:
+        return InMemoryUnitOfWork(
+            users=users,
+            organizations=organizations,
+            memberships=memberships,
+            refresh_sessions=refresh_sessions,
+        )
+
+    container.uow_factory = uow_factory
+    app = create_app(settings=auth_settings, container=container)
+    client = TestClient(app)
+    return client, "secret-password", user.id, organization_id, role
+
+
+def test_session_returns_user_and_memberships(auth_settings: AppSettings) -> None:
+    client, password, user_id, organization_id, role = _build_session_client(auth_settings)
+    with client:
+        login = client.post(
+            "/api/v1/auth/login",
+            json={"email": "operator@example.com", "password": password},
+        )
+        assert login.status_code == 200
+
+        response = client.get(
+            "/api/v1/auth/session",
+            headers={"Authorization": f"Bearer {login.json()['access_token']}"},
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["user"]["id"] == str(user_id.value)
+        assert body["user"]["email"] == "operator@example.com"
+        assert body["user"]["display_name"] == "Safety Operator"
+        assert body["user"]["status"] == "ACTIVE"
+        assert len(body["memberships"]) == 1
+        membership = body["memberships"][0]
+        assert membership["organization_id"] == str(organization_id.value)
+        assert membership["organization_name"] == "Acme Safety"
+        assert membership["role"] == role.value
+        assert membership["status"] == "ACTIVE"
+        assert membership["permissions"] == sorted(
+            permission.value for permission in permissions_for_role(role)
+        )
+
+
+def test_session_requires_bearer_token(auth_settings: AppSettings) -> None:
+    client, _, _, _, _ = _build_session_client(auth_settings)
+    with client:
+        response = client.get("/api/v1/auth/session")
+
+        assert response.status_code == 401
+        assert_error_envelope(response, status_code=401, code="unauthenticated")

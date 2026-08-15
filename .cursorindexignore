@@ -1,0 +1,58 @@
+# Version control
+.git/
+
+# Python caches and environments
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.coverage
+**/htmlcov/
+.venv/
+venv/
+
+# JavaScript dependencies and build output
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+**/coverage/
+**/storybook-static/
+**/playwright-report/
+**/test-results/
+
+# IDE and operating system
+.DS_Store
+.idea/
+.vscode/
+
+# Logs and temporary files
+**/*.log
+**/*.tmp
+**/*.temp
+tmp/
+temp/
+
+# Secrets and local configuration
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Generated and binary artifacts
+**/*.min.js
+**/*.map
+**/*.lock
+**/*.sqlite
+**/*.db
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.webp
+**/*.pdf
+**/*.zip
+**/*.tar
+**/*.gz

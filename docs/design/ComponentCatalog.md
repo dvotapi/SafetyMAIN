@@ -22,7 +22,7 @@ Status legend for this doc:
 | **Specified** | Design-complete in P9-001 |
 | **Deferred code** | Not implemented in repo yet |
 
-All entries below are **Specified / Deferred code**.
+All entries below are design contracts. Runtime implementation: **TASK-P9-003** (`@/components`).
 
 ---
 

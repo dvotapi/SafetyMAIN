@@ -1,0 +1,49 @@
+.kpi {
+  display: grid;
+  gap: var(--sm-space-2);
+}
+
+.task {
+  display: grid;
+  gap: var(--sm-space-2);
+}
+
+.taskHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm-space-2);
+}
+
+.alertCard {
+  display: grid;
+  gap: var(--sm-space-2);
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  border: 1px dashed var(--sm-color-border-default);
+  border-radius: var(--sm-radius-md);
+  background: var(--sm-color-bg-subtle);
+  color: var(--sm-color-text-muted);
+  font-size: var(--sm-font-size-sm);
+}
+
+.chartContainer {
+  display: grid;
+  gap: var(--sm-space-3);
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm-space-2);
+}
+
+.chartBody {
+  min-height: 200px;
+}

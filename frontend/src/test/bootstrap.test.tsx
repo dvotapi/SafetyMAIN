@@ -18,7 +18,58 @@ import { AppShell } from "@/layouts/AppShell";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
 }));
+
+vi.mock("@/features/auth/AuthProvider", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/features/auth/AuthProvider")
+  >("@/features/auth/AuthProvider");
+  return {
+    ...actual,
+    useAuth: () => ({
+      status: "authenticated",
+      tokens: null,
+      session: {
+        user: {
+          id: "u1",
+          email: "admin@example.com",
+          displayName: "Admin User",
+          status: "ACTIVE",
+        },
+        memberships: [
+          {
+            organizationId: "o1",
+            organizationName: "Acme",
+            role: "admin",
+            status: "ACTIVE",
+            permissions: [
+              "hazard:read",
+              "risk:read",
+              "risk_control:read",
+              "user:read",
+              "knowledge_object:read",
+              "audit:read",
+            ],
+          },
+        ],
+      },
+      organizationId: "o1",
+      error: null,
+      login: vi.fn(),
+      logout: vi.fn(),
+      refresh: vi.fn(),
+      hasPermission: () => true,
+      currentMembership: {
+        organizationId: "o1",
+        organizationName: "Acme",
+        role: "admin",
+        status: "ACTIVE",
+        permissions: ["hazard:read", "user:read"],
+      },
+    }),
+  };
+});
 
 vi.mock("next/link", () => ({
   default: ({

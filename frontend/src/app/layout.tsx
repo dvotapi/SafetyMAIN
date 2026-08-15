@@ -3,7 +3,7 @@ import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { AppProviders } from "@/app/providers";
-import { AppShell } from "@/layouts/AppShell";
+import { AuthShellGate } from "@/features/auth/AuthShellGate";
 import { themeInitScript } from "@/theme/theme-init-script";
 
 import "@/theme/generated/tokens.css";
@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         }}
       >
         <AppProviders>
-          <AppShell>{children}</AppShell>
+          <AuthShellGate>{children}</AuthShellGate>
         </AppProviders>
       </body>
     </html>

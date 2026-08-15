@@ -1,22 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 
+import { OrganizationSwitcher, UserMenu } from "@/components/navigation/Menus";
 import { Button } from "@/components/primitives/Button";
 import { Text } from "@/components/primitives/Text";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { filterNavigationByPermissions } from "@/lib/filter-navigation";
 import { primaryNavigation } from "@/lib/navigation";
 import { useTheme } from "@/theme/theme-provider";
 import { cx } from "@/utils/cx";
 
 import styles from "./AppShell.module.css";
 
-function NavTree({ onNavigate }: { onNavigate?: () => void }) {
+function NavTree({
+  onNavigate,
+  sections,
+}: {
+  onNavigate?: () => void;
+  sections: typeof primaryNavigation;
+}) {
   const pathname = usePathname();
   return (
     <ul className={styles.navList}>
-      {primaryNavigation.map((section) => {
+      {sections.map((section) => {
         const active =
           pathname === section.href ||
           (section.href !== "/" && pathname.startsWith(section.href));
@@ -61,9 +70,16 @@ function NavTree({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { mode, setMode, resolved } = useTheme();
+  const { session, currentMembership, logout, hasPermission } = useAuth();
+  const router = useRouter();
   const [navOpen, setNavOpen] = useState(false);
   const navId = useId();
   const pathname = usePathname();
+
+  const sections = useMemo(
+    () => filterNavigationByPermissions(primaryNavigation, hasPermission),
+    [hasPermission],
+  );
 
   useEffect(() => {
     setNavOpen(false);
@@ -91,9 +107,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         </div>
         <div className={styles.topMeta} aria-label="Organization and user">
-          <Text as="span" tone="secondary" variant="caption">
-            Organization placeholder
-          </Text>
+          <OrganizationSwitcher
+            organizationName={
+              currentMembership?.organizationName ?? "No organization"
+            }
+          />
           <label>
             <span className="visually-hidden">Theme</span>
             <select
@@ -111,14 +129,41 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Text as="span" tone="muted" variant="caption">
             {resolved}
           </Text>
-          <Text as="span" variant="caption">
-            User menu
-          </Text>
+          <UserMenu
+            name={session?.user.displayName ?? "User"}
+            items={[
+              {
+                id: "email",
+                label: session?.user.email ?? "",
+                disabled: true,
+              },
+              {
+                id: "org",
+                label: currentMembership
+                  ? `${currentMembership.organizationName} (${currentMembership.role})`
+                  : "No organization",
+                disabled: true,
+              },
+              {
+                id: "profile",
+                label: "Profile (coming soon)",
+                disabled: true,
+              },
+              {
+                id: "logout",
+                label: "Sign out",
+                destructive: true,
+                onSelect: () => {
+                  void logout().then(() => router.replace("/login"));
+                },
+              },
+            ]}
+          />
         </div>
       </header>
       <div className={styles.body}>
         <nav className={cx(styles.nav, styles.navDesktop)} aria-label="Primary">
-          <NavTree />
+          <NavTree sections={sections} />
         </nav>
         {navOpen ? (
           <div className={styles.navDrawer}>
@@ -129,7 +174,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => setNavOpen(false)}
             />
             <nav id={navId} className={styles.drawer} aria-label="Primary">
-              <NavTree onNavigate={() => setNavOpen(false)} />
+              <NavTree
+                sections={sections}
+                onNavigate={() => setNavOpen(false)}
+              />
             </nav>
           </div>
         ) : null}

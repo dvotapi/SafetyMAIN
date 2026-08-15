@@ -73,3 +73,212 @@
   color: var(--sm-color-danger-fg);
   background: var(--sm-color-danger-bg);
 }
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sm-space-3);
+  padding: var(--sm-space-10) var(--sm-space-4);
+  text-align: center;
+  border: 1px dashed var(--sm-color-border-default);
+  border-radius: var(--sm-radius-lg);
+  background: var(--sm-color-bg-subtle);
+}
+
+.emptyTitle {
+  font-size: var(--sm-font-size-lg);
+  line-height: var(--sm-font-lineHeight-lg);
+  font-weight: var(--sm-font-weight-semibold);
+  color: var(--sm-color-text-primary);
+}
+
+.emptyDescription {
+  max-width: 36ch;
+  color: var(--sm-color-text-muted);
+  font-size: var(--sm-font-size-md);
+  line-height: var(--sm-font-lineHeight-md);
+}
+
+.emptyAction {
+  margin-top: var(--sm-space-2);
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sm-space-3);
+  padding: var(--sm-space-8);
+}
+
+.loadingLabel {
+  font-size: var(--sm-font-size-md);
+  line-height: var(--sm-font-lineHeight-md);
+  font-weight: var(--sm-font-weight-medium);
+}
+
+.loadingDescription {
+  color: var(--sm-color-text-muted);
+  font-size: var(--sm-font-size-sm);
+  line-height: var(--sm-font-lineHeight-sm);
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm-space-4);
+  padding: var(--sm-space-3) var(--sm-space-4);
+  border-radius: var(--sm-radius-md);
+  border: 1px solid var(--sm-color-border-default);
+}
+
+.bannerContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm-space-1);
+}
+
+.bannerTitle {
+  font-weight: var(--sm-font-weight-semibold);
+}
+
+.bannerAction {
+  flex-shrink: 0;
+}
+
+.bannerinfo {
+  background: var(--sm-color-info-bg);
+  color: var(--sm-color-info-fg);
+}
+
+.bannersuccess {
+  background: var(--sm-color-success-bg);
+  color: var(--sm-color-success-fg);
+}
+
+.bannerwarning {
+  background: var(--sm-color-warning-bg);
+  color: var(--sm-color-warning-fg);
+}
+
+.bannerdanger {
+  background: var(--sm-color-danger-bg);
+  color: var(--sm-color-danger-fg);
+}
+
+.toastViewport {
+  position: fixed;
+  right: var(--sm-space-4);
+  bottom: var(--sm-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm-space-2);
+  z-index: var(--sm-z-toast);
+  width: min(92vw, 360px);
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sm-space-2);
+  padding: var(--sm-space-3);
+  border-radius: var(--sm-radius-md);
+  border: 1px solid var(--sm-color-border-default);
+  background: var(--sm-color-bg-surface);
+  box-shadow: var(--sm-shadow-md);
+}
+
+.toastContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm-space-1);
+}
+
+.toastInfo {
+  border-left: 3px solid var(--sm-color-info-fg);
+}
+
+.toastSuccess {
+  border-left: 3px solid var(--sm-color-success-fg);
+}
+
+.toastWarning {
+  border-left: 3px solid var(--sm-color-warning-fg);
+}
+
+.toastDanger {
+  border-left: 3px solid var(--sm-color-danger-fg);
+}
+
+.notificationItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sm-space-3);
+  padding: var(--sm-space-3);
+  border-bottom: 1px solid var(--sm-color-border-default);
+}
+
+.notificationUnread {
+  background: var(--sm-color-bg-subtle);
+}
+
+.notificationTitle {
+  font-weight: var(--sm-font-weight-medium);
+}
+
+.notificationDescription {
+  color: var(--sm-color-text-muted);
+  font-size: var(--sm-font-size-sm);
+  line-height: var(--sm-font-lineHeight-sm);
+}
+
+.notificationMeta {
+  color: var(--sm-color-text-muted);
+  font-size: var(--sm-font-size-xs);
+  line-height: var(--sm-font-lineHeight-xs);
+  white-space: nowrap;
+}
+
+.progressBar {
+  width: 100%;
+  height: var(--sm-space-2);
+  border-radius: var(--sm-radius-full);
+  background: var(--sm-color-bg-subtle);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--sm-color-interactive-default);
+  border-radius: inherit;
+  transition: width var(--sm-motion-fast) ease-out;
+}
+
+.progressRing {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progressRingTrack {
+  stroke: var(--sm-color-bg-subtle);
+}
+
+.progressRingFill {
+  stroke: var(--sm-color-interactive-default);
+  transition: stroke-dashoffset var(--sm-motion-fast) ease-out;
+}
+
+.progressRingLabel {
+  position: absolute;
+  font-size: var(--sm-font-size-xs);
+  line-height: var(--sm-font-lineHeight-xs);
+  font-weight: var(--sm-font-weight-medium);
+}

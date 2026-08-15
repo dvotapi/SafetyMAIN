@@ -12,6 +12,7 @@ EXPECTED_PATHS: dict[str, set[str]] = {
     "/api/v1/auth/login": {"post"},
     "/api/v1/auth/refresh": {"post"},
     "/api/v1/auth/logout": {"post"},
+    "/api/v1/auth/session": {"get"},
     "/api/v1/knowledge-objects": {"get", "post"},
     "/api/v1/knowledge-objects/{knowledge_object_id}": {"get", "put", "delete"},
     "/api/v1/knowledge-objects/{knowledge_object_id}/archive": {"post"},
@@ -119,7 +120,13 @@ def test_openapi_system_routes_do_not_require_organization_header(
     application = create_app(settings=app_settings)
     paths = application.openapi()["paths"]
 
-    for path in ("/api/v1/health", "/api/v1/ready", "/api/v1/auth/login", "/api/v1/auth/refresh"):
+    for path in (
+        "/api/v1/health",
+        "/api/v1/ready",
+        "/api/v1/auth/login",
+        "/api/v1/auth/refresh",
+        "/api/v1/auth/session",
+    ):
         for operation in paths[path].values():
             parameter_names = {item["name"] for item in operation.get("parameters", [])}
             assert "X-Organization-ID" not in parameter_names
@@ -169,6 +176,14 @@ def test_openapi_auth_routes_do_not_require_bearer_auth(app_settings: AppSetting
             if not isinstance(operation, dict):
                 continue
             assert operation.get("security") != [{"BearerAuth": []}]
+
+
+def test_openapi_session_route_requires_bearer_auth(app_settings: AppSettings) -> None:
+    application = create_app(settings=app_settings)
+    paths = application.openapi()["paths"]
+
+    session_operation = paths["/api/v1/auth/session"]["get"]
+    assert session_operation.get("security") == [{"BearerAuth": []}]
 
 
 def test_openapi_protected_routes_document_auth_error_responses(

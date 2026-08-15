@@ -1,0 +1,99 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sm-space-3);
+  padding: var(--sm-space-3) var(--sm-space-4);
+  border: 1px solid var(--sm-color-border-default);
+  border-radius: var(--sm-radius-md);
+  background: var(--sm-color-bg-surface);
+}
+
+.section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sm-space-2);
+}
+
+.quickFilter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm-space-1);
+  padding: 0 var(--sm-space-3);
+  min-height: var(--sm-size-control-sm);
+  border-radius: var(--sm-radius-full);
+  border: 1px solid var(--sm-color-border-default);
+  background: var(--sm-color-bg-surface);
+  font-size: var(--sm-font-size-sm);
+  color: var(--sm-color-text-secondary);
+  cursor: pointer;
+}
+
+.quickFilterActive {
+  border-color: var(--sm-color-border-focus);
+  background: var(--sm-color-bg-subtle);
+  color: var(--sm-color-text-primary);
+}
+
+.advancedPanel {
+  margin-top: var(--sm-space-2);
+  padding: var(--sm-space-4);
+  border: 1px solid var(--sm-color-border-default);
+  border-radius: var(--sm-radius-md);
+  background: var(--sm-color-bg-subtle);
+}
+
+.advancedToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm-space-1);
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm-space-1);
+  padding: 0 var(--sm-space-2);
+  min-height: 24px;
+  border-radius: var(--sm-radius-full);
+  background: var(--sm-color-bg-muted);
+  font-size: var(--sm-font-size-xs);
+}
+
+.filterChipLabel {
+  color: var(--sm-color-text-muted);
+}
+
+.filterChipValue {
+  color: var(--sm-color-text-primary);
+  font-weight: var(--sm-font-weight-medium);
+}
+
+.savedFilters {
+  font-size: var(--sm-font-size-sm);
+  color: var(--sm-color-text-muted);
+  font-style: italic;
+}
+
+.dateRange {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sm-space-2);
+}
+
+.dateRangeSep {
+  color: var(--sm-color-text-muted);
+  font-size: var(--sm-font-size-sm);
+}
+
+.searchWrap {
+  min-width: 220px;
+  flex: 1 1 220px;
+  max-width: 360px;
+}
+
+.clearAll {
+  margin-left: auto;
+}

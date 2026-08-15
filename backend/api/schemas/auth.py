@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -29,3 +31,29 @@ class TokenResponse(BaseModel):
     refresh_token: str
     token_type: str
     expires_in: int
+
+
+class AuthSessionUser(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    email: str
+    display_name: str
+    status: str
+
+
+class AuthSessionMembership(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    organization_id: UUID
+    organization_name: str
+    role: str
+    status: str
+    permissions: list[str]
+
+
+class AuthSessionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    user: AuthSessionUser
+    memberships: list[AuthSessionMembership]

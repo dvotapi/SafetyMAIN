@@ -34,6 +34,7 @@ const config: StorybookConfig = {
       "@/utils": path.join(root, "../src/utils"),
       "@/icons": path.join(root, "../src/icons"),
       "@": path.join(root, "../src"),
+      "next/navigation": path.join(root, "mocks/next-navigation.ts"),
     };
     return config;
   },

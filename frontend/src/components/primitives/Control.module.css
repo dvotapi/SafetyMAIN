@@ -1,0 +1,108 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm-space-2);
+  cursor: pointer;
+}
+
+.root[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sm-size-icon-md);
+  height: var(--sm-size-icon-md);
+  border: 1px solid var(--sm-color-border-default);
+  background: var(--sm-color-bg-surface);
+  color: var(--sm-color-text-inverse);
+  flex-shrink: 0;
+}
+
+.checkbox .indicator {
+  border-radius: var(--sm-radius-sm);
+}
+
+.checkbox[data-state="checked"] .indicator,
+.checkbox[data-state="indeterminate"] .indicator {
+  background: var(--sm-color-interactive-default);
+  border-color: var(--sm-color-interactive-default);
+}
+
+.radio .indicator {
+  border-radius: var(--sm-radius-full);
+}
+
+.radio[data-state="checked"] .indicator {
+  border-color: var(--sm-color-interactive-default);
+}
+
+.radioDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--sm-radius-full);
+  background: var(--sm-color-interactive-default);
+}
+
+.label {
+  font-size: var(--sm-font-size-md);
+  line-height: var(--sm-font-lineHeight-md);
+  color: var(--sm-color-text-primary);
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--sm-color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--sm-radius-sm);
+}
+
+.switchRoot {
+  all: unset;
+  width: 40px;
+  height: var(--sm-size-control-sm);
+  background: var(--sm-color-bg-subtle);
+  border: 1px solid var(--sm-color-border-default);
+  border-radius: var(--sm-radius-full);
+  position: relative;
+  cursor: pointer;
+}
+
+.switchRoot[data-state="checked"] {
+  background: var(--sm-color-interactive-default);
+  border-color: var(--sm-color-interactive-default);
+}
+
+.switchRoot[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.switchThumb {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background: var(--sm-color-bg-surface);
+  border-radius: var(--sm-radius-full);
+  transition: transform var(--sm-motion-fast) ease-out;
+  transform: translateX(2px);
+  will-change: transform;
+}
+
+.switchRoot[data-state="checked"] .switchThumb {
+  transform: translateX(18px);
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm-space-2);
+}
+
+.radioGroupInline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--sm-space-4);
+}

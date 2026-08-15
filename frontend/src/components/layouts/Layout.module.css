@@ -1,0 +1,140 @@
+.container {
+  width: 100%;
+  max-width: var(--sm-layout-max-width, 1200px);
+  margin-inline: auto;
+  padding-inline: var(--sm-space-4);
+}
+
+.containerWide {
+  max-width: var(--sm-layout-max-width-wide, 1440px);
+}
+
+.containerNarrow {
+  max-width: var(--sm-layout-max-width-narrow, 720px);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.gap1 {
+  gap: var(--sm-space-1);
+}
+.gap2 {
+  gap: var(--sm-space-2);
+}
+.gap3 {
+  gap: var(--sm-space-3);
+}
+.gap4 {
+  gap: var(--sm-space-4);
+}
+.gap6 {
+  gap: var(--sm-space-6);
+}
+.gap8 {
+  gap: var(--sm-space-8);
+}
+
+.inline {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.grid {
+  display: grid;
+  gap: var(--sm-space-4);
+}
+
+.cols1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+.cols2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.cols3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.cols4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm-space-4);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sm-space-4);
+}
+
+.spacer {
+  flex-shrink: 0;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sm-space-6);
+}
+
+.splitReverse {
+  direction: rtl;
+}
+
+.splitReverse > * {
+  direction: ltr;
+}
+
+.resizable {
+  display: flex;
+  min-height: 240px;
+  border: 1px solid var(--sm-color-border-default);
+  border-radius: var(--sm-radius-md);
+  overflow: hidden;
+  background: var(--sm-color-bg-surface);
+}
+
+.panel {
+  min-width: 0;
+  padding: var(--sm-space-4);
+  overflow: auto;
+}
+
+.primaryPanel {
+  flex: 1 1 auto;
+}
+
+.secondaryPanel {
+  flex: 0 0 var(--sm-split-secondary-size, 320px);
+  border-left: 1px solid var(--sm-color-border-default);
+  resize: horizontal;
+  overflow: auto;
+  min-width: 200px;
+  max-width: 60%;
+}
+
+@media (max-width: 768px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+
+  .resizable {
+    flex-direction: column;
+  }
+
+  .secondaryPanel {
+    resize: vertical;
+    border-left: 0;
+    border-top: 1px solid var(--sm-color-border-default);
+    max-width: none;
+    max-height: 50%;
+  }
+}

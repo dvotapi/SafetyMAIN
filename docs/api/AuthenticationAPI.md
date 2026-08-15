@@ -27,9 +27,12 @@ unchanged in this milestone.
 |--------|------|--------------|-------------|
 | `POST` | `/api/v1/auth/login` | `auth_login` | Authenticate with email and password |
 | `POST` | `/api/v1/auth/refresh` | `auth_refresh` | Exchange a refresh token for a new pair |
+| `POST` | `/api/v1/auth/logout` | `auth_logout` | Revoke the presented refresh session |
+| `GET` | `/api/v1/auth/session` | `auth_session` | Bootstrap the authenticated session |
 
-Both endpoints use the standard API error envelope and return `X-Request-ID` on
-every response.
+Both login and refresh endpoints use the standard API error envelope and return `X-Request-ID` on
+every response. The session endpoint requires a Bearer access token and does not require
+`X-Organization-ID`.
 
 ---
 
@@ -62,6 +65,62 @@ every response.
 | `401` | `invalid_credentials` | Unknown email or invalid password |
 | `403` | `authentication_forbidden` | User exists but cannot authenticate |
 | `422` | `request_validation_error` | Invalid request body |
+
+---
+
+## Session
+
+### Request
+
+Requires `Authorization: Bearer <access_token>`.
+
+### Success (`200 OK`)
+
+```json
+{
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "operator@example.com",
+    "display_name": "Safety Operator",
+    "status": "ACTIVE"
+  },
+  "memberships": [
+    {
+      "organization_id": "660e8400-e29b-41d4-a716-446655440001",
+      "organization_name": "Acme Safety",
+      "role": "admin",
+      "status": "ACTIVE",
+      "permissions": ["audit:read", "hazard:read", "user:read"]
+    }
+  ]
+}
+```
+
+Only memberships with status `ACTIVE` are returned. Permissions are derived from the membership
+role via `permissions_for_role`.
+
+### Errors
+
+| HTTP | Code | Meaning |
+|------|------|---------|
+| `401` | `unauthenticated` | Missing or invalid access token |
+
+---
+
+## Logout
+
+### Request
+
+```json
+{
+  "refresh_token": "<jwt>"
+}
+```
+
+### Success (`204 No Content`)
+
+The refresh session is revoked. Repeated calls with the same or invalid refresh token also
+return `204`.
 
 ---
 
@@ -117,6 +176,8 @@ Business routes do **not** require Bearer authentication yet.
 |-----------|----------------|
 | `AuthenticateUserCommand` / `AuthenticateUserHandler` | Validate credentials and issue tokens |
 | `RefreshAuthenticationCommand` / `RefreshAuthenticationHandler` | Rotate tokens from refresh token |
+| `LogoutCommand` / `LogoutHandler` | Revoke refresh sessions |
+| `GetAuthSessionQuery` / `GetAuthSessionHandler` | Load user profile and active memberships |
 
 Handlers depend only on contracts:
 

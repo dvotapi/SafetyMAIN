@@ -1,0 +1,92 @@
+---
+description: Core project rules for SafetyMAIN
+alwaysApply: true
+---
+
+# SafetyMAIN Core Rules
+
+## Working principles
+
+- Work only on the task explicitly requested by the user.
+- Do not implement unrelated improvements.
+- Do not refactor unrelated code.
+- Prefer the smallest correct change.
+- Preserve established architecture and naming conventions.
+- Follow existing production patterns before introducing new ones.
+- Do not invent project conventions when existing examples can be found.
+- Ask for clarification only when a material requirement cannot be inferred from the repository.
+
+## Authority
+
+When multiple sources exist, use them in the following order:
+
+1. Current task document.
+2. Approved implementation plan.
+3. Relevant architecture documentation.
+4. Existing production implementation.
+5. Existing tests.
+
+If authoritative sources conflict:
+
+- do not guess;
+- identify the conflict;
+- explain it;
+- request clarification before changing architecture or public contracts.
+
+## Context discipline
+
+- Do not scan the entire repository unless explicitly required.
+- Start with the current task document and directly related architecture documentation.
+- Read `AI_CONTEXT.md` before planning non-trivial work.
+- Follow the workflow defined in `docs/ai/DevelopmentWorkflow.md`.
+- Search using targeted symbols, filenames, routes, aggregates, repositories, DTOs, permissions, and tests.
+- Read only files relevant to the current task and current implementation phase.
+- Do not repeatedly reread unchanged files.
+- Summarize findings before beginning implementation.
+
+## Phase discipline
+
+- Never begin implementation before an implementation plan has been approved.
+- Implement only the currently approved phase.
+- Do not anticipate future phases.
+- Do not introduce functionality outside the approved scope.
+- Stop after the current phase and wait for explicit approval before continuing.
+
+## Safety constraints
+
+- Never delete files, migrations, tests, or documentation unless explicitly required.
+- Never weaken authentication, authorization, tenant isolation, audit, validation, or optimistic concurrency.
+- Never expose data across organizations.
+- Never silently change public API contracts.
+- Never invent endpoints, permissions, lifecycle transitions, DTO fields, or backend behavior.
+- Never duplicate backend-authoritative calculations in the frontend.
+- Never bypass failing tests to complete a task.
+- Never edit generated files manually when a generation command exists.
+
+## Quality expectations
+
+Before declaring a phase complete, ensure that:
+
+- the implementation matches the approved phase;
+- no unrelated files were modified;
+- no unnecessary abstractions were introduced;
+- focused tests pass;
+- type checking passes where applicable;
+- documentation affected by the phase is updated;
+- self-review has been completed.
+
+Do not declare work complete if known BLOCKER or IMPORTANT review findings remain unresolved.
+
+## Communication
+
+- Tasks, code, comments, identifiers, commit messages, and technical documentation must be written in English.
+- Explanations to the user must be written in Russian.
+- Keep progress reports concise and factual.
+- Distinguish confirmed repository facts from assumptions.
+- Report uncertainty honestly.
+- Always report:
+  - files changed;
+  - tests executed;
+  - verification results;
+  - unresolved questions;
+  - deviations from the approved plan.

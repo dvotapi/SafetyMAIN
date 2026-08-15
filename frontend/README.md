@@ -40,12 +40,12 @@ Open http://localhost:3100
 | `npm run architecture:check`            | dependency-cruiser guardrails                                    |
 | `npm run verify`                        | tokens → format → lint → typecheck → architecture → test → build |
 
-## Architecture
-
-See [docs/architecture/frontend/](../docs/architecture/frontend/).
+Prefer importing from `@/components`. Shared library docs:
+[SharedUIComponents.md](../docs/architecture/frontend/SharedUIComponents.md).
 
 Design System source of truth: [docs/design/README.md](../docs/design/README.md).
 
 ## Deferred
 
-Authentication, org switching, permission-aware nav, business screens, full component library — see `docs/tasks/TASK-P9-002.md`.
+Authentication, org switching, permission-aware nav, business screens —
+see `docs/tasks/TASK-P9-003.md` and follow-ups P9-004 / P9-005.

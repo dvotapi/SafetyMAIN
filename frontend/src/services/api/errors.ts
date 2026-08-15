@@ -106,14 +106,18 @@ function readString(value: unknown): string | undefined {
 /** Normalize backend/network failures into UI-safe error types. */
 export function normalizeApiError(input: NormalizeInput): ApiClientError {
   const record = asRecord(input.body);
-  const code = readString(record?.["code"]);
+  const nested = asRecord(record?.["error"]);
+  const payload = nested ?? record;
+  const code = readString(payload?.["code"]);
   const message =
-    readString(record?.["message"]) ??
+    readString(payload?.["message"]) ??
     input.fallbackMessage ??
     "Unexpected API error";
-  const details = record?.["details"] ?? record?.["errors"];
+  const details = payload?.["details"] ?? record?.["errors"];
+  const detailsRecord = asRecord(details);
   const correlationId =
     input.correlationId ??
+    readString(detailsRecord?.["request_id"]) ??
     readString(record?.["correlation_id"]) ??
     readString(record?.["correlationId"]);
 

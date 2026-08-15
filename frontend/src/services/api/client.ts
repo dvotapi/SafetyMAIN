@@ -2,6 +2,11 @@ import {
   createApiClientConfig,
   type ApiClientConfig,
 } from "@/services/api/config";
+import {
+  getBoundAccessToken,
+  getBoundOrganizationId,
+  notifyUnauthorized,
+} from "@/services/api/auth-bridge";
 import { normalizeApiError } from "@/services/api/errors";
 import type { ApiRequestOptions } from "@/services/api/types";
 
@@ -26,6 +31,14 @@ function buildUrl(
   return url.toString();
 }
 
+function isAuthPath(path: string): boolean {
+  return (
+    path.includes("/api/v1/auth/login") ||
+    path.includes("/api/v1/auth/refresh") ||
+    path.includes("/api/v1/auth/logout")
+  );
+}
+
 export class ApiClient {
   private readonly config: ApiClientConfig;
 
@@ -33,7 +46,11 @@ export class ApiClient {
     this.config = config;
   }
 
-  async request<T>(options: ApiRequestOptions): Promise<T | null> {
+  async request<T>(
+    options: ApiRequestOptions,
+    internal: { _retried?: boolean } = {},
+  ): Promise<T | null> {
+    const retried = internal._retried ?? false;
     const method = options.method ?? "GET";
     const correlationId =
       options.correlationId ??
@@ -47,18 +64,17 @@ export class ApiClient {
       "X-Request-Id": correlationId,
     };
 
-    const token = options.getAccessToken
-      ? await options.getAccessToken()
-      : null;
+    const tokenProvider = options.getAccessToken ?? getBoundAccessToken;
+    const token = await tokenProvider();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const organizationId = options.getOrganizationId
-      ? await options.getOrganizationId()
-      : null;
+    const organizationProvider =
+      options.getOrganizationId ?? getBoundOrganizationId;
+    const organizationId = await organizationProvider();
     if (organizationId) {
-      headers["X-Organization-Id"] = organizationId;
+      headers["X-Organization-ID"] = organizationId;
     }
 
     let response: Response;
@@ -86,6 +102,18 @@ export class ApiClient {
         correlationId,
         cause,
       });
+    }
+
+    if (
+      response.status === 401 &&
+      !retried &&
+      !isAuthPath(options.path) &&
+      !options.getAccessToken
+    ) {
+      const refreshed = await notifyUnauthorized();
+      if (refreshed) {
+        return this.request<T>(options, { _retried: true });
+      }
     }
 
     if (response.status === 204) {

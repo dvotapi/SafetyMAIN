@@ -24,6 +24,7 @@ DELETE_KNOWLEDGE_OBJECT_RELATION = "delete_knowledge_object_relation"
 AUTH_LOGIN = "auth_login"
 AUTH_REFRESH = "auth_refresh"
 AUTH_LOGOUT = "auth_logout"
+AUTH_SESSION = "auth_session"
 
 CREATE_USER = "create_user"
 LIST_USERS = "list_users"
@@ -98,6 +99,7 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         AUTH_LOGIN,
         AUTH_REFRESH,
         AUTH_LOGOUT,
+        AUTH_SESSION,
         CREATE_USER,
         LIST_USERS,
         GET_USER,

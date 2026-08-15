@@ -1,0 +1,316 @@
+---
+description: Planning behavior for implementation tasks
+alwaysApply: false
+---
+
+# Planning Behavior
+
+Apply these rules whenever preparing an implementation plan.
+
+This document governs planning behavior only.
+
+---
+
+# Planning objective
+
+The purpose of planning is to understand the existing system and produce an implementation plan that can be executed safely.
+
+Planning is an investigation.
+
+Planning is not implementation.
+
+Planning is not architecture design.
+
+Do not modify code during planning.
+
+---
+
+# Sources of truth
+
+Always investigate in the following order:
+
+1. Current TASK document.
+2. Approved architecture documentation.
+3. Existing production implementation.
+4. Backend contracts.
+5. Existing tests.
+
+Do not invent missing behavior while planning.
+
+If authoritative sources conflict:
+
+- identify the conflict;
+- explain it;
+- stop and request clarification.
+
+---
+
+# Repository exploration
+
+Read only what is required.
+
+Always begin with:
+
+- AI_CONTEXT.md
+- current TASK
+- directly related architecture documents
+
+Then locate:
+
+- closest existing feature
+- closest existing API
+- closest existing tests
+- closest existing UI pattern
+
+Do not scan unrelated modules.
+
+Prefer targeted search over broad repository exploration.
+
+---
+
+# Existing implementation first
+
+Never assume a feature should be implemented from scratch.
+
+Before proposing a solution:
+
+- find similar implementations;
+- reuse existing architecture;
+- reuse existing patterns;
+- reuse shared components;
+- reuse validation;
+- reuse testing strategy.
+
+New patterns require explicit justification.
+
+---
+
+# Backend contracts
+
+Treat backend contracts as authoritative.
+
+Do not invent:
+
+- endpoints;
+- permissions;
+- lifecycle transitions;
+- DTO fields;
+- filters;
+- sorting;
+- calculations.
+
+If the backend does not expose something:
+
+- document the limitation;
+- do not design replacement APIs.
+
+---
+
+# Architecture boundaries
+
+Respect existing boundaries.
+
+Do not plan:
+
+- cross-feature internal imports;
+- duplicated shared components;
+- duplicated utilities;
+- duplicated DTOs;
+- duplicated business logic.
+
+Prefer public feature boundaries.
+
+Prefer shared abstractions only when they already exist.
+
+---
+
+# Scope discipline
+
+Plan only the requested task.
+
+Do not:
+
+- add future work;
+- redesign unrelated modules;
+- refactor unrelated code;
+- introduce speculative abstractions.
+
+Every planned activity must be traceable to:
+
+- TASK
+or
+- approved architecture.
+
+---
+
+# Phase planning
+
+Large implementations must be divided into implementation phases.
+
+Each phase should:
+
+- have a clear objective;
+- be independently testable;
+- be independently reviewable;
+- minimize implementation risk.
+
+Avoid phases that modify unrelated areas simultaneously.
+
+Prefer vertical slices over large horizontal changes.
+
+---
+
+# Required planning output
+
+Every implementation plan should include:
+
+## Goal
+
+Implementation objective.
+
+---
+
+## Approved assumptions
+
+Assumptions confirmed by repository evidence.
+
+---
+
+## Open questions
+
+Items requiring clarification before implementation.
+
+---
+
+## Backend contract
+
+Relevant:
+
+- endpoints
+- DTOs
+- permissions
+- lifecycle
+- validation
+
+---
+
+## Architecture boundaries
+
+Allowed dependencies.
+
+Forbidden dependencies.
+
+Shared components to reuse.
+
+---
+
+## Affected files
+
+Only files expected to change.
+
+---
+
+## Implementation phases
+
+Small, reviewable phases.
+
+Each phase should define:
+
+- scope;
+- excluded work;
+- expected verification.
+
+---
+
+## Acceptance Criteria coverage
+
+Map implementation phases to Acceptance Criteria.
+
+Every Acceptance Criterion should be covered.
+
+---
+
+## Verification strategy
+
+Focused verification for each phase.
+
+Include:
+
+- unit tests;
+- integration tests;
+- E2E where applicable;
+- type checking;
+- linting when required.
+
+---
+
+## Risks
+
+Identify:
+
+- contract risks;
+- architecture risks;
+- migration risks;
+- testing risks.
+
+Do not speculate beyond repository evidence.
+
+---
+
+## Known limitations
+
+Document backend limitations instead of inventing functionality.
+
+---
+
+# Planning quality
+
+A good plan:
+
+- minimizes implementation risk;
+- minimizes repository changes;
+- minimizes future rework;
+- maximizes reuse;
+- clearly separates implementation phases.
+
+---
+
+# Before implementation
+
+Before implementation begins, verify:
+
+- implementation plan exists;
+- plan has been reviewed;
+- plan has been approved;
+- implementation phases are defined;
+- architecture boundaries are understood;
+- backend contract has been confirmed.
+
+Do not begin implementation before explicit approval.
+
+---
+
+# Reporting
+
+At the end of planning, report:
+
+- documents inspected;
+- implementation patterns reused;
+- backend contracts identified;
+- affected files;
+- implementation phases;
+- verification strategy;
+- risks;
+- open questions.
+
+Do not report implementation progress.
+
+Planning ends when an implementation-ready plan has been approved.
+
+---
+
+# Core principle
+
+Planning discovers the existing system.
+
+It does not invent a new one.

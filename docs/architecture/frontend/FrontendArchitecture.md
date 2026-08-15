@@ -11,6 +11,9 @@ Related:
 - [ADR-FrontendUILibrary.md](ADR-FrontendUILibrary.md)
 - [FrontendTheming.md](FrontendTheming.md)
 - [FrontendTesting.md](FrontendTesting.md)
+- [AuthenticationShell.md](AuthenticationShell.md)
+- [SharedUIComponents.md](SharedUIComponents.md)
+- [HazardManagementUI.md](HazardManagementUI.md)
 
 ---
 

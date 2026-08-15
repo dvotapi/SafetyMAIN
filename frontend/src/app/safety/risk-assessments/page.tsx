@@ -1,5 +1,18 @@
-import PlaceholderSectionPage from "@/components/patterns/PlaceholderSectionPage";
+import { Suspense } from "react";
+
+import { LoadingState } from "@/components";
+import { RiskAssessmentRegistryPage } from "@/features/risk-assessments";
 
 export default function Page() {
-  return <PlaceholderSectionPage title="Risk Assessments" />;
+  return (
+    <Suspense
+      fallback={
+        <div style={{ padding: "var(--sm-space-8)" }}>
+          <LoadingState label="Loading risk assessments" />
+        </div>
+      }
+    >
+      <RiskAssessmentRegistryPage />
+    </Suspense>
+  );
 }

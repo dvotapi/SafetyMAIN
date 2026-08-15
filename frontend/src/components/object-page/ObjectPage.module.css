@@ -1,0 +1,96 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sm-space-4);
+  padding-bottom: var(--sm-space-4);
+  border-bottom: 1px solid var(--sm-color-border-default);
+}
+
+.headerMain {
+  display: grid;
+  gap: var(--sm-space-2);
+  min-width: 0;
+}
+
+.headerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sm-space-2);
+}
+
+.summary {
+  display: grid;
+  gap: var(--sm-space-4);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sm-space-2);
+}
+
+.sidebar {
+  display: grid;
+  gap: var(--sm-space-4);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sm-space-1);
+  border-bottom: 1px solid var(--sm-color-border-default);
+}
+
+.tab {
+  padding: var(--sm-space-2) var(--sm-space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: var(--sm-font-size-sm);
+  color: var(--sm-color-text-muted);
+  cursor: pointer;
+}
+
+.tabActive {
+  color: var(--sm-color-text-primary);
+  border-bottom-color: var(--sm-color-border-focus);
+  font-weight: var(--sm-font-weight-medium);
+}
+
+.relationships {
+  display: grid;
+  gap: var(--sm-space-3);
+}
+
+.relationshipItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm-space-2);
+  padding: var(--sm-space-2) 0;
+  border-bottom: 1px solid var(--sm-color-border-default);
+}
+
+.layout {
+  display: grid;
+  gap: var(--sm-space-5);
+}
+
+.layoutWithSidebar {
+  grid-template-columns: minmax(0, 1fr) 280px;
+}
+
+@media (max-width: 960px) {
+  .layoutWithSidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panelSection {
+  display: grid;
+  gap: var(--sm-space-3);
+}

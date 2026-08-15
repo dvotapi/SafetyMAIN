@@ -1,0 +1,323 @@
+---
+description: Implementation behavior for implementation phases
+alwaysApply: false
+---
+
+# Implementation Behavior
+
+Apply these rules whenever implementing an approved task.
+
+This document governs implementation behavior only.
+
+---
+
+# Implementation objective
+
+The purpose of implementation is to execute the approved implementation phase.
+
+Implementation is not planning.
+
+Implementation is not architecture design.
+
+Implementation is not repository cleanup.
+
+Only implement the approved phase.
+
+---
+
+# Preconditions
+
+Before modifying any files, verify that:
+
+- the current TASK exists;
+- an approved implementation plan exists;
+- the current implementation phase is identified;
+- architecture boundaries are understood;
+- backend contracts have been inspected.
+
+If any of these are missing:
+
+Stop.
+
+Request clarification.
+
+Do not begin implementation.
+
+---
+
+# Scope discipline
+
+Implement only the currently approved phase.
+
+Do not:
+
+- implement future phases;
+- redesign architecture;
+- introduce unrelated functionality;
+- perform unrelated refactoring;
+- optimize unrelated code;
+- clean unrelated files.
+
+Every code change must be traceable to:
+
+- the current TASK;
+- the approved implementation phase;
+- an approved review correction.
+
+---
+
+# Smallest correct change
+
+Prefer the smallest correct implementation.
+
+Prefer:
+
+- existing components;
+- existing utilities;
+- existing DTOs;
+- existing validation;
+- existing project patterns.
+
+Do not introduce new abstractions unless they eliminate demonstrated duplication.
+
+Avoid speculative architecture.
+
+---
+
+# Backend authority
+
+Backend behavior is authoritative.
+
+Never invent:
+
+- API endpoints;
+- permissions;
+- lifecycle transitions;
+- DTO fields;
+- validation rules;
+- business calculations;
+- sorting;
+- filtering.
+
+Frontend must adapt to backend contracts.
+
+Never modify backend contracts unless explicitly requested.
+
+---
+
+# Architecture discipline
+
+Respect existing architecture.
+
+Do not:
+
+- violate feature boundaries;
+- import feature internals;
+- duplicate shared components;
+- duplicate business logic;
+- bypass public interfaces.
+
+Reuse existing architecture whenever possible.
+
+---
+
+# Safety
+
+Never weaken:
+
+- authentication;
+- authorization;
+- tenant isolation;
+- optimistic concurrency;
+- validation;
+- auditing.
+
+Never expose data across organizations.
+
+Never remove existing verification.
+
+---
+
+# Implementation quality
+
+Every implementation should:
+
+- remain readable;
+- minimize changed files;
+- preserve existing patterns;
+- avoid unnecessary abstractions;
+- avoid dead code;
+- avoid commented-out code.
+
+Do not leave:
+
+- TODO
+- FIXME
+- temporary code
+- debug logging
+
+unless explicitly requested.
+
+---
+
+# Testing
+
+Run focused verification for the implemented phase.
+
+Prefer:
+
+- focused unit tests;
+- focused integration tests;
+- focused feature tests.
+
+Run broader verification only when required.
+
+Do not claim success without running verification.
+
+---
+
+# Self Review
+
+Before requesting review, perform a self-review.
+
+Verify:
+
+□ implementation matches the approved phase
+
+□ no unrelated files changed
+
+□ no scope creep
+
+□ no invented API
+
+□ no invented permissions
+
+□ no invented lifecycle
+
+□ backend contracts respected
+
+□ architecture respected
+
+□ feature boundaries respected
+
+□ tenant isolation preserved
+
+□ validation preserved
+
+□ optimistic concurrency preserved
+
+□ documentation updated where required
+
+□ focused tests passed
+
+□ type checking passed where applicable
+
+If any item fails:
+
+Correct it before requesting review.
+
+---
+
+# Reporting
+
+When implementation stops, always report:
+
+## Scope completed
+
+Describe only the completed implementation phase.
+
+---
+
+## Files changed
+
+List every modified file.
+
+---
+
+## Verification
+
+Report:
+
+- tests executed;
+- type checking;
+- linting;
+- build verification;
+- exact results.
+
+Do not claim verification that was not executed.
+
+---
+
+## Open questions
+
+List remaining uncertainties.
+
+Separate:
+
+- confirmed repository facts;
+- assumptions;
+- future work.
+
+---
+
+## Deviations
+
+Explicitly report any deviation from:
+
+- TASK;
+- approved implementation plan;
+- architecture.
+
+Explain why.
+
+---
+
+## Readiness
+
+End with exactly one statement:
+
+- Ready for review.
+- Ready after listed corrections.
+- Blocked.
+
+Do not declare implementation complete.
+
+Only declare the current phase complete.
+
+---
+
+# Stop conditions
+
+Stop implementation immediately when:
+
+- current phase is complete;
+- a backend contract is unclear;
+- architecture conflicts are discovered;
+- implementation requires changing another phase;
+- unexpected repository behavior requires architectural decisions.
+
+Do not continue automatically.
+
+Wait for explicit approval.
+
+---
+
+# Forbidden behavior
+
+Never:
+
+- continue into the next phase;
+- silently expand scope;
+- silently redesign architecture;
+- silently change contracts;
+- silently fix unrelated code;
+- silently introduce new abstractions;
+- silently change tests unrelated to the phase.
+
+---
+
+# Core principle
+
+Implementation executes approved decisions.
+
+It does not create new ones.

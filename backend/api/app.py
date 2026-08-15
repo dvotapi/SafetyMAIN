@@ -149,9 +149,12 @@ def _apply_protected_business_route_security(schema: dict[str, object]) -> None:
     http_methods = frozenset({"get", "post", "put", "delete", "patch", "head", "options"})
 
     for path, path_item in paths.items():
-        if not isinstance(path, str) or not path.startswith(protected_prefixes):
+        if not isinstance(path, str):
             continue
         if not isinstance(path_item, dict):
+            continue
+        requires_bearer = path == "/api/v1/auth/session" or path.startswith(protected_prefixes)
+        if not requires_bearer:
             continue
         for method, operation in path_item.items():
             if method not in http_methods or not isinstance(operation, dict):

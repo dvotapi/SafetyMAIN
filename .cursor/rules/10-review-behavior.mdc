@@ -1,0 +1,250 @@
+---
+description: Review behavior for implementation phases
+alwaysApply: false
+---
+
+# Review Behavior
+
+Apply these rules whenever reviewing an implementation.
+
+This document governs review behavior only.
+
+---
+
+# Review objective
+
+The purpose of review is to determine whether the implementation satisfies the approved task and implementation phase.
+
+Review is evidence-based.
+
+Do not suggest changes based only on personal preference.
+
+---
+
+# Sources of truth
+
+Review in the following order:
+
+1. Current TASK document.
+2. Approved implementation plan.
+3. Relevant architecture documentation.
+4. Backend contracts.
+5. Existing production patterns.
+
+Do not reject implementation because it differs from an imagined solution.
+
+Reject only when it violates an authoritative source or introduces measurable risk.
+
+---
+
+# Review scope
+
+Review only the current implementation phase.
+
+Do not request work belonging to future phases.
+
+Do not expand scope.
+
+Do not suggest optional enhancements unless they improve correctness or maintainability.
+
+---
+
+# Review priorities
+
+Review in this order:
+
+1. Backend contract
+2. Architecture
+3. Security
+4. Tenant isolation
+5. Authorization
+6. Lifecycle correctness
+7. Data validation
+8. Feature boundaries
+9. Code quality
+10. Tests
+11. Documentation
+
+Lower-priority observations must never hide higher-priority issues.
+
+---
+
+# Classification
+
+Every finding must be classified.
+
+## BLOCKER
+
+Implementation cannot be accepted.
+
+Examples:
+
+- incorrect backend contract
+- tenant isolation violation
+- security issue
+- authorization issue
+- data corruption risk
+- architecture violation
+- broken implementation
+- failing verification
+
+---
+
+## IMPORTANT
+
+Implementation is functionally incomplete or incorrect.
+
+Examples:
+
+- incorrect DTO
+- missing validation
+- missing acceptance criterion
+- incorrect lifecycle
+- missing tests
+- contract mismatch
+- significant maintainability issue
+
+These findings must normally be corrected before the next implementation phase.
+
+---
+
+## MINOR
+
+Quality improvements.
+
+Examples:
+
+- duplicated constant
+- unnecessary abstraction
+- missing edge-case test
+- documentation improvement
+- naming improvement
+- small cleanup
+
+Minor findings must not block implementation progress.
+
+---
+
+## NO ISSUE
+
+Explicitly acknowledge areas that are correct.
+
+Review should confirm correctness, not only identify problems.
+
+---
+
+# Required review areas
+
+Always inspect:
+
+- implementation scope
+- backend contracts
+- DTOs
+- permissions
+- lifecycle
+- validation
+- architecture boundaries
+- feature boundaries
+- query invalidation
+- concurrency
+- tenant isolation
+- tests
+- documentation
+
+Only inspect UI, accessibility, or performance when relevant to the current phase.
+
+---
+
+# Review principles
+
+Do not recommend:
+
+- speculative abstractions
+- future architecture
+- unnecessary refactoring
+- style-only changes
+- alternative implementations with equivalent behavior
+
+Prefer existing project patterns over introducing new ones.
+
+---
+
+# Review findings
+
+Each finding should contain:
+
+- classification
+- affected file
+- affected symbol
+- exact problem
+- why it matters
+- recommended correction
+
+Avoid vague statements.
+
+Every finding should be actionable.
+
+---
+
+# Review decision
+
+Review must end with exactly one decision.
+
+Possible decisions:
+
+## APPROVE
+
+Requirements satisfied.
+
+Implementation may continue to the next phase.
+
+---
+
+## APPROVE WITH MINOR CORRECTIONS
+
+Only MINOR findings remain.
+
+Next phase may begin after optional cleanup.
+
+---
+
+## REJECT — CORRECTIONS REQUIRED
+
+One or more BLOCKER or IMPORTANT findings remain.
+
+Do not continue implementation.
+
+Correct only confirmed review findings.
+
+Repeat review after corrections.
+
+---
+
+# Review discipline
+
+Do not modify code while reviewing.
+
+Do not silently fix problems.
+
+Review and implementation are separate activities.
+
+---
+
+# Reporting
+
+Always report:
+
+- reviewed scope
+- files inspected
+- findings
+- decision
+
+If no problems are found, explicitly state that the inspected areas comply with the approved implementation phase.
+
+---
+
+# Core principle
+
+Review validates correctness.
+
+It does not redesign the solution.

@@ -1,0 +1,79 @@
+.section {
+  display: grid;
+  gap: var(--sm-space-4);
+}
+
+.sectionHeader {
+  display: grid;
+  gap: var(--sm-space-1);
+}
+
+.fieldGroup {
+  display: grid;
+  gap: var(--sm-space-3);
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.fieldGroupLegend {
+  font-size: var(--sm-font-size-sm);
+  font-weight: var(--sm-font-weight-medium);
+  color: var(--sm-color-text-primary);
+  margin-bottom: var(--sm-space-2);
+}
+
+.formRow {
+  display: grid;
+  gap: var(--sm-space-3);
+}
+
+.formRowCols2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 768px) {
+  .formRowCols2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.validationSummary {
+  padding: var(--sm-space-3);
+  border-radius: var(--sm-radius-md);
+  border: 1px solid var(--sm-color-danger-border, var(--sm-color-danger-fg));
+  background: var(--sm-color-danger-bg, var(--sm-color-bg-subtle));
+}
+
+.validationList {
+  margin: var(--sm-space-2) 0 0;
+  padding-left: var(--sm-space-4);
+  font-size: var(--sm-font-size-sm);
+  color: var(--sm-color-danger-fg);
+}
+
+.readOnlyField {
+  display: grid;
+  gap: var(--sm-space-1);
+}
+
+.readOnlyLabel {
+  font-size: var(--sm-font-size-xs);
+  color: var(--sm-color-text-muted);
+}
+
+.readOnlyValue {
+  font-size: var(--sm-font-size-sm);
+  color: var(--sm-color-text-primary);
+}
+
+.reviewMode {
+  padding: var(--sm-space-4);
+  border: 1px dashed var(--sm-color-border-default);
+  border-radius: var(--sm-radius-md);
+  background: var(--sm-color-bg-subtle);
+}
+
+.reviewModeBanner {
+  margin-bottom: var(--sm-space-4);
+}

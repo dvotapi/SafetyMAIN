@@ -26,6 +26,28 @@
   cursor: not-allowed;
 }
 
+.loading {
+  position: relative;
+}
+
+.loadingContent {
+  visibility: hidden;
+}
+
+.loadingSpinner {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.buttonSpinner {
+  width: var(--sm-size-icon-sm);
+  height: var(--sm-size-icon-sm);
+  border-width: 2px;
+}
+
 .sm {
   height: var(--sm-size-control-sm);
   padding: 0 var(--sm-space-3);
