@@ -760,3 +760,26 @@ def test_risk_control_response_exposes_is_overdue(
         headers=headers,
     ).json()
     assert cancelled["is_overdue"] is False
+
+
+@pytest.mark.parametrize(
+    "param",
+    ["status", "hierarchy_level", "control_nature", "latest_effectiveness_result"],
+)
+def test_list_risk_controls_rejects_unknown_enum_param(
+    enforced_auth_settings: AppSettings,
+    param: str,
+) -> None:
+    client, org, token, *_ = _build_client(
+        enforced_auth_settings,
+        role=Role.admin(),
+    )
+    headers = _headers(org, token)
+    response = client.get(
+        "/api/v1/risk-controls", params={param: "bogus-value"}, headers=headers
+    )
+    assert response.status_code == 422
+    body = response.json()
+    assert body["error"]["code"] == "request_validation_error"
+    locations = [v["location"] for v in body["error"]["details"]["violations"]]
+    assert ["query", param] in locations
