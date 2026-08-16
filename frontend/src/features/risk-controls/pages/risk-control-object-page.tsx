@@ -19,6 +19,7 @@ import {
   useAssignRiskControlOwnerMutation,
   useCompleteRiskControlImplementationMutation,
   usePlanRiskControlMutation,
+  useRecordRiskControlVerificationMutation,
   useStartRiskControlImplementationMutation,
   useUpdateRiskControlProgressMutation,
 } from "@/features/risk-controls/api/risk-control-mutations";
@@ -42,6 +43,7 @@ import {
   RiskControlSummary,
 } from "@/features/risk-controls/components/risk-control-summary";
 import { SourceSnapshot } from "@/features/risk-controls/components/source-snapshot";
+import { VerificationForm } from "@/features/risk-controls/components/verification-form";
 import { VerificationHistory } from "@/features/risk-controls/components/verification-history";
 import { useRiskControlCommand } from "@/features/risk-controls/hooks/use-risk-control-command";
 import { mapRiskControlCapabilities } from "@/features/risk-controls/hooks/use-risk-control-permissions";
@@ -53,6 +55,7 @@ import {
 } from "@/features/risk-controls/schemas/implementation-progress-schema";
 import { planFormValuesToRequest } from "@/features/risk-controls/schemas/implementation-schema";
 import { ownerFormValuesToRequest } from "@/features/risk-controls/schemas/owner-schema";
+import { verificationFormValuesToRequest } from "@/features/risk-controls/schemas/verification-schema";
 import {
   effectivenessLabel,
   effectivenessToVisual,
@@ -97,6 +100,7 @@ export function RiskControlObjectPage({
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [evidenceDialogOpen, setEvidenceDialogOpen] = useState(false);
+  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
 
   const assignOwnerMutation = useAssignRiskControlOwnerMutation(riskControlId);
   const addEvidenceMutation = useAddRiskControlEvidenceMutation(riskControlId);
@@ -107,6 +111,8 @@ export function RiskControlObjectPage({
     useUpdateRiskControlProgressMutation(riskControlId);
   const completeImplementationMutation =
     useCompleteRiskControlImplementationMutation(riskControlId);
+  const recordVerificationMutation =
+    useRecordRiskControlVerificationMutation(riskControlId);
   const {
     runCommand,
     busyAction,
@@ -430,6 +436,36 @@ export function RiskControlObjectPage({
             latestResult={control.latestEffectivenessResult}
             latestVerification={latest}
             riskAssessmentId={control.riskAssessmentId}
+          />
+          <VerificationForm
+            status={control.status}
+            capabilities={capabilities}
+            reviewRequired={control.reviewSchedule.reviewRequired}
+            noReviewReason={control.reviewSchedule.noReviewReason}
+            hasExistingEvidence={control.evidence.length > 0}
+            version={control.version}
+            open={verificationDialogOpen}
+            onOpenChange={setVerificationDialogOpen}
+            loading={busyAction === "verify"}
+            errorMessage={commandError}
+            onSubmit={async (values) => {
+              const successDescription =
+                values.result === "partially_effective"
+                  ? "Effectiveness is now Verified Partially Effective. The control's lifecycle status is unchanged."
+                  : undefined;
+              const succeeded = await runCommand(
+                "verify",
+                () =>
+                  recordVerificationMutation.mutateAsync(
+                    verificationFormValuesToRequest(values, control.version),
+                  ),
+                "Verification recorded",
+                successDescription,
+              );
+              if (succeeded) {
+                setVerificationDialogOpen(false);
+              }
+            }}
           />
           <VerificationHistory verifications={control.verifications} />
         </div>

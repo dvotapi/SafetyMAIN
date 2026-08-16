@@ -6,10 +6,17 @@ import { ControlOwnerSection } from "@/features/risk-controls/components/control
 import { EvidenceForm } from "@/features/risk-controls/components/evidence-form";
 import { ImplementationPlanSection } from "@/features/risk-controls/components/implementation-plan-section";
 import { ImplementationProgressSection } from "@/features/risk-controls/components/implementation-progress-section";
+import { EffectivenessSummary } from "@/features/risk-controls/components/effectiveness-summary";
+import { VerificationForm } from "@/features/risk-controls/components/verification-form";
+import { VerificationHistory } from "@/features/risk-controls/components/verification-history";
 import {
   buildEvidenceFormSchema,
   evidenceFormValuesToRequest,
 } from "@/features/risk-controls/schemas/evidence-schema";
+import {
+  buildVerificationFormSchema,
+  verificationFormValuesToRequest,
+} from "@/features/risk-controls/schemas/verification-schema";
 import {
   buildCompleteImplementationFormSchema,
   completeImplementationFormValuesToRequest,
@@ -25,6 +32,7 @@ import type {
   RiskControl,
   RiskControlCapabilities,
   RiskControlMilestone,
+  RiskControlVerification,
 } from "@/features/risk-controls/types/risk-control-types";
 
 afterEach(() => {
@@ -839,5 +847,385 @@ describe("evidenceFormValuesToRequest", () => {
       checksum: "sha256:abc123",
       allow_after_implemented: true,
     });
+  });
+});
+
+const VERIFY_CAPABILITIES: RiskControlCapabilities = {
+  ...BASE_CAPABILITIES,
+  canVerify: true,
+};
+
+function renderVerificationForm(
+  overrides: Partial<{
+    status: string;
+    capabilities: RiskControlCapabilities;
+    reviewRequired: boolean;
+    noReviewReason: string | null;
+    hasExistingEvidence: boolean;
+    open: boolean;
+    onSubmit: (values: unknown) => void | Promise<void>;
+  }> = {},
+) {
+  const onOpenChange = vi.fn();
+  const onSubmit = overrides.onSubmit ?? vi.fn();
+  render(
+    <VerificationForm
+      status={overrides.status ?? "implemented"}
+      capabilities={overrides.capabilities ?? VERIFY_CAPABILITIES}
+      reviewRequired={overrides.reviewRequired ?? true}
+      noReviewReason={overrides.noReviewReason ?? null}
+      hasExistingEvidence={overrides.hasExistingEvidence ?? true}
+      version={4}
+      open={overrides.open ?? false}
+      onOpenChange={onOpenChange}
+      onSubmit={onSubmit}
+    />,
+  );
+  return { onOpenChange, onSubmit };
+}
+
+describe("VerificationForm availability", () => {
+  it("does not render the record-verification button without risk_control:verify", () => {
+    renderVerificationForm({ capabilities: BASE_CAPABILITIES });
+    expect(
+      screen.queryByRole("button", { name: /record verification/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not render when status is draft", () => {
+    renderVerificationForm({ status: "draft" });
+    expect(
+      screen.queryByRole("button", { name: /record verification/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders when permitted and status is implemented", () => {
+    renderVerificationForm({ status: "implemented" });
+    expect(
+      screen.getByRole("button", { name: /record verification/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders when status is verified_effective or verified_ineffective", () => {
+    renderVerificationForm({ status: "verified_effective" });
+    expect(
+      screen.getByRole("button", { name: /record verification/i }),
+    ).toBeInTheDocument();
+
+    cleanup();
+
+    renderVerificationForm({ status: "verified_ineffective" });
+    expect(
+      screen.getByRole("button", { name: /record verification/i }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("VerificationForm result options", () => {
+  it("offers only the three verifiable results, each with a visible text label", async () => {
+    renderVerificationForm({ open: true });
+    const dialog = await screen.findByRole("dialog");
+
+    expect(
+      within(dialog).getByRole("radio", { name: "Verified Effective" }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("radio", {
+        name: "Verified Partially Effective",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("radio", { name: "Verified Ineffective" }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("radio", { name: /not verified/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("radio", { name: /not applicable/i }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("VerificationForm submit validation", () => {
+  it("blocks submit for effective without a next review date when review is required", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderVerificationForm({
+      open: true,
+      reviewRequired: true,
+      noReviewReason: null,
+      hasExistingEvidence: true,
+    });
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText(/method/i),
+      "Field inspection",
+    );
+    await user.click(
+      within(dialog).getByRole("radio", { name: "Verified Effective" }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /record verification/i }),
+    );
+
+    expect(
+      within(dialog).getByText(
+        "A next review date is required when verifying a control effective.",
+      ),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("allows submit for effective without a next review date when review is not required", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderVerificationForm({
+      open: true,
+      reviewRequired: false,
+      hasExistingEvidence: true,
+    });
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText(/method/i),
+      "Field inspection",
+    );
+    await user.click(
+      within(dialog).getByRole("radio", { name: "Verified Effective" }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /record verification/i }),
+    );
+
+    expect(onSubmit).toHaveBeenCalled();
+  });
+
+  it("blocks submit when evidenceRefs is empty and the control has no existing evidence", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderVerificationForm({
+      open: true,
+      reviewRequired: false,
+      hasExistingEvidence: false,
+    });
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText(/method/i),
+      "Field inspection",
+    );
+    await user.click(
+      within(dialog).getByRole("radio", { name: "Verified Ineffective" }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /record verification/i }),
+    );
+
+    expect(
+      within(dialog).getByText(
+        "At least one evidence reference is required.",
+      ),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("allows empty evidenceRefs when the control already has evidence", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderVerificationForm({
+      open: true,
+      reviewRequired: false,
+      hasExistingEvidence: true,
+    });
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText(/method/i),
+      "Field inspection",
+    );
+    await user.click(
+      within(dialog).getByRole("radio", { name: "Verified Ineffective" }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /record verification/i }),
+    );
+
+    expect(onSubmit).toHaveBeenCalled();
+  });
+});
+
+describe("buildVerificationFormSchema", () => {
+  const base = {
+    verificationType: "initial" as const,
+    method: "Field inspection",
+    criteria: "",
+    result: "effective" as const,
+    rating: "",
+    findings: "",
+    evidenceRefs: ["EV-1"],
+    nextAction: "",
+    nextReviewDate: "",
+  };
+
+  it("requires nextReviewDate for effective only when review is required and no reason is on file", () => {
+    expect(
+      buildVerificationFormSchema({
+        reviewRequired: true,
+        noReviewReason: null,
+        hasExistingEvidence: true,
+      }).safeParse(base).success,
+    ).toBe(false);
+
+    expect(
+      buildVerificationFormSchema({
+        reviewRequired: true,
+        noReviewReason: "Control line retired next quarter",
+        hasExistingEvidence: true,
+      }).safeParse(base).success,
+    ).toBe(true);
+
+    expect(
+      buildVerificationFormSchema({
+        reviewRequired: false,
+        noReviewReason: null,
+        hasExistingEvidence: true,
+      }).safeParse(base).success,
+    ).toBe(true);
+  });
+
+  it("allows empty evidenceRefs only when the control already has evidence", () => {
+    const ineffective = { ...base, result: "ineffective" as const, evidenceRefs: [] };
+
+    expect(
+      buildVerificationFormSchema({
+        reviewRequired: false,
+        noReviewReason: null,
+        hasExistingEvidence: false,
+      }).safeParse(ineffective).success,
+    ).toBe(false);
+
+    expect(
+      buildVerificationFormSchema({
+        reviewRequired: false,
+        noReviewReason: null,
+        hasExistingEvidence: true,
+      }).safeParse(ineffective).success,
+    ).toBe(true);
+  });
+
+  it("never accepts not_verified or not_applicable as a result", () => {
+    const schema = buildVerificationFormSchema({
+      reviewRequired: false,
+      noReviewReason: null,
+      hasExistingEvidence: true,
+    });
+
+    expect(
+      schema.safeParse({ ...base, result: "not_verified" }).success,
+    ).toBe(false);
+    expect(
+      schema.safeParse({ ...base, result: "not_applicable" }).success,
+    ).toBe(false);
+  });
+});
+
+describe("verificationFormValuesToRequest", () => {
+  it("carries expected_version and sends profile_key/profile_version explicitly", () => {
+    const request = verificationFormValuesToRequest(
+      {
+        verificationType: "initial",
+        method: "Field inspection",
+        criteria: "",
+        result: "effective",
+        rating: "",
+        findings: "",
+        evidenceRefs: [],
+        nextAction: "",
+        nextReviewDate: "2026-09-01",
+      },
+      8,
+    );
+
+    expect(request).toEqual({
+      expected_version: 8,
+      verification_type: "initial",
+      method: "Field inspection",
+      result: "effective",
+      evidence_refs: [],
+      next_review_date: "2026-09-01T00:00:00Z",
+      profile_key: "default",
+      profile_version: "1",
+    });
+  });
+});
+
+function buildVerification(
+  overrides: Partial<RiskControlVerification> = {},
+): RiskControlVerification {
+  return {
+    id: "verification-1",
+    verificationType: "initial",
+    method: "Field inspection",
+    criteria: "",
+    performedAt: "2026-08-01T00:00:00Z",
+    performedByUserId: "user-1",
+    result: "partially_effective",
+    rating: null,
+    findings: "",
+    evidenceRefs: [],
+    nextAction: null,
+    nextReviewDate: null,
+    profileKey: "default",
+    profileVersion: "1",
+    ...overrides,
+  };
+}
+
+describe("partially_effective never collapses into effective or ineffective", () => {
+  it("never renders 'Verified Effective' or 'Verified Ineffective' anywhere when the latest result is partially_effective", () => {
+    const verification = buildVerification({ result: "partially_effective" });
+    const { container } = render(
+      <>
+        <EffectivenessSummary
+          latestResult="partially_effective"
+          latestVerification={verification}
+          riskAssessmentId={null}
+        />
+        <VerificationHistory verifications={[verification]} />
+      </>,
+    );
+
+    expect(container.textContent).toContain("Verified Partially Effective");
+    expect(container.textContent).not.toContain("Verified Effective");
+    expect(container.textContent).not.toContain("Verified Ineffective");
+  });
+});
+
+describe("VerificationHistory is append-only", () => {
+  it("never renders an edit/delete/remove control for any record, including the latest", () => {
+    const verifications: RiskControlVerification[] = [
+      buildVerification({
+        id: "v1",
+        result: "ineffective",
+        performedAt: "2026-06-01T00:00:00Z",
+      }),
+      buildVerification({
+        id: "v2",
+        result: "partially_effective",
+        performedAt: "2026-07-01T00:00:00Z",
+      }),
+      buildVerification({
+        id: "v3",
+        result: "effective",
+        performedAt: "2026-08-01T00:00:00Z",
+      }),
+    ];
+
+    render(<VerificationHistory verifications={verifications} />);
+
+    expect(
+      screen.queryAllByRole("button", { name: /edit|delete|remove/i }),
+    ).toHaveLength(0);
+    expect(
+      screen.queryAllByRole("link", { name: /edit|delete|remove/i }),
+    ).toHaveLength(0);
+    expect(screen.getAllByText("Latest")).toHaveLength(1);
   });
 });
