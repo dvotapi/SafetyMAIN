@@ -24,6 +24,10 @@ All implementation work must follow:
 
 The workflow is mandatory for human developers and AI agents.
 
+Before any local changes (edits, commits, planning that assumes current tree),
+run `git pull` so the branch matches the remote. Do not work on a stale
+checkout. Stop and ask if pull conflicts or history has diverged.
+
 Do not skip planning, review, correction, or acceptance stages unless the user explicitly approves an exception.
 
 ## Authoritative sources

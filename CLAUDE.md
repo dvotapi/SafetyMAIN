@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository enforces a strict, phase-gated AI workflow defined in `AI_CONTEXT.md`, `docs/ai/DevelopmentWorkflow.md`, and `.cursor/rules/*.mdc`. It applies to every AI agent, including Claude Code. Key rules:
 
+- **Pull before any changes.** Before editing files, committing, or starting planning/implementation, run `git pull` (or `git pull --rebase` if that is the local convention) so the working tree matches `origin`. Do not invent commits on a stale branch. If pull reports conflicts or diverged history, stop and resolve with the user before continuing.
 - **Authority order** when sources conflict: current TASK document (`docs/tasks/TASK-*.md`) → approved implementation plan → `docs/architecture/*` → existing production implementation → existing tests → general assumptions (only if nothing else answers it). Never guess; surface the conflict and ask.
 - **Never begin implementation without an approved plan.** Planning (investigation only, no code) and implementation are separate phases. Do not implement future phases speculatively.
 - **Smallest correct change.** No unrelated refactors, no speculative abstractions, no scope creep. Every change must trace back to a TASK or an approved plan.

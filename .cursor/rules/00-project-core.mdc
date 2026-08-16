@@ -7,6 +7,7 @@ alwaysApply: true
 
 ## Working principles
 
+- Before any edits, commits, or implementation work, run `git pull` so the working tree matches the remote. Stop and ask if pull conflicts or history has diverged.
 - Work only on the task explicitly requested by the user.
 - Do not implement unrelated improvements.
 - Do not refactor unrelated code.
