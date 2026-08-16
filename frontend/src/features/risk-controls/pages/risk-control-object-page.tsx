@@ -16,7 +16,10 @@ import {
 import { PageContainer } from "@/components/patterns/Page";
 import {
   useAssignRiskControlOwnerMutation,
+  useCompleteRiskControlImplementationMutation,
   usePlanRiskControlMutation,
+  useStartRiskControlImplementationMutation,
+  useUpdateRiskControlProgressMutation,
 } from "@/features/risk-controls/api/risk-control-mutations";
 import {
   useRiskControlActivityQuery,
@@ -28,6 +31,7 @@ import { ControlOwnerSection } from "@/features/risk-controls/components/control
 import { EffectivenessSummary } from "@/features/risk-controls/components/effectiveness-summary";
 import { EvidenceList } from "@/features/risk-controls/components/evidence-list";
 import { ImplementationPlanSection } from "@/features/risk-controls/components/implementation-plan-section";
+import { ImplementationProgressSection } from "@/features/risk-controls/components/implementation-progress-section";
 import { ImplementationSummary } from "@/features/risk-controls/components/implementation-summary";
 import { RiskControlActivity } from "@/features/risk-controls/components/risk-control-activity";
 import { RiskControlConflictDialog } from "@/features/risk-controls/components/risk-control-conflict-dialog";
@@ -41,6 +45,10 @@ import { VerificationHistory } from "@/features/risk-controls/components/verific
 import { useRiskControlCommand } from "@/features/risk-controls/hooks/use-risk-control-command";
 import { mapRiskControlCapabilities } from "@/features/risk-controls/hooks/use-risk-control-permissions";
 import { latestVerification } from "@/features/risk-controls/mappers/risk-control-mappers";
+import {
+  completeImplementationFormValuesToRequest,
+  progressFormValuesToRequest,
+} from "@/features/risk-controls/schemas/implementation-progress-schema";
 import { planFormValuesToRequest } from "@/features/risk-controls/schemas/implementation-schema";
 import { ownerFormValuesToRequest } from "@/features/risk-controls/schemas/owner-schema";
 import {
@@ -83,9 +91,18 @@ export function RiskControlObjectPage({
   const [tab, setTab] = useState("overview");
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const [startDialogOpen, setStartDialogOpen] = useState(false);
+  const [progressDialogOpen, setProgressDialogOpen] = useState(false);
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
 
   const assignOwnerMutation = useAssignRiskControlOwnerMutation(riskControlId);
   const planMutation = usePlanRiskControlMutation(riskControlId);
+  const startImplementationMutation =
+    useStartRiskControlImplementationMutation(riskControlId);
+  const updateProgressMutation =
+    useUpdateRiskControlProgressMutation(riskControlId);
+  const completeImplementationMutation =
+    useCompleteRiskControlImplementationMutation(riskControlId);
   const {
     runCommand,
     busyAction,
@@ -313,6 +330,60 @@ export function RiskControlObjectPage({
               );
               if (succeeded) {
                 setPlanDialogOpen(false);
+              }
+            }}
+          />
+          <ImplementationProgressSection
+            control={control}
+            capabilities={capabilities}
+            startOpen={startDialogOpen}
+            onStartOpenChange={setStartDialogOpen}
+            progressOpen={progressDialogOpen}
+            onProgressOpenChange={setProgressDialogOpen}
+            completeOpen={completeDialogOpen}
+            onCompleteOpenChange={setCompleteDialogOpen}
+            startLoading={busyAction === "start_implementation"}
+            progressLoading={busyAction === "update_progress"}
+            completeLoading={busyAction === "complete_implementation"}
+            errorMessage={commandError}
+            onStart={async () => {
+              await runCommand(
+                "start_implementation",
+                () =>
+                  startImplementationMutation.mutateAsync({
+                    expected_version: control.version,
+                  }),
+                "Implementation started",
+              );
+            }}
+            onProgress={async (values) => {
+              const succeeded = await runCommand(
+                "update_progress",
+                () =>
+                  updateProgressMutation.mutateAsync(
+                    progressFormValuesToRequest(values, control.version),
+                  ),
+                "Progress updated",
+              );
+              if (succeeded) {
+                setProgressDialogOpen(false);
+              }
+            }}
+            onComplete={async (values) => {
+              const succeeded = await runCommand(
+                "complete_implementation",
+                () =>
+                  completeImplementationMutation.mutateAsync(
+                    completeImplementationFormValuesToRequest(
+                      values,
+                      control.version,
+                      control.evidence.length === 0,
+                    ),
+                  ),
+                "Implementation completed",
+              );
+              if (succeeded) {
+                setCompleteDialogOpen(false);
               }
             }}
           />

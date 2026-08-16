@@ -4,12 +4,23 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ControlOwnerSection } from "@/features/risk-controls/components/control-owner-section";
 import { ImplementationPlanSection } from "@/features/risk-controls/components/implementation-plan-section";
+import { ImplementationProgressSection } from "@/features/risk-controls/components/implementation-progress-section";
+import {
+  buildCompleteImplementationFormSchema,
+  completeImplementationFormValuesToRequest,
+  progressFormSchema,
+  progressFormValuesToRequest,
+} from "@/features/risk-controls/schemas/implementation-progress-schema";
 import {
   buildImplementationFormSchema,
   planFormValuesToRequest,
 } from "@/features/risk-controls/schemas/implementation-schema";
 import { ownerFormValuesToRequest } from "@/features/risk-controls/schemas/owner-schema";
-import type { RiskControlCapabilities } from "@/features/risk-controls/types/risk-control-types";
+import type {
+  RiskControl,
+  RiskControlCapabilities,
+  RiskControlMilestone,
+} from "@/features/risk-controls/types/risk-control-types";
 
 afterEach(() => {
   cleanup();
@@ -312,5 +323,339 @@ describe("buildImplementationFormSchema verificationMethodRequirement conditiona
     });
 
     expect(result.success).toBe(true);
+  });
+});
+
+const IMPLEMENT_CAPABILITIES: RiskControlCapabilities = {
+  ...BASE_CAPABILITIES,
+  canImplement: true,
+};
+
+function buildMilestone(
+  overrides: Partial<RiskControlMilestone> = {},
+): RiskControlMilestone {
+  return {
+    id: "milestone-1",
+    title: "Install guarding",
+    description: "",
+    dueDate: null,
+    status: "pending",
+    completedAt: null,
+    evidenceRefs: [],
+    ...overrides,
+  };
+}
+
+function buildControl(overrides: Partial<RiskControl> = {}): RiskControl {
+  return {
+    id: "control-1",
+    organizationId: "org-1",
+    code: "RC-0001",
+    title: "Install machine guarding",
+    description: "",
+    hierarchyLevel: "engineering",
+    controlNature: "preventive",
+    source: {
+      sourceType: "manual",
+      sourceReference: null,
+      riskAssessmentId: null,
+      sourceControlReference: null,
+      assessmentVersion: null,
+      assessmentApprovedAt: null,
+      residualLevel: null,
+      snapshot: null,
+    },
+    hazardId: null,
+    riskAssessmentId: null,
+    scope: [],
+    owner: null,
+    implementation: {
+      targetStartDate: null,
+      targetCompletionDate: null,
+      actualStartDate: null,
+      actualCompletionDate: null,
+      implementationMethod: "",
+      milestones: [],
+      dependencies: [],
+      resourceNotes: "",
+      evidenceRequirements: [],
+      progress: 0,
+      summary: "",
+      evidenceWaiverReason: null,
+    },
+    evidence: [],
+    verifications: [],
+    reviewSchedule: {
+      reviewRequired: false,
+      reviewFrequencyDays: null,
+      nextReviewDate: null,
+      lastReviewDate: null,
+      reviewBasis: "manual",
+      escalationPolicyRef: null,
+      noReviewReason: null,
+    },
+    competencyRequirements: [],
+    relatedEntities: [],
+    extensionData: {},
+    status: "planned",
+    latestEffectivenessResult: null,
+    nextReviewDate: null,
+    isOverdue: false,
+    verificationMethodRequirement: "Visual inspection",
+    version: 4,
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+function renderProgressSection(
+  overrides: Partial<{
+    control: RiskControl;
+    capabilities: RiskControlCapabilities;
+    startOpen: boolean;
+    progressOpen: boolean;
+    completeOpen: boolean;
+    onStart: () => void | Promise<void>;
+    onProgress: (values: unknown) => void | Promise<void>;
+    onComplete: (values: unknown) => void | Promise<void>;
+  }> = {},
+) {
+  const onStartOpenChange = vi.fn();
+  const onProgressOpenChange = vi.fn();
+  const onCompleteOpenChange = vi.fn();
+  const onStart = overrides.onStart ?? vi.fn();
+  const onProgress = overrides.onProgress ?? vi.fn();
+  const onComplete = overrides.onComplete ?? vi.fn();
+  render(
+    <ImplementationProgressSection
+      control={overrides.control ?? buildControl()}
+      capabilities={overrides.capabilities ?? IMPLEMENT_CAPABILITIES}
+      startOpen={overrides.startOpen ?? false}
+      onStartOpenChange={onStartOpenChange}
+      progressOpen={overrides.progressOpen ?? false}
+      onProgressOpenChange={onProgressOpenChange}
+      completeOpen={overrides.completeOpen ?? false}
+      onCompleteOpenChange={onCompleteOpenChange}
+      onStart={onStart}
+      onProgress={onProgress}
+      onComplete={onComplete}
+    />,
+  );
+  return {
+    onStartOpenChange,
+    onProgressOpenChange,
+    onCompleteOpenChange,
+    onStart,
+    onProgress,
+    onComplete,
+  };
+}
+
+describe("ImplementationProgressSection", () => {
+  it("shows the start button only when status is planned", () => {
+    renderProgressSection({ control: buildControl({ status: "planned" }) });
+    expect(
+      screen.getByRole("button", { name: /start implementation/i }),
+    ).toBeInTheDocument();
+
+    cleanup();
+
+    renderProgressSection({ control: buildControl({ status: "draft" }) });
+    expect(
+      screen.queryByRole("button", { name: /start implementation/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the progress and complete buttons only when status is in_implementation", () => {
+    renderProgressSection({
+      control: buildControl({ status: "in_implementation" }),
+    });
+    expect(
+      screen.getByRole("button", { name: /update progress/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /complete implementation/i }),
+    ).toBeInTheDocument();
+
+    cleanup();
+
+    renderProgressSection({ control: buildControl({ status: "planned" }) });
+    expect(
+      screen.queryByRole("button", { name: /update progress/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /complete implementation/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("requires the evidence waiver reason exactly when evidence is empty", async () => {
+    const user = userEvent.setup();
+    const { onComplete } = renderProgressSection({
+      control: buildControl({ status: "in_implementation", evidence: [] }),
+      completeOpen: true,
+    });
+
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).getByLabelText(/evidence waiver reason/i),
+    ).toBeInTheDocument();
+
+    await user.type(
+      within(dialog).getByLabelText(/completion summary/i),
+      "Guarding installed and verified in the field",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /complete implementation/i }),
+    );
+
+    expect(
+      within(dialog).getByText("Evidence waiver reason is required"),
+    ).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it("hides the evidence waiver reason field when evidence exists", () => {
+    const control = buildControl({
+      status: "in_implementation",
+      evidence: [
+        {
+          id: "evidence-1",
+          evidenceType: "photo",
+          externalReference: "ref-1",
+          title: "Guard installed photo",
+          description: "",
+          capturedAt: null,
+          capturedByUserId: null,
+          checksum: null,
+          metadata: {},
+        },
+      ],
+    });
+    renderProgressSection({ control, completeOpen: true });
+
+    const dialog = screen.getByRole("dialog");
+    expect(
+      within(dialog).queryByLabelText(/evidence waiver reason/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the incomplete-milestones checkbox only when a milestone is pending", () => {
+    const withPendingMilestone = buildControl({
+      status: "in_implementation",
+      implementation: {
+        ...buildControl().implementation,
+        milestones: [buildMilestone({ status: "pending" })],
+      },
+    });
+    renderProgressSection({ control: withPendingMilestone, completeOpen: true });
+    expect(
+      screen.getByRole("checkbox", { name: /allow incomplete milestones/i }),
+    ).toBeInTheDocument();
+
+    cleanup();
+
+    const withOnlyResolvedMilestones = buildControl({
+      status: "in_implementation",
+      implementation: {
+        ...buildControl().implementation,
+        milestones: [
+          buildMilestone({ id: "m1", status: "completed" }),
+          buildMilestone({ id: "m2", status: "cancelled" }),
+        ],
+      },
+    });
+    renderProgressSection({
+      control: withOnlyResolvedMilestones,
+      completeOpen: true,
+    });
+    expect(
+      screen.queryByRole("checkbox", { name: /allow incomplete milestones/i }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("progressFormSchema", () => {
+  it("rejects progress values outside 0-100", () => {
+    expect(
+      progressFormSchema.safeParse({ progress: 101, summary: "" }).success,
+    ).toBe(false);
+    expect(
+      progressFormSchema.safeParse({ progress: -1, summary: "" }).success,
+    ).toBe(false);
+    expect(
+      progressFormSchema.safeParse({ progress: 50, summary: "" }).success,
+    ).toBe(true);
+  });
+});
+
+describe("progressFormValuesToRequest", () => {
+  it("carries expected_version in the request body", () => {
+    const request = progressFormValuesToRequest(
+      { progress: 42, summary: "Halfway there" },
+      6,
+    );
+
+    expect(request).toEqual({
+      expected_version: 6,
+      progress: 42,
+      summary: "Halfway there",
+    });
+  });
+});
+
+describe("buildCompleteImplementationFormSchema", () => {
+  it("requires evidenceWaiverReason only when evidence is empty", () => {
+    const requiredSchema = buildCompleteImplementationFormSchema(true);
+    expect(
+      requiredSchema.safeParse({
+        summary: "Done",
+        evidenceWaiverReason: "",
+        allowIncompleteMilestones: false,
+      }).success,
+    ).toBe(false);
+
+    const optionalSchema = buildCompleteImplementationFormSchema(false);
+    expect(
+      optionalSchema.safeParse({
+        summary: "Done",
+        evidenceWaiverReason: "",
+        allowIncompleteMilestones: false,
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe("completeImplementationFormValuesToRequest", () => {
+  it("carries expected_version and includes the waiver reason only when evidence is empty", () => {
+    const withWaiver = completeImplementationFormValuesToRequest(
+      {
+        summary: "Guarding installed",
+        evidenceWaiverReason: "Photo evidence pending upload",
+        allowIncompleteMilestones: true,
+      },
+      9,
+      true,
+    );
+    expect(withWaiver).toEqual({
+      expected_version: 9,
+      summary: "Guarding installed",
+      evidence_waiver_reason: "Photo evidence pending upload",
+      allow_incomplete_milestones: true,
+    });
+
+    const withoutWaiver = completeImplementationFormValuesToRequest(
+      {
+        summary: "Guarding installed",
+        evidenceWaiverReason: "",
+        allowIncompleteMilestones: false,
+      },
+      9,
+      false,
+    );
+    expect(withoutWaiver).toEqual({
+      expected_version: 9,
+      summary: "Guarding installed",
+    });
   });
 });
