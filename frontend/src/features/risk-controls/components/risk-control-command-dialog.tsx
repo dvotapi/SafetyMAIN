@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 
 import {
   Alert,
@@ -17,6 +17,15 @@ import {
  * commands. Callers supply the body (`children`) — e.g. a single required
  * reason `TextArea` for reason-only commands — and own validation of that
  * body before invoking `onConfirm`.
+ *
+ * Focus restore: every caller opens this dialog from a plain `Button`
+ * click (setting external `open` state) rather than through Radix's
+ * `Dialog.Trigger`. Radix's own close-focus logic only ever restores
+ * focus to `Dialog.Trigger`'s ref — with no trigger registered, it would
+ * silently drop focus to `<body>` on close. We track the element that had
+ * focus when the dialog opened and restore it ourselves via
+ * `onCloseAutoFocus`, so keyboard and screen-reader users land back on the
+ * button that opened the dialog, not at the top of the document.
  */
 export function RiskControlCommandDialog({
   open,
@@ -43,9 +52,22 @@ export function RiskControlCommandDialog({
   loading?: boolean;
   confirmDisabled?: boolean;
 }) {
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      lastFocusedRef.current = document.activeElement as HTMLElement | null;
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          lastFocusedRef.current?.focus();
+        }}
+      >
         <DialogHeader
           title={title}
           description={`This action uses version ${version}.`}

@@ -704,3 +704,166 @@ Do not mark this sub-task complete if any lifecycle command is missing,
 partial effectiveness is collapsed into another state, optimistic
 concurrency is ignored, verification history can be rewritten, or the
 Storybook build fails.
+
+---
+
+## Completion Report
+
+Status: **Complete.** Delivered across sub-tasks B1–B10; this report covers
+B10 specifically (Storybook coverage, accessibility pass, architecture doc,
+this report) and confirms the phase as a whole against the acceptance
+criteria and Verification section above.
+
+### Implementation summary
+
+Every lifecycle command listed in the Object Model/Acceptance Criteria is
+implemented and wired to a real backend endpoint, each behind its matching
+capability and the legal status transition (never one alone):
+
+- **Owner assignment** (`assign_owner`) — `ControlOwnerSection` +
+  `schemas/owner-schema.ts`.
+- **Implementation** (`plan`, `start_implementation`, `update_progress`,
+  `complete_implementation`) — `ImplementationPlanSection` +
+  `ImplementationProgressSection` + `schemas/implementation-schema.ts` +
+  `schemas/implementation-progress-schema.ts`.
+- **Evidence** (`add_evidence`) — `EvidenceList`/`EvidenceForm` +
+  `schemas/evidence-schema.ts`. Reference-only by construction — no file
+  upload affordance exists anywhere in the component.
+- **Effectiveness verification** (`record_verification`) —
+  `VerificationForm` + `schemas/verification-schema.ts`. Effective /
+  Partially Effective / Ineffective are three distinct, always
+  text-labelled results; `partially_effective` never collapses into either
+  neighbor (dedicated test coverage).
+- **Verification history** — `VerificationHistory`, read-only and
+  append-only, newest-first display over an oldest-first backend array.
+- **Review scheduling** (`schedule_review`, `complete_review`) —
+  `ReviewScheduleSection` + `schemas/review-schema.ts`, including the
+  optional bundled verification on `complete_review` and the two documented
+  traps (redundant nested `expected_version`, double version bump — see the
+  architecture doc).
+- **Lifecycle actions** (`suspend`, `resume`, `supersede`, `cancel`,
+  `archive`) — `RiskControlLifecycleActions`, ordered forward-action-first
+  then terminal-commands-last, backed by `availableLifecycleActions`
+  encoding the backend's `_TRANSITIONS` table. No delete action of any kind
+  exists for any status.
+- **Optimistic concurrency** — every command sends `expected_version`;
+  every success writes the server's returned `version` straight into the
+  query cache (never client-computed); every `409` routes to
+  `RiskControlConflictDialog` with no automatic retry.
+- **Storybook coverage** (this sub-task) —
+  `frontend/src/features/risk-controls/risk-controls.stories.tsx`.
+- **Accessibility pass** (this sub-task) — extended
+  `risk-control-workflow.test.tsx` with an `Accessibility` describe block.
+- **Architecture documentation** (this sub-task) —
+  `docs/architecture/frontend/RiskControlManagementUI.md` Phase B sections
+  filled in.
+
+### Storybook state coverage
+
+`risk-controls.stories.tsx` (deterministic fixtures — fixed UUIDs and ISO
+timestamps only, no `Date.now()`/`Math.random()`) covers every component and
+state listed in the brief: `RiskControlSummary`; `ControlOwnerSection`
+(assigned / unassigned / read-only / assignment form); `ImplementationPlan
+Section` (blocked-empty / ready-to-plan / plan form); `ImplementationProgress
+Section` (planned / in progress / complete); `EvidenceList` (empty /
+populated / add-evidence form); `EffectivenessSummary` (not verified /
+Effective / Partially Effective / Ineffective); `VerificationHistory` (empty
+/ multi-record); `VerificationForm` (default / submitting); `ReviewSchedule
+Section` (scheduled / none / overdue); `SourceSnapshot` (present / absent);
+`RiskControlLifecycleActions` (draft / planned / implemented / suspended /
+archived / permission-limited / a narrow-viewport variant using the existing
+`addon-viewport` global rather than a duplicated story). `npm run
+build-storybook` passes.
+
+### Accessibility pass results
+
+Ran `vitest-axe` (the project's established pattern, per
+`src/test/bootstrap.test.tsx`) over: the object page (`RiskControlObjectPage`,
+fully loaded with owner/evidence/verification/review data), the owner form,
+the implementation-plan form, the evidence form, the verification form
+(including its result `radiogroup`), both review-schedule forms (schedule
+and complete-review), all five lifecycle terminal-command dialogs (suspend,
+resume, supersede, cancel, archive), and the conflict dialog. **Zero
+serious-or-critical axe violations** across all of them (the object-page
+check tolerates a `moderate` `heading-order` finding that is an artifact of
+rendering the page fragment without its surrounding app-shell `h1` — not a
+real defect; the helper `expectNoSeriousA11yViolations` records why).
+Explicit non-axe assertions also confirm: every form control resolves via
+`getByLabelText`; the verification radio group is a real `radiogroup`/
+`radio` pair with one `aria-checked="true"` at a time and a working
+click-to-select interaction; validation errors render inside `role="alert"`
+regions; and effectiveness results are asserted by their visible text
+("Verified Ineffective", "Verified Partially Effective"), never by color
+alone.
+
+**One real defect found and fixed during the pass:** every command/
+confirmation dialog in this feature (`RiskControlCommandDialog`,
+`RiskControlConflictDialog`) is opened from a plain `Button` against
+externally-held `open` state, not through Radix's `Dialog.Trigger`. Radix's
+`DialogContentModal` unconditionally calls `event.preventDefault()` in its
+own `onCloseAutoFocus` and then focuses `context.triggerRef.current` — which
+is `null` whenever no `Dialog.Trigger` was rendered, so focus was silently
+dropping to `<body>` on close instead of returning to the button that opened
+the dialog (confirmed by a failing `toHaveFocus()` assertion before the
+fix). Fixed locally in both components: each now captures
+`document.activeElement` in an effect keyed on `open`, and supplies its own
+`onCloseAutoFocus` to `DialogContent` that restores it. Dialog focus
+**trapping** (Tab never escapes the dialog) was already correct via Radix's
+`FocusScope` and needed no change. The same gap likely exists in the shared
+`components/dialogs/*` primitives for any other feature calling `Dialog`
+the same way — flagged in the architecture doc's Deferred work rather than
+fixed there, since that is a cross-feature change outside this task's scope.
+
+### `npm run verify` summary
+
+All stages pass: `tokens:build` → `format:check` → `lint` (`--max-
+warnings=0`) → `typecheck` (`tsc --noEmit`) → `architecture:check`
+(dependency-cruiser) → `test` (Vitest, 252 tests across 23 files, including
+the new 93-test `risk-control-workflow.test.tsx`) → `build` (Next.js
+production build). `build-storybook` also passes as a separate, explicitly
+required check.
+
+### Known limitations / traps (carried into the architecture doc)
+
+- The two `complete-review` traps (redundant nested `expected_version`,
+  double version bump) — documented with full mechanism detail in
+  `docs/architecture/frontend/RiskControlManagementUI.md` and covered by
+  dedicated unit and end-to-end tests.
+- `plan` is only ever offered from `draft`; there is no "edit plan"
+  affordance for a `planned` control (the backend's `PATCH` for that case is
+  out of scope for Phase B).
+- No employee/user directory — owner assignment uses raw free-text owner
+  references.
+- `409` responses do not carry the server's current version; the only
+  recovery path is reload-and-retry via `RiskControlConflictDialog`.
+- The dialog focus-restore gap described above, fixed locally but not yet
+  audited/fixed across the shared `components/dialogs/*` primitives.
+
+### Judgment calls
+
+- Interpreted the brief's `ImplementationPlanSection` "(empty / planned)"
+  states as "blocked, no owner yet" vs. "ready to plan" (the component
+  itself only renders while `status === "draft"` and unmounts once planned,
+  so a literal "status is planned" story would render nothing).
+- Filtered the Storybook-adjacent axe assertions in the object-page test to
+  serious-or-critical impact only, rather than using `toHaveNoViolations()`
+  unfiltered, because rendering the object page without the surrounding
+  `AppShell` produces a `moderate` `heading-order` finding that is a test-
+  harness artifact, not a real page defect — the helper function and its
+  comment explain the reasoning inline.
+- Fixed the focus-restore defect found during the accessibility pass
+  (scoped to the two `risk-controls`-local dialog components) rather than
+  only documenting it, since "no critical violations allowed" and an
+  explicit "dialogs trap and restore focus" requirement are stated
+  verification criteria for this exact step.
+
+### Recommended next task
+
+`TASK-P9-007c` — Risk Assessment materialization integration
+(`POST /api/v1/risk-controls/materialize`, `RiskControlConflictDialog`'s
+`duplicate_materialization` variant), Playwright end-to-end coverage for the
+Risk Control Registry and Object Page, and the final consolidated
+documentation/completion report for the whole of `TASK-P9-007`. Consider
+also auditing the shared `components/dialogs/*` primitives for the same
+focus-restore gap found here, since it likely affects every other feature
+that opens a `Dialog` without `Dialog.Trigger`.

@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 import {
   Alert,
   Button,
@@ -58,9 +60,22 @@ export function RiskControlConflictDialog({
   variant?: RiskControlConflictVariant;
 }) {
   const copy = VARIANT_COPY[variant];
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      lastFocusedRef.current = document.activeElement as HTMLElement | null;
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          lastFocusedRef.current?.focus();
+        }}
+      >
         <DialogHeader title={copy.title} description={copy.description} />
         <DialogBody>
           <Alert tone="warning" title="Version conflict">

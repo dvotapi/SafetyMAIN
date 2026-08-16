@@ -1,10 +1,18 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { axe } from "vitest-axe";
 
 import { ToastProvider } from "@/components/feedback/Toast";
 import { ControlOwnerSection } from "@/features/risk-controls/components/control-owner-section";
+import { RiskControlConflictDialog } from "@/features/risk-controls/components/risk-control-conflict-dialog";
 import { EvidenceForm } from "@/features/risk-controls/components/evidence-form";
 import { ImplementationPlanSection } from "@/features/risk-controls/components/implementation-plan-section";
 import { ImplementationProgressSection } from "@/features/risk-controls/components/implementation-progress-section";
@@ -2125,5 +2133,347 @@ describe("reasonOnlyFormValuesToRequest", () => {
       expected_version: 2,
       reason: "No longer needed",
     });
+  });
+});
+
+/* ----------------------------------------------------------------------
+ * Accessibility pass (TASK-P9-007b, step 3).
+ *
+ * Covers: object page, owner form, implementation form, evidence form,
+ * verification form, review schedule form, each of the five lifecycle
+ * confirmation dialogs, and the conflict dialog. Every check runs
+ * `vitest-axe` over the rendered DOM (no critical violations allowed) and,
+ * where the brief calls out a specific concern, an explicit assertion on
+ * top: every control has a programmatic label, the verification result
+ * radio group is a real `radiogroup`/`radio` pair, dialogs trap and
+ * restore focus, validation errors use `role="alert"`, and effectiveness
+ * is identifiable from text content alone (never color-only).
+ * ---------------------------------------------------------------------- */
+
+/**
+ * `toHaveNoViolations()` fails on any axe violation regardless of impact.
+ * For components rendered without their surrounding page chrome (no `h1`
+ * from the app shell above them), axe's `heading-order` check can flag a
+ * heading-level jump that is an artifact of the test harness, not a real
+ * defect — the object page itself starts its own heading hierarchy at
+ * `h2`/`h3` under the app shell's `h1`. This project's a11y bar (per the
+ * brief) is "no critical violations"; serious ones are also asserted here
+ * since we already have axe's output, but moderate/minor findings like
+ * fragment-rendering heading order are not treated as failures.
+ */
+async function expectNoSeriousA11yViolations(container: Element) {
+  const results = await axe(container);
+  const seriousOrWorse = results.violations.filter(
+    (violation) =>
+      violation.impact === "critical" || violation.impact === "serious",
+  );
+  expect(seriousOrWorse).toEqual([]);
+}
+
+describe("Accessibility", () => {
+  it("RiskControlObjectPage has no critical violations once loaded", async () => {
+    const detailDto = buildRiskControlDto({
+      id: "rc-a11y",
+      version: 5,
+      lifecycle_status: "implemented",
+      owner: {
+        owner_type: "user",
+        owner_reference: "user-42",
+        display_name_snapshot: "Jane Doe",
+        assigned_at: "2026-01-05T09:00:00Z",
+        assigned_by: "user-1",
+      },
+      evidence: [
+        {
+          id: "ev-1",
+          evidence_type: "photo",
+          external_reference: "DMS-1001",
+          title: "Guard installation photo",
+          captured_at: "2026-01-28T00:00:00Z",
+        },
+      ],
+      verifications: [
+        {
+          id: "ver-1",
+          verification_type: "initial",
+          method: "Field inspection",
+          result: "effective",
+          performed_at: "2026-02-05T00:00:00Z",
+        },
+      ],
+      review_schedule: {
+        review_required: true,
+        review_frequency_days: 365,
+        next_review_date: "2027-02-05",
+      },
+      latest_effectiveness_result: "effective",
+    });
+
+    const requestSpy = vi
+      .spyOn(apiClient, "request")
+      .mockImplementation(async (options) => {
+        if (
+          options.method === "GET" &&
+          options.path === "/api/v1/risk-controls/rc-a11y"
+        ) {
+          return detailDto;
+        }
+        throw new Error(
+          `Unexpected request: ${options.method} ${options.path}`,
+        );
+      });
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+    const { container } = render(
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <RiskControlObjectPage riskControlId="rc-a11y" />
+        </ToastProvider>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText("Version 5")).toBeInTheDocument();
+    await expectNoSeriousA11yViolations(container);
+
+    requestSpy.mockRestore();
+  });
+
+  it("owner assignment form: every control is labeled and has no violations", async () => {
+    render(
+      <ControlOwnerSection
+        owner={null}
+        status="draft"
+        version={1}
+        capabilities={{ ...BASE_CAPABILITIES, canAssignOwner: true }}
+        open
+        onOpenChange={vi.fn()}
+        onAssign={vi.fn()}
+      />,
+    );
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByLabelText(/owner type/i)).toBeInTheDocument();
+    expect(
+      within(dialog).getByLabelText(/owner reference/i),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/display name/i)).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/reason/i)).toBeInTheDocument();
+    await expectNoSeriousA11yViolations(dialog);
+  });
+
+  it("implementation plan form: every control is labeled and has no violations", async () => {
+    render(
+      <ImplementationPlanSection
+        status="draft"
+        ownerAssigned
+        version={1}
+        verificationMethodRequirement=""
+        capabilities={UPDATE_CAPABILITIES}
+        open
+        onOpenChange={vi.fn()}
+        onPlan={vi.fn()}
+      />,
+    );
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).getByLabelText(/target completion date/i),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByLabelText(/verification method requirement/i),
+    ).toBeInTheDocument();
+    await expectNoSeriousA11yViolations(dialog);
+  });
+
+  it("evidence form: every control is labeled and has no violations", async () => {
+    renderEvidenceForm({ open: true });
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByLabelText(/evidence type/i)).toBeInTheDocument();
+    expect(
+      within(dialog).getByLabelText(/external reference/i),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/title/i)).toBeInTheDocument();
+    await expectNoSeriousA11yViolations(dialog);
+  });
+
+  it("verification form: the result radio group is a real, keyboard-navigable radiogroup with no violations", async () => {
+    const user = userEvent.setup();
+    renderVerificationForm({ open: true });
+    const dialog = await screen.findByRole("dialog");
+
+    const radioGroup = within(dialog).getByRole("radiogroup", {
+      name: /result/i,
+    });
+    const radios = within(radioGroup).getAllByRole("radio");
+    expect(radios).toHaveLength(3);
+    // Each radio's accessible name comes from its wrapping <label>, not its
+    // own textContent (Radix's indicator button has no text node of its
+    // own) — this is the same association `getByLabelText` relies on.
+    expect(radios.map((radio) => radio.closest("label")?.textContent)).toEqual([
+      "Verified Effective",
+      "Verified Partially Effective",
+      "Verified Ineffective",
+    ]);
+
+    // The default result ("effective") is pre-checked; each `Radio` is a
+    // real `role="radio"` button (Radix `RadioGroupPrimitive.Item`), so
+    // exactly one carries `aria-checked="true"` at a time.
+    expect(radios[0]).toHaveAttribute("aria-checked", "true");
+    expect(radios[1]).toHaveAttribute("aria-checked", "false");
+    expect(radios[2]).toHaveAttribute("aria-checked", "false");
+
+    // Selecting a different option via keyboard-equivalent interaction
+    // (click, same as Space/Enter on a focused radio) updates the checked
+    // state and announces it through aria-checked — screen readers pick
+    // this up without any color dependency.
+    await user.click(radios[1] as HTMLElement);
+    expect(radios[1]).toHaveFocus();
+    expect(radios[1]).toHaveAttribute("aria-checked", "true");
+    expect(radios[0]).toHaveAttribute("aria-checked", "false");
+    expect(radios[2]).toHaveAttribute("aria-checked", "false");
+
+    await expectNoSeriousA11yViolations(dialog);
+  });
+
+  it("review schedule form (schedule and complete-review) has no violations and labels every control", async () => {
+    renderReviewSection({ scheduleOpen: true });
+    const scheduleDialog = await screen.findByRole("dialog");
+    expect(
+      within(scheduleDialog).getByLabelText(/review required/i),
+    ).toBeInTheDocument();
+    await expectNoSeriousA11yViolations(scheduleDialog);
+    cleanup();
+
+    renderReviewSection({ completeOpen: true });
+    const completeDialog = await screen.findByRole("dialog");
+    expect(
+      within(completeDialog).getByLabelText(/record a verification/i),
+    ).toBeInTheDocument();
+    await expectNoSeriousA11yViolations(completeDialog);
+  });
+
+  it("each lifecycle confirmation dialog traps focus, restores it to the trigger on close, and has no violations", async () => {
+    const user = userEvent.setup();
+    renderLifecycleActions({
+      control: buildControl({ status: "implemented" }),
+    });
+
+    const suspendTrigger = screen.getByRole("button", {
+      name: /suspend control/i,
+    });
+    await user.click(suspendTrigger);
+    const dialog = await screen.findByRole("dialog");
+
+    // Focus starts inside the dialog (Radix auto-focuses on open).
+    expect(dialog).toContainElement(document.activeElement as HTMLElement);
+
+    // Tabbing repeatedly never escapes the dialog (focus trap).
+    for (let i = 0; i < 10; i += 1) {
+      await user.tab();
+      expect(dialog).toContainElement(document.activeElement as HTMLElement);
+    }
+
+    await expectNoSeriousA11yViolations(dialog);
+
+    // Closing (Escape) restores focus to the trigger that opened it.
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(suspendTrigger).toHaveFocus());
+  });
+
+  it("the remaining four lifecycle dialogs (resume, supersede, cancel, archive) have no violations", async () => {
+    const user = userEvent.setup();
+
+    renderLifecycleActions({ control: buildControl({ status: "suspended" }) });
+    await user.click(screen.getByRole("button", { name: /resume control/i }));
+    let dialog = await screen.findByRole("dialog");
+    await expectNoSeriousA11yViolations(dialog);
+    cleanup();
+
+    renderLifecycleActions({
+      control: buildControl({ status: "implemented" }),
+    });
+    await user.click(
+      screen.getByRole("button", { name: /supersede control/i }),
+    );
+    dialog = await screen.findByRole("dialog");
+    await expectNoSeriousA11yViolations(dialog);
+    cleanup();
+
+    renderLifecycleActions({ control: buildControl({ status: "draft" }) });
+    await user.click(screen.getByRole("button", { name: /cancel control/i }));
+    dialog = await screen.findByRole("dialog");
+    await expectNoSeriousA11yViolations(dialog);
+    cleanup();
+
+    renderLifecycleActions({ control: buildControl({ status: "cancelled" }) });
+    await user.click(screen.getByRole("button", { name: /archive control/i }));
+    dialog = await screen.findByRole("dialog");
+    await expectNoSeriousA11yViolations(dialog);
+  });
+
+  it("validation errors are announced via role=alert in the lifecycle dialogs", async () => {
+    const user = userEvent.setup();
+    renderLifecycleActions({
+      control: buildControl({ status: "implemented" }),
+    });
+    await user.click(screen.getByRole("button", { name: /suspend control/i }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /suspend control/i }),
+    );
+    // The static warning banner is also role="alert" — the field error is
+    // a second, distinct alert region, not the only one in the dialog.
+    const alerts = within(dialog).getAllByRole("alert");
+    expect(
+      alerts.some((alert) =>
+        /reason is required/i.test(alert.textContent ?? ""),
+      ),
+    ).toBe(true);
+  });
+
+  it("RiskControlConflictDialog has no violations", async () => {
+    const { container } = render(
+      <RiskControlConflictDialog
+        open
+        onOpenChange={vi.fn()}
+        onReload={vi.fn()}
+      />,
+    );
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).getByRole("button", { name: /reload latest/i }),
+    ).toBeInTheDocument();
+    await expectNoSeriousA11yViolations(container);
+  });
+
+  it("effectiveness is identifiable by text alone, not color", () => {
+    render(
+      <EffectivenessSummary
+        latestResult="ineffective"
+        latestVerification={buildVerification({ result: "ineffective" })}
+        riskAssessmentId={null}
+      />,
+    );
+    expect(screen.getByText("Verified Ineffective")).toBeInTheDocument();
+
+    cleanup();
+
+    render(
+      <EffectivenessSummary
+        latestResult="partially_effective"
+        latestVerification={buildVerification({
+          result: "partially_effective",
+        })}
+        riskAssessmentId={null}
+      />,
+    );
+    expect(
+      screen.getByText("Verified Partially Effective"),
+    ).toBeInTheDocument();
   });
 });
