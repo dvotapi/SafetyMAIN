@@ -252,3 +252,65 @@ describe("buildImplementationFormSchema milestone validation", () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe("buildImplementationFormSchema verificationMethodRequirement conditional validation", () => {
+  const baseValues = {
+    targetStartDate: "",
+    targetCompletionDate: "2026-09-01",
+    implementationMethod: "",
+    resourceNotes: "",
+    dependencies: [],
+    evidenceRequirements: [],
+    milestones: [],
+  };
+
+  it("allows a blank field when the control already has an existing value", () => {
+    const schema = buildImplementationFormSchema(true);
+    const result = schema.safeParse({
+      ...baseValues,
+      verificationMethodRequirement: "",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("omits verification_method_requirement from the request when left blank with an existing value", () => {
+    const request = planFormValuesToRequest(
+      {
+        ...baseValues,
+        verificationMethodRequirement: "",
+      },
+      3,
+    );
+
+    expect(request).not.toHaveProperty("verification_method_requirement");
+  });
+
+  it("rejects a blank field when the control has no existing value", () => {
+    const schema = buildImplementationFormSchema(false);
+    const result = schema.safeParse({
+      ...baseValues,
+      verificationMethodRequirement: "",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((candidate) =>
+        candidate.path.includes("verificationMethodRequirement"),
+      );
+      expect(issue?.message).toBe(
+        "Verification method requirement is required",
+      );
+    }
+  });
+
+  it("accepts a non-blank field when the control has no existing value", () => {
+    const schema = buildImplementationFormSchema(false);
+    const result = schema.safeParse({
+      ...baseValues,
+      verificationMethodRequirement: "Visual inspection",
+    });
+
+    expect(result.success).toBe(true);
+  });
+});
