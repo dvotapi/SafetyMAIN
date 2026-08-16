@@ -18,8 +18,10 @@ import {
   useAddRiskControlEvidenceMutation,
   useAssignRiskControlOwnerMutation,
   useCompleteRiskControlImplementationMutation,
+  useCompleteRiskControlReviewMutation,
   usePlanRiskControlMutation,
   useRecordRiskControlVerificationMutation,
+  useScheduleRiskControlReviewMutation,
   useStartRiskControlImplementationMutation,
   useUpdateRiskControlProgressMutation,
 } from "@/features/risk-controls/api/risk-control-mutations";
@@ -37,6 +39,7 @@ import { ImplementationProgressSection } from "@/features/risk-controls/componen
 import { ImplementationSummary } from "@/features/risk-controls/components/implementation-summary";
 import { RiskControlActivity } from "@/features/risk-controls/components/risk-control-activity";
 import { RiskControlConflictDialog } from "@/features/risk-controls/components/risk-control-conflict-dialog";
+import { ReviewScheduleSection } from "@/features/risk-controls/components/review-schedule-section";
 import { RiskControlRelationships } from "@/features/risk-controls/components/risk-control-relationships";
 import {
   RiskControlProperties,
@@ -55,6 +58,10 @@ import {
 } from "@/features/risk-controls/schemas/implementation-progress-schema";
 import { planFormValuesToRequest } from "@/features/risk-controls/schemas/implementation-schema";
 import { ownerFormValuesToRequest } from "@/features/risk-controls/schemas/owner-schema";
+import {
+  completeReviewFormValuesToRequest,
+  reviewScheduleFormValuesToRequest,
+} from "@/features/risk-controls/schemas/review-schema";
 import { verificationFormValuesToRequest } from "@/features/risk-controls/schemas/verification-schema";
 import {
   effectivenessLabel,
@@ -101,6 +108,10 @@ export function RiskControlObjectPage({
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [evidenceDialogOpen, setEvidenceDialogOpen] = useState(false);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [scheduleReviewDialogOpen, setScheduleReviewDialogOpen] =
+    useState(false);
+  const [completeReviewDialogOpen, setCompleteReviewDialogOpen] =
+    useState(false);
 
   const assignOwnerMutation = useAssignRiskControlOwnerMutation(riskControlId);
   const addEvidenceMutation = useAddRiskControlEvidenceMutation(riskControlId);
@@ -113,6 +124,10 @@ export function RiskControlObjectPage({
     useCompleteRiskControlImplementationMutation(riskControlId);
   const recordVerificationMutation =
     useRecordRiskControlVerificationMutation(riskControlId);
+  const scheduleReviewMutation =
+    useScheduleRiskControlReviewMutation(riskControlId);
+  const completeReviewMutation =
+    useCompleteRiskControlReviewMutation(riskControlId);
   const {
     runCommand,
     busyAction,
@@ -313,6 +328,47 @@ export function RiskControlObjectPage({
             latestResult={control.latestEffectivenessResult}
             latestVerification={latest}
             riskAssessmentId={control.riskAssessmentId}
+          />
+          <ReviewScheduleSection
+            reviewSchedule={control.reviewSchedule}
+            status={control.status}
+            version={control.version}
+            isOverdue={control.isOverdue}
+            capabilities={capabilities}
+            hasExistingEvidence={control.evidence.length > 0}
+            scheduleOpen={scheduleReviewDialogOpen}
+            onScheduleOpenChange={setScheduleReviewDialogOpen}
+            completeOpen={completeReviewDialogOpen}
+            onCompleteOpenChange={setCompleteReviewDialogOpen}
+            scheduleLoading={busyAction === "schedule_review"}
+            completeLoading={busyAction === "complete_review"}
+            errorMessage={commandError}
+            onSchedule={async (values) => {
+              const succeeded = await runCommand(
+                "schedule_review",
+                () =>
+                  scheduleReviewMutation.mutateAsync(
+                    reviewScheduleFormValuesToRequest(values, control.version),
+                  ),
+                "Review scheduled",
+              );
+              if (succeeded) {
+                setScheduleReviewDialogOpen(false);
+              }
+            }}
+            onComplete={async (values) => {
+              const succeeded = await runCommand(
+                "complete_review",
+                () =>
+                  completeReviewMutation.mutateAsync(
+                    completeReviewFormValuesToRequest(values, control.version),
+                  ),
+                "Review completed",
+              );
+              if (succeeded) {
+                setCompleteReviewDialogOpen(false);
+              }
+            }}
           />
         </div>
       ) : null}

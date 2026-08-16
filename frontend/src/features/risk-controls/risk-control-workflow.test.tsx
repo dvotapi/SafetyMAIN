@@ -7,8 +7,10 @@ import { EvidenceForm } from "@/features/risk-controls/components/evidence-form"
 import { ImplementationPlanSection } from "@/features/risk-controls/components/implementation-plan-section";
 import { ImplementationProgressSection } from "@/features/risk-controls/components/implementation-progress-section";
 import { EffectivenessSummary } from "@/features/risk-controls/components/effectiveness-summary";
+import { ReviewScheduleSection } from "@/features/risk-controls/components/review-schedule-section";
 import { VerificationForm } from "@/features/risk-controls/components/verification-form";
 import { VerificationHistory } from "@/features/risk-controls/components/verification-history";
+import { completeRiskControlReview } from "@/features/risk-controls/api/risk-control-commands";
 import {
   buildEvidenceFormSchema,
   evidenceFormValuesToRequest,
@@ -28,12 +30,23 @@ import {
   planFormValuesToRequest,
 } from "@/features/risk-controls/schemas/implementation-schema";
 import { ownerFormValuesToRequest } from "@/features/risk-controls/schemas/owner-schema";
+import {
+  DEFAULT_COMPLETE_REVIEW_FORM_VALUES,
+  buildCompleteReviewFormSchema,
+  completeReviewFormValuesToRequest,
+  reviewScheduleFormSchema,
+  reviewScheduleFormValuesToRequest,
+  type CompleteReviewFormValues,
+} from "@/features/risk-controls/schemas/review-schema";
+import type { RiskControlDto } from "@/features/risk-controls/types/risk-control-dto";
 import type {
   RiskControl,
   RiskControlCapabilities,
   RiskControlMilestone,
+  RiskControlReviewSchedule,
   RiskControlVerification,
 } from "@/features/risk-controls/types/risk-control-types";
+import { apiClient } from "@/services/api/client";
 
 afterEach(() => {
   cleanup();
@@ -1227,5 +1240,450 @@ describe("VerificationHistory is append-only", () => {
       screen.queryAllByRole("link", { name: /edit|delete|remove/i }),
     ).toHaveLength(0);
     expect(screen.getAllByText("Latest")).toHaveLength(1);
+  });
+});
+
+/* ----------------------------------------------------------------------
+ * Task B8: review scheduling, review completion, overdue presentation.
+ * ---------------------------------------------------------------------- */
+
+const REVIEW_CAPABILITIES: RiskControlCapabilities = {
+  ...BASE_CAPABILITIES,
+  canReview: true,
+};
+
+function buildReviewSchedule(
+  overrides: Partial<RiskControlReviewSchedule> = {},
+): RiskControlReviewSchedule {
+  return {
+    reviewRequired: true,
+    reviewFrequencyDays: 365,
+    nextReviewDate: "2026-09-01T00:00:00Z",
+    lastReviewDate: null,
+    reviewBasis: "fixed_interval",
+    escalationPolicyRef: null,
+    noReviewReason: null,
+    ...overrides,
+  };
+}
+
+function renderReviewSection(
+  overrides: Partial<{
+    capabilities: RiskControlCapabilities;
+    status: string;
+    reviewSchedule: RiskControlReviewSchedule;
+    isOverdue: boolean;
+    scheduleOpen: boolean;
+    completeOpen: boolean;
+    onSchedule: (values: unknown) => void | Promise<void>;
+    onComplete: (values: unknown) => void | Promise<void>;
+  }> = {},
+) {
+  const onScheduleOpenChange = vi.fn();
+  const onCompleteOpenChange = vi.fn();
+  const onSchedule = overrides.onSchedule ?? vi.fn();
+  const onComplete = overrides.onComplete ?? vi.fn();
+  render(
+    <ReviewScheduleSection
+      reviewSchedule={overrides.reviewSchedule ?? buildReviewSchedule()}
+      status={overrides.status ?? "implemented"}
+      version={5}
+      isOverdue={overrides.isOverdue ?? false}
+      capabilities={overrides.capabilities ?? REVIEW_CAPABILITIES}
+      hasExistingEvidence
+      scheduleOpen={overrides.scheduleOpen ?? false}
+      onScheduleOpenChange={onScheduleOpenChange}
+      completeOpen={overrides.completeOpen ?? false}
+      onCompleteOpenChange={onCompleteOpenChange}
+      onSchedule={onSchedule}
+      onComplete={onComplete}
+    />,
+  );
+  return {
+    onScheduleOpenChange,
+    onCompleteOpenChange,
+    onSchedule,
+    onComplete,
+  };
+}
+
+describe("ReviewScheduleSection availability", () => {
+  it("does not render Schedule review without risk_control:review", () => {
+    renderReviewSection({
+      capabilities: { ...REVIEW_CAPABILITIES, canReview: false },
+    });
+
+    expect(
+      screen.queryByRole("button", { name: /schedule review/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not render Schedule review when status is terminal-inactive", () => {
+    renderReviewSection({ status: "archived" });
+
+    expect(
+      screen.queryByRole("button", { name: /schedule review/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders Schedule review when permitted and status is not terminal-inactive", () => {
+    renderReviewSection({ status: "implemented" });
+
+    expect(
+      screen.getByRole("button", { name: /schedule review/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not render Complete review when review is not required", () => {
+    renderReviewSection({
+      reviewSchedule: buildReviewSchedule({ reviewRequired: false }),
+    });
+
+    expect(
+      screen.queryByRole("button", { name: /complete review/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not render Complete review when there is no next review date", () => {
+    renderReviewSection({
+      reviewSchedule: buildReviewSchedule({ nextReviewDate: null }),
+    });
+
+    expect(
+      screen.queryByRole("button", { name: /complete review/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders Complete review when permitted, review is required, and a next review date exists", () => {
+    renderReviewSection();
+
+    expect(
+      screen.getByRole("button", { name: /complete review/i }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("ReviewScheduleSection overdue presentation keys off isOverdue only", () => {
+  it("renders the overdue banner with the exact copy when isOverdue is true", () => {
+    renderReviewSection({ isOverdue: true });
+
+    expect(screen.getByText("Review overdue")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The scheduled review date has passed. Complete the review to bring this control back into compliance.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("renders no overdue indicator when isOverdue is false, even with a past next review date", () => {
+    renderReviewSection({
+      isOverdue: false,
+      reviewSchedule: buildReviewSchedule({
+        // Past date, but the control is e.g. suspended — the domain never
+        // marks a suspended control overdue, and the frontend must not
+        // second-guess that by comparing dates itself.
+        nextReviewDate: "2020-01-01T00:00:00Z",
+      }),
+    });
+
+    expect(screen.queryByText("Review overdue")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "The scheduled review date has passed. Complete the review to bring this control back into compliance.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("reviewScheduleFormSchema", () => {
+  const base = {
+    reviewRequired: true,
+    reviewFrequencyDays: 365,
+    nextReviewDate: "",
+    reviewBasis: "fixed_interval" as const,
+    escalationPolicyRef: "",
+    noReviewReason: "",
+  };
+
+  it("requires noReviewReason when reviewRequired is false", () => {
+    expect(
+      reviewScheduleFormSchema.safeParse({
+        ...base,
+        reviewRequired: false,
+        noReviewReason: "",
+      }).success,
+    ).toBe(false);
+
+    expect(
+      reviewScheduleFormSchema.safeParse({
+        ...base,
+        reviewRequired: false,
+        noReviewReason: "Control line retired next quarter",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("requires reviewFrequencyDays when reviewRequired is true and nextReviewDate is empty", () => {
+    expect(
+      reviewScheduleFormSchema.safeParse({
+        ...base,
+        reviewFrequencyDays: null,
+        nextReviewDate: "",
+      }).success,
+    ).toBe(false);
+
+    expect(
+      reviewScheduleFormSchema.safeParse({
+        ...base,
+        reviewFrequencyDays: null,
+        nextReviewDate: "2026-09-01",
+      }).success,
+    ).toBe(true);
+
+    expect(
+      reviewScheduleFormSchema.safeParse({
+        ...base,
+        reviewFrequencyDays: 90,
+        nextReviewDate: "",
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe("reviewScheduleFormValuesToRequest", () => {
+  it("carries expected_version and builds the nested schedule body", () => {
+    const request = reviewScheduleFormValuesToRequest(
+      {
+        reviewRequired: true,
+        reviewFrequencyDays: 180,
+        nextReviewDate: "",
+        reviewBasis: "risk_based",
+        escalationPolicyRef: "  ESC-1  ",
+        noReviewReason: "",
+      },
+      5,
+    );
+
+    expect(request).toEqual({
+      expected_version: 5,
+      schedule: {
+        review_required: true,
+        review_frequency_days: 180,
+        next_review_date: null,
+        review_basis: "risk_based",
+        escalation_policy_ref: "ESC-1",
+        no_review_reason: null,
+      },
+    });
+  });
+
+  it("sends no_review_reason and null frequency when review is not required", () => {
+    const request = reviewScheduleFormValuesToRequest(
+      {
+        reviewRequired: false,
+        reviewFrequencyDays: 180,
+        nextReviewDate: "",
+        reviewBasis: "manual",
+        escalationPolicyRef: "",
+        noReviewReason: "Control line retired next quarter",
+      },
+      5,
+    );
+
+    expect(request.schedule.review_required).toBe(false);
+    expect(request.schedule.review_frequency_days).toBeNull();
+    expect(request.schedule.no_review_reason).toBe(
+      "Control line retired next quarter",
+    );
+  });
+});
+
+describe("buildCompleteReviewFormSchema", () => {
+  const options = {
+    reviewRequired: true,
+    noReviewReason: null,
+    hasExistingEvidence: false,
+  };
+
+  it("never validates the nested verification when includeVerification is false", () => {
+    const values: CompleteReviewFormValues = {
+      ...DEFAULT_COMPLETE_REVIEW_FORM_VALUES,
+      includeVerification: false,
+    };
+
+    expect(
+      buildCompleteReviewFormSchema(options).safeParse(values).success,
+    ).toBe(true);
+  });
+
+  it("applies the same cross-field rules as the standalone verification form when includeVerification is true", () => {
+    const values: CompleteReviewFormValues = {
+      nextReviewDate: "",
+      includeVerification: true,
+      verification: {
+        verificationType: "scheduled_review",
+        method: "Field inspection",
+        criteria: "",
+        result: "ineffective",
+        rating: "",
+        findings: "",
+        // hasExistingEvidence is false above, so an empty evidenceRefs
+        // must fail — same rule as buildVerificationFormSchema.
+        evidenceRefs: [],
+        nextAction: "",
+        nextReviewDate: "",
+      },
+    };
+
+    const result = buildCompleteReviewFormSchema(options).safeParse(values);
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a valid nested verification when includeVerification is true", () => {
+    const values: CompleteReviewFormValues = {
+      nextReviewDate: "",
+      includeVerification: true,
+      verification: {
+        verificationType: "scheduled_review",
+        method: "Field inspection",
+        criteria: "",
+        result: "ineffective",
+        rating: "",
+        findings: "",
+        evidenceRefs: ["EV-1"],
+        nextAction: "",
+        nextReviewDate: "",
+      },
+    };
+
+    expect(
+      buildCompleteReviewFormSchema(options).safeParse(values).success,
+    ).toBe(true);
+  });
+});
+
+describe("completeReviewFormValuesToRequest", () => {
+  it("omits verification entirely when includeVerification is false", () => {
+    const request = completeReviewFormValuesToRequest(
+      {
+        nextReviewDate: "2026-09-01",
+        includeVerification: false,
+        verification: {
+          verificationType: "initial",
+          method: "",
+          criteria: "",
+          result: "effective",
+          rating: "",
+          findings: "",
+          evidenceRefs: [],
+          nextAction: "",
+          nextReviewDate: "",
+        },
+      },
+      5,
+    );
+
+    expect(request).toEqual({
+      expected_version: 5,
+      next_review_date: "2026-09-01T00:00:00Z",
+    });
+    expect(request).not.toHaveProperty("verification");
+  });
+
+  it("TRAP 1: sets the nested verification.expected_version to the control's current version, the same value as the top-level expected_version — never a separately computed value", () => {
+    const request = completeReviewFormValuesToRequest(
+      {
+        nextReviewDate: "",
+        includeVerification: true,
+        verification: {
+          verificationType: "scheduled_review",
+          method: "Field inspection",
+          criteria: "",
+          result: "effective",
+          rating: "",
+          findings: "",
+          evidenceRefs: ["EV-1"],
+          nextAction: "",
+          nextReviewDate: "2026-09-01",
+        },
+      },
+      5,
+    );
+
+    expect(request.expected_version).toBe(5);
+    expect(request.verification?.expected_version).toBe(5);
+    expect(request.verification?.expected_version).toBe(
+      request.expected_version,
+    );
+  });
+});
+
+function buildRiskControlDto(
+  overrides: Partial<RiskControlDto> = {},
+): RiskControlDto {
+  return {
+    id: "rc-1",
+    organization_id: "org-1",
+    code: "RC-1",
+    title: "Conveyor guard rail",
+    description: "Fixed guard on the conveyor pinch point",
+    hierarchy_level: "engineering",
+    control_nature: "preventive",
+    source: { source_type: "manual" },
+    hazard_id: null,
+    risk_assessment_id: null,
+    scope: [],
+    owner: null,
+    implementation: {},
+    evidence: [],
+    verifications: [],
+    review_schedule: { review_required: true, review_frequency_days: 365 },
+    competency_requirements: [],
+    related_entities: [],
+    extension_data: {},
+    lifecycle_status: "implemented",
+    latest_effectiveness_result: null,
+    next_review_date: null,
+    is_overdue: false,
+    verification_method_requirement: "",
+    version: 1,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+describe("completeRiskControlReview version trap", () => {
+  it("TRAP 2: a control at version 5 completing a review with a verification, receiving version 7 in the response, leaves the UI showing version 7 — never expected_version + 1", async () => {
+    const responseDto = buildRiskControlDto({ version: 7 });
+    const requestSpy = vi
+      .spyOn(apiClient, "request")
+      .mockResolvedValue(responseDto);
+
+    const body = {
+      expected_version: 5,
+      verification: {
+        expected_version: 5,
+        method: "Field inspection",
+        result: "effective" as const,
+        evidence_refs: ["EV-1"],
+        next_review_date: "2026-09-01T00:00:00Z",
+      },
+    };
+
+    const result = await completeRiskControlReview("rc-1", body);
+
+    expect(requestSpy).toHaveBeenCalledWith({
+      method: "POST",
+      path: "/api/v1/risk-controls/rc-1/complete-review",
+      body,
+    });
+    // The response carries the double-bumped version (5 -> 6 for the
+    // review completion, 6 -> 7 for the applied verification). The
+    // mapped result must reflect that, never a client-computed 6.
+    expect(result.version).toBe(7);
+    expect(result.version).not.toBe(body.expected_version + 1);
+
+    requestSpy.mockRestore();
   });
 });
