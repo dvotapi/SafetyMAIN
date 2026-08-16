@@ -344,3 +344,15 @@ python -m pytest && python -m ruff check .
 Do not mark this sub-task — or the umbrella TASK-P9-007 — complete if
 materialization is incomplete, architecture guardrails fail, or any E2E
 test fails.
+
+---
+
+## Completion Report
+
+Status: **Complete.** Delivered per the acceptance criteria and
+Verification section above (materialization workflow, deferred-work and
+documentation cleanup, Playwright E2E coverage). This sub-task's work is
+folded into the umbrella completion report — see `TASK-P9-007.md`
+§ Completion Report for the consolidated implementation summary,
+verification results, and commit range covering `TASK-P9-007a`,
+`TASK-P9-007b`, and `TASK-P9-007c` together.

@@ -579,7 +579,7 @@ archived / permission-limited / a narrow-viewport variant using the shared
 
 ## Browser end-to-end tests
 
-`frontend/e2e/risk-controls.spec.ts` — 20 tests, run against a real `next
+`frontend/e2e/risk-controls.spec.ts` — 19 tests, run against a real `next
 start` server with the backend replaced by Playwright route interception
 (`page.route`), the same pattern `hazards.spec.ts` and `risk-assessments.
 spec.ts` already use (no live FastAPI backend is required to run
@@ -608,10 +608,10 @@ spec.ts` already use (no live FastAPI backend is required to run
   status; archive leaves the control readable by direct link; cancel moves
   the control to `cancelled`; supersede moves the control to `superseded`.
 
-All 20 tests pass alongside the pre-existing `auth.spec.ts`, `hazards.
-spec.ts`, `risk-assessments.spec.ts`, and `smoke.spec.ts` (34 total across
-`npm run test:e2e`), confirming no regression in authentication, Hazard, or
-Risk Assessment E2E coverage.
+All 19 tests pass alongside the pre-existing `auth.spec.ts`, `hazards.
+spec.ts`, `risk-assessments.spec.ts` (6 tests), and `smoke.spec.ts` (34 total
+across `npm run test:e2e`), confirming no regression in authentication,
+Hazard, or Risk Assessment E2E coverage.
 
 ## Known limitations
 
@@ -668,7 +668,8 @@ Per the umbrella specification's §52 deferred-work list:
 - Organization switching.
 - Offline mode.
 - Bulk Risk Control editing.
-- Bulk evidence upload.
+- Bulk evidence upload (a distinct §52 item from bulk Risk Control editing
+  above).
 - Saved registry views backed by persistence.
 - Advanced analytics.
 - AI control recommendations.

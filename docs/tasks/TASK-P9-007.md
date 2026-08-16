@@ -2912,11 +2912,11 @@ and all remain green — no regression.
 
 ### E2E test count
 
-**34 Playwright tests pass** (`npm run test:e2e`), of which **20 are Risk
+**34 Playwright tests pass** (`npm run test:e2e`), of which **19 are Risk
 Control-specific** (`e2e/risk-controls.spec.ts`: 1 main-workflow, 3
 effectiveness-result, 11 negative-scenario, 4 terminal-command). The
-remaining 14 are the pre-existing `auth.spec.ts` (4), `hazards.spec.ts`
-(4), `risk-assessments.spec.ts` (5), and `smoke.spec.ts` (1) — all pass
+remaining 15 are the pre-existing `auth.spec.ts` (4), `hazards.spec.ts`
+(4), `risk-assessments.spec.ts` (6), and `smoke.spec.ts` (1) — all pass
 unchanged, confirming no regression in authentication, Hazard, or Risk
 Assessment E2E coverage.
 
@@ -2984,7 +2984,8 @@ Per §52 of this specification, explicitly deferred: dedicated
 document management, Inspection UI, Finding UI, Corrective Action UI,
 Incident UI, Employee Management UI, Competency Management UI, Training UI,
 Knowledge UI, organization switching, offline mode, bulk Risk Control
-editing, bulk evidence upload, saved registry views backed by persistence,
+editing, bulk evidence upload (listed separately from bulk Risk Control
+editing in §52 above), saved registry views backed by persistence,
 advanced analytics, AI control recommendations, AI verification decisions,
 automatic residual-risk mutation, real-time collaborative editing,
 websocket updates. Additionally deferred as a carry-over from Phase B: the
@@ -3016,7 +3017,7 @@ Frontend
                                       files, production build)
   npm run architecture:check  PASS  (0 violations, 349 modules, 1247 deps)
   npm run build-storybook     PASS
-  npm run test:e2e            PASS  (34/34, incl. 20 risk-controls)
+  npm run test:e2e            PASS  (34/34, incl. 19 risk-controls)
 
 Backend
   pytest -k risk_control -v          35 passed, 11 skipped (DB-marked)
