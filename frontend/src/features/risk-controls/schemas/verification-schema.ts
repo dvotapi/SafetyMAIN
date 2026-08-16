@@ -34,14 +34,6 @@ export type VerificationFormValues = z.infer<
   typeof baseVerificationFormSchema
 >;
 
-/**
- * Exposes the unvalidated field shape (no cross-field `.refine`s) so
- * `review-schema.ts` can embed it as a nested `verification` object inside
- * the complete-review form and layer the same cross-field rules on top via
- * `buildVerificationFormSchema` — reused rather than re-implemented.
- */
-export const verificationFieldsSchema = baseVerificationFormSchema;
-
 export const DEFAULT_VERIFICATION_FORM_VALUES: VerificationFormValues = {
   verificationType: "initial",
   method: "",

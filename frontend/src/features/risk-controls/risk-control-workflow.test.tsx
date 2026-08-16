@@ -1,7 +1,9 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { ToastProvider } from "@/components/feedback/Toast";
 import { ControlOwnerSection } from "@/features/risk-controls/components/control-owner-section";
 import { EvidenceForm } from "@/features/risk-controls/components/evidence-form";
 import { ImplementationPlanSection } from "@/features/risk-controls/components/implementation-plan-section";
@@ -29,6 +31,7 @@ import {
   buildImplementationFormSchema,
   planFormValuesToRequest,
 } from "@/features/risk-controls/schemas/implementation-schema";
+import { RiskControlObjectPage } from "@/features/risk-controls/pages/risk-control-object-page";
 import { ownerFormValuesToRequest } from "@/features/risk-controls/schemas/owner-schema";
 import {
   DEFAULT_COMPLETE_REVIEW_FORM_VALUES,
@@ -47,6 +50,19 @@ import type {
   RiskControlVerification,
 } from "@/features/risk-controls/types/risk-control-types";
 import { apiClient } from "@/services/api/client";
+
+// Used only by the RiskControlObjectPage render test below — grants every
+// permission so capability gating never hides the Complete review button,
+// and pins a stable organizationId so the query and mutation hooks (which
+// both key their cache entries off it) stay in sync.
+vi.mock("@/hooks/auth", () => ({
+  useAuth: () => ({ hasPermission: () => true }),
+  useOrganization: () => ({
+    organizationId: "org-1",
+    organizationName: "Org",
+    membership: null,
+  }),
+}));
 
 afterEach(() => {
   cleanup();
@@ -1683,6 +1699,77 @@ describe("completeRiskControlReview version trap", () => {
     // mapped result must reflect that, never a client-computed 6.
     expect(result.version).toBe(7);
     expect(result.version).not.toBe(body.expected_version + 1);
+
+    requestSpy.mockRestore();
+  });
+});
+
+describe("RiskControlObjectPage renders the version the server returns (TRAP 2, end to end)", () => {
+  it("shows Version 7 after completing a review with a verification that the server double-bumps, never a client-computed 6", async () => {
+    const user = userEvent.setup();
+    const detailDto = buildRiskControlDto({
+      version: 5,
+      lifecycle_status: "implemented",
+      review_schedule: {
+        review_required: true,
+        review_frequency_days: 365,
+        next_review_date: "2026-09-01T00:00:00Z",
+      },
+    });
+    const completedDto = buildRiskControlDto({
+      ...detailDto,
+      version: 7,
+    });
+
+    const requestSpy = vi
+      .spyOn(apiClient, "request")
+      .mockImplementation(async (options) => {
+        if (
+          options.method === "GET" &&
+          options.path === "/api/v1/risk-controls/rc-1"
+        ) {
+          return detailDto;
+        }
+        if (
+          options.method === "POST" &&
+          options.path === "/api/v1/risk-controls/rc-1/complete-review"
+        ) {
+          return completedDto;
+        }
+        throw new Error(`Unexpected request: ${options.method} ${options.path}`);
+      });
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <RiskControlObjectPage riskControlId="rc-1" />
+        </ToastProvider>
+      </QueryClientProvider>,
+    );
+
+    // Initial load reflects version 5 from the detail query.
+    expect(await screen.findByText("Version 5")).toBeInTheDocument();
+
+    await user.click(
+      await screen.findByRole("button", { name: /complete review/i }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /complete review/i }),
+    );
+
+    // The mutation's onSuccess must feed the response straight into the
+    // object page's rendered state (via the detail query cache) — not a
+    // client-computed expected_version + 1, and not a stale cached prop.
+    expect(await screen.findByText("Version 7")).toBeInTheDocument();
+    expect(screen.queryByText("Version 6")).not.toBeInTheDocument();
 
     requestSpy.mockRestore();
   });
