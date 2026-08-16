@@ -71,8 +71,12 @@ function useInvalidateRiskControls() {
 }
 
 export function useAssignRiskControlOwnerMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: AssignOwnerDto) =>
       assignRiskControlOwner(riskControlId, body),
@@ -86,8 +90,12 @@ export function useAssignRiskControlOwnerMutation(riskControlId: string) {
 }
 
 export function usePlanRiskControlMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: PlanRiskControlDto) =>
       planRiskControl(riskControlId, body),
@@ -103,8 +111,12 @@ export function usePlanRiskControlMutation(riskControlId: string) {
 export function useStartRiskControlImplementationMutation(
   riskControlId: string,
 ) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: VersionOnlyDto) =>
       startRiskControlImplementation(riskControlId, body),
@@ -118,8 +130,12 @@ export function useStartRiskControlImplementationMutation(
 }
 
 export function useUpdateRiskControlProgressMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: ProgressDto) =>
       updateRiskControlProgress(riskControlId, body),
@@ -133,8 +149,12 @@ export function useUpdateRiskControlProgressMutation(riskControlId: string) {
 }
 
 export function useAddRiskControlEvidenceMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: EvidenceRequestDto) =>
       addRiskControlEvidence(riskControlId, body),
@@ -150,8 +170,12 @@ export function useAddRiskControlEvidenceMutation(riskControlId: string) {
 export function useCompleteRiskControlImplementationMutation(
   riskControlId: string,
 ) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: CompleteImplementationDto) =>
       completeRiskControlImplementation(riskControlId, body),
@@ -167,8 +191,12 @@ export function useCompleteRiskControlImplementationMutation(
 export function useRecordRiskControlVerificationMutation(
   riskControlId: string,
 ) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: VerificationRequestDto) =>
       recordRiskControlVerification(riskControlId, body),
@@ -182,8 +210,12 @@ export function useRecordRiskControlVerificationMutation(
 }
 
 export function useScheduleRiskControlReviewMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: ScheduleReviewDto) =>
       scheduleRiskControlReview(riskControlId, body),
@@ -197,8 +229,12 @@ export function useScheduleRiskControlReviewMutation(riskControlId: string) {
 }
 
 export function useCompleteRiskControlReviewMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: CompleteReviewDto) =>
       completeRiskControlReview(riskControlId, body),
@@ -212,8 +248,12 @@ export function useCompleteRiskControlReviewMutation(riskControlId: string) {
 }
 
 export function useSuspendRiskControlMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: SuspendDto) => suspendRiskControl(riskControlId, body),
     onSuccess: (control) => {
@@ -226,8 +266,12 @@ export function useSuspendRiskControlMutation(riskControlId: string) {
 }
 
 export function useResumeRiskControlMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: VersionOnlyDto) =>
       resumeRiskControl(riskControlId, body),
@@ -241,8 +285,12 @@ export function useResumeRiskControlMutation(riskControlId: string) {
 }
 
 export function useSupersedeRiskControlMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: SupersedeDto) =>
       supersedeRiskControl(riskControlId, body),
@@ -256,8 +304,12 @@ export function useSupersedeRiskControlMutation(riskControlId: string) {
 }
 
 export function useArchiveRiskControlMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: ReasonVersionDto) =>
       archiveRiskControl(riskControlId, body),
@@ -271,8 +323,12 @@ export function useArchiveRiskControlMutation(riskControlId: string) {
 }
 
 export function useCancelRiskControlMutation(riskControlId: string) {
-  const { setDetail, invalidateLists, invalidateActivity, invalidateAssessmentRelated } =
-    useInvalidateRiskControls();
+  const {
+    setDetail,
+    invalidateLists,
+    invalidateActivity,
+    invalidateAssessmentRelated,
+  } = useInvalidateRiskControls();
   return useMutation({
     mutationFn: (body: ReasonVersionDto) =>
       cancelRiskControl(riskControlId, body),

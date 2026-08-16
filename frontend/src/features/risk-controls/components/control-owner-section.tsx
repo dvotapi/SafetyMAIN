@@ -182,8 +182,8 @@ export function ControlOwnerSection({
               invalid={Boolean(errors.ownerReference)}
             />
             <HelperText>
-              No employee directory exists yet — enter the owner reference
-              used by your organization.
+              No employee directory exists yet — enter the owner reference used
+              by your organization.
             </HelperText>
             {errors.ownerReference?.message ? (
               <FieldError>{errors.ownerReference.message}</FieldError>

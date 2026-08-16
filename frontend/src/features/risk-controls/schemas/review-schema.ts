@@ -44,9 +44,7 @@ const reviewScheduleBaseSchema = z.object({
   noReviewReason: z.string().trim(),
 });
 
-export type ReviewScheduleFormValues = z.infer<
-  typeof reviewScheduleBaseSchema
->;
+export type ReviewScheduleFormValues = z.infer<typeof reviewScheduleBaseSchema>;
 
 export const DEFAULT_REVIEW_SCHEDULE_FORM_VALUES: ReviewScheduleFormValues = {
   reviewRequired: true,
@@ -133,9 +131,7 @@ const completeReviewBaseSchema = z.object({
   verification: z.custom<VerificationFormValues>(() => true),
 });
 
-export type CompleteReviewFormValues = z.infer<
-  typeof completeReviewBaseSchema
->;
+export type CompleteReviewFormValues = z.infer<typeof completeReviewBaseSchema>;
 
 export const DEFAULT_COMPLETE_REVIEW_FORM_VALUES: CompleteReviewFormValues = {
   nextReviewDate: "",

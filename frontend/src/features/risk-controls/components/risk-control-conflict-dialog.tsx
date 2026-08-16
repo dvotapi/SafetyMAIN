@@ -11,8 +11,7 @@ import {
 } from "@/components";
 
 export type RiskControlConflictVariant =
-  | "version_conflict"
-  | "duplicate_materialization";
+  "version_conflict" | "duplicate_materialization";
 
 /** Backend error codes that select the duplicate-materialization copy. */
 const DUPLICATE_MATERIALIZATION_CODE = "risk_control_already_materialized";
@@ -35,7 +34,8 @@ const VARIANT_COPY: Record<
 > = {
   version_conflict: {
     title: "Risk control changed elsewhere",
-    description: "Another user updated this control. Your changes were not saved.",
+    description:
+      "Another user updated this control. Your changes were not saved.",
   },
   duplicate_materialization: {
     title: "Controls already materialized",

@@ -30,9 +30,7 @@ const baseVerificationFormSchema = z.object({
   nextReviewDate: z.string().trim(),
 });
 
-export type VerificationFormValues = z.infer<
-  typeof baseVerificationFormSchema
->;
+export type VerificationFormValues = z.infer<typeof baseVerificationFormSchema>;
 
 export const DEFAULT_VERIFICATION_FORM_VALUES: VerificationFormValues = {
   verificationType: "initial",
@@ -77,13 +75,10 @@ export function buildVerificationFormSchema(options: {
           "A next review date is required when verifying a control effective.",
       },
     )
-    .refine(
-      (v) => v.evidenceRefs.length > 0 || hasExistingEvidence,
-      {
-        path: ["evidenceRefs"],
-        message: "At least one evidence reference is required.",
-      },
-    );
+    .refine((v) => v.evidenceRefs.length > 0 || hasExistingEvidence, {
+      path: ["evidenceRefs"],
+      message: "At least one evidence reference is required.",
+    });
 }
 
 export type VerificationFormSchema = ReturnType<

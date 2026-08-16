@@ -62,9 +62,8 @@ export function buildCompleteImplementationFormSchema(
 export type CompleteImplementationFormSchema = ReturnType<
   typeof buildCompleteImplementationFormSchema
 >;
-export type CompleteImplementationFormValues = z.infer<
-  CompleteImplementationFormSchema
->;
+export type CompleteImplementationFormValues =
+  z.infer<CompleteImplementationFormSchema>;
 
 export const DEFAULT_COMPLETE_IMPLEMENTATION_FORM_VALUES: CompleteImplementationFormValues =
   {

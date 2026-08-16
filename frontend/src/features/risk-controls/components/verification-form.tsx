@@ -228,8 +228,8 @@ export function VerificationForm({
 
           {result === "partially_effective" ? (
             <Text variant="caption" tone="muted">
-              Partially effective does not change the control&apos;s
-              lifecycle status — only the effectiveness result.
+              Partially effective does not change the control&apos;s lifecycle
+              status — only the effectiveness result.
             </Text>
           ) : null}
 

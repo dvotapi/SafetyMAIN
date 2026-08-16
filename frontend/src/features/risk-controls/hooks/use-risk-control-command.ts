@@ -43,7 +43,8 @@ function flattenValidationError(error: ValidationError): string {
           const location = readLocation(
             violation["location"] ?? violation["loc"],
           );
-          const last = location.length > 0 ? location[location.length - 1] : null;
+          const last =
+            location.length > 0 ? location[location.length - 1] : null;
           const message =
             readViolationMessage(violation["message"]) ??
             readViolationMessage(violation["msg"]);

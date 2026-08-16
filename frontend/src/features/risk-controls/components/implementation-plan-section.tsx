@@ -93,7 +93,8 @@ export function ImplementationPlanSection({
     verificationMethodRequirement.trim(),
   );
   const schema = useMemo(
-    () => buildImplementationFormSchema(hasExistingVerificationMethodRequirement),
+    () =>
+      buildImplementationFormSchema(hasExistingVerificationMethodRequirement),
     [hasExistingVerificationMethodRequirement],
   );
   const defaultValues = useMemo(
@@ -147,8 +148,8 @@ export function ImplementationPlanSection({
       >
         {canPlan ? (
           <Text tone="muted">
-            No implementation plan yet. Plan implementation to set target
-            dates and milestones.
+            No implementation plan yet. Plan implementation to set target dates
+            and milestones.
           </Text>
         ) : (
           <BlockingReason>
@@ -169,9 +170,7 @@ export function ImplementationPlanSection({
       >
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "grid", gap: 8 }}>
-            <Label htmlFor="plan-target-start-date">
-              Target start date
-            </Label>
+            <Label htmlFor="plan-target-start-date">Target start date</Label>
             <Input
               id="plan-target-start-date"
               type="date"

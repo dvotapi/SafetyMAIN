@@ -76,7 +76,9 @@ export function ImplementationProgressSection({
   onCompleteOpenChange: (open: boolean) => void;
   onStart: () => void | Promise<void>;
   onProgress: (values: ProgressFormValues) => void | Promise<void>;
-  onComplete: (values: CompleteImplementationFormValues) => void | Promise<void>;
+  onComplete: (
+    values: CompleteImplementationFormValues,
+  ) => void | Promise<void>;
   startLoading?: boolean;
   progressLoading?: boolean;
   completeLoading?: boolean;
@@ -300,8 +302,8 @@ export function ImplementationProgressSection({
                 )}
               />
               <HelperText>
-                Add at least one evidence reference, or record why evidence
-                is waived.
+                Add at least one evidence reference, or record why evidence is
+                waived.
               </HelperText>
               {completeForm.formState.errors.evidenceWaiverReason?.message ? (
                 <FieldError>
@@ -319,7 +321,9 @@ export function ImplementationProgressSection({
                 <Checkbox
                   id="complete-allow-incomplete-milestones"
                   checked={field.value}
-                  onCheckedChange={(checked) => field.onChange(checked === true)}
+                  onCheckedChange={(checked) =>
+                    field.onChange(checked === true)
+                  }
                   label="Allow incomplete milestones"
                 />
               )}

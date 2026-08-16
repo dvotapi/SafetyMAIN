@@ -68,11 +68,7 @@ describe("useRiskControlCommand", () => {
 
     let pending: Promise<boolean> | undefined;
     act(() => {
-      pending = result.current.runCommand(
-        "resume",
-        runner,
-        "Control resumed",
-      );
+      pending = result.current.runCommand("resume", runner, "Control resumed");
     });
 
     await waitFor(() => {
@@ -155,17 +151,11 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(conflictError);
 
     await act(async () => {
-      await result.current.runCommand(
-        "verify",
-        runner,
-        "Control verified",
-      );
+      await result.current.runCommand("verify", runner, "Control verified");
     });
 
     expect(result.current.conflictOpen).toBe(true);
-    expect(result.current.conflictVariant).toBe(
-      "duplicate_materialization",
-    );
+    expect(result.current.conflictVariant).toBe("duplicate_materialization");
   });
 
   it("flattens ValidationError violations into '<last segment>: <message>' lines", async () => {
@@ -183,11 +173,7 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(validationError);
 
     await act(async () => {
-      await result.current.runCommand(
-        "suspend",
-        runner,
-        "Control suspended",
-      );
+      await result.current.runCommand("suspend", runner, "Control suspended");
     });
 
     expect(result.current.commandError).toBe(
@@ -206,11 +192,7 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(validationError);
 
     await act(async () => {
-      await result.current.runCommand(
-        "suspend",
-        runner,
-        "Control suspended",
-      );
+      await result.current.runCommand("suspend", runner, "Control suspended");
     });
 
     expect(result.current.commandError).toBe(
@@ -227,11 +209,7 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(validationError);
 
     await act(async () => {
-      await result.current.runCommand(
-        "suspend",
-        runner,
-        "Control suspended",
-      );
+      await result.current.runCommand("suspend", runner, "Control suspended");
     });
 
     expect(result.current.commandError).toBe(
@@ -248,11 +226,7 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(permissionError);
 
     await act(async () => {
-      await result.current.runCommand(
-        "suspend",
-        runner,
-        "Control suspended",
-      );
+      await result.current.runCommand("suspend", runner, "Control suspended");
     });
 
     expect(result.current.commandError).toBe(
@@ -270,15 +244,9 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(notFoundError);
 
     await act(async () => {
-      await result.current.runCommand(
-        "suspend",
-        runner,
-        "Control suspended",
-      );
+      await result.current.runCommand("suspend", runner, "Control suspended");
     });
 
-    expect(result.current.commandError).toBe(
-      toUserSafeMessage(notFoundError),
-    );
+    expect(result.current.commandError).toBe(toUserSafeMessage(notFoundError));
   });
 });

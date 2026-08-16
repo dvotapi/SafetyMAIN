@@ -287,13 +287,9 @@ export function ReviewScheduleSection({
                   Used to derive the next review date when one is not set
                   explicitly below.
                 </HelperText>
-                {scheduleForm.formState.errors.reviewFrequencyDays
-                  ?.message ? (
+                {scheduleForm.formState.errors.reviewFrequencyDays?.message ? (
                   <FieldError>
-                    {
-                      scheduleForm.formState.errors.reviewFrequencyDays
-                        .message
-                    }
+                    {scheduleForm.formState.errors.reviewFrequencyDays.message}
                   </FieldError>
                 ) : null}
               </div>
@@ -342,9 +338,7 @@ export function ReviewScheduleSection({
               <TextArea
                 id="schedule-no-review-reason"
                 {...scheduleForm.register("noReviewReason")}
-                invalid={Boolean(
-                  scheduleForm.formState.errors.noReviewReason,
-                )}
+                invalid={Boolean(scheduleForm.formState.errors.noReviewReason)}
               />
               {scheduleForm.formState.errors.noReviewReason?.message ? (
                 <FieldError>
@@ -387,9 +381,7 @@ export function ReviewScheduleSection({
               <Checkbox
                 id="complete-review-include-verification"
                 checked={field.value}
-                onCheckedChange={(checked) =>
-                  field.onChange(checked === true)
-                }
+                onCheckedChange={(checked) => field.onChange(checked === true)}
                 label="Record a verification as part of this review"
               />
             )}
@@ -433,13 +425,9 @@ export function ReviewScheduleSection({
                     completeForm.formState.errors.verification?.method,
                   )}
                 />
-                {completeForm.formState.errors.verification?.method
-                  ?.message ? (
+                {completeForm.formState.errors.verification?.method?.message ? (
                   <FieldError>
-                    {
-                      completeForm.formState.errors.verification.method
-                        .message
-                    }
+                    {completeForm.formState.errors.verification.method.message}
                   </FieldError>
                 ) : null}
               </div>
@@ -519,16 +507,15 @@ export function ReviewScheduleSection({
                   type="date"
                   {...completeForm.register("verification.nextReviewDate")}
                   invalid={Boolean(
-                    completeForm.formState.errors.verification
-                      ?.nextReviewDate,
+                    completeForm.formState.errors.verification?.nextReviewDate,
                   )}
                 />
                 {completeForm.formState.errors.verification?.nextReviewDate
                   ?.message ? (
                   <FieldError>
                     {
-                      completeForm.formState.errors.verification
-                        .nextReviewDate.message
+                      completeForm.formState.errors.verification.nextReviewDate
+                        .message
                     }
                   </FieldError>
                 ) : null}

@@ -67,9 +67,7 @@ describe("RiskControlCommandDialog", () => {
       />,
     );
 
-    expect(
-      screen.getByText("This action uses version 7."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("This action uses version 7.")).toBeInTheDocument();
   });
 
   it("does not fire confirm when a required reason is left blank", async () => {
@@ -78,17 +76,13 @@ describe("RiskControlCommandDialog", () => {
 
     render(<ReasonCommandHost onConfirmed={onConfirmed} />);
 
-    await user.click(
-      screen.getByRole("button", { name: "Suspend control" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Suspend control" }));
 
     expect(onConfirmed).not.toHaveBeenCalled();
     expect(screen.getByText("Reason is required")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText(/Reason/i), "No longer needed");
-    await user.click(
-      screen.getByRole("button", { name: "Suspend control" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Suspend control" }));
 
     await waitFor(() => {
       expect(onConfirmed).toHaveBeenCalledWith("No longer needed");

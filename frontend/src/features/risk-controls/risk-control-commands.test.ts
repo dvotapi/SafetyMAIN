@@ -132,11 +132,7 @@ describe("boundary-safe assessment related invalidation", () => {
       ),
     ).toBe(false);
     expect(
-      isAssessmentRelatedControlsQueryKey([
-        "risk-controls",
-        "org-1",
-        "list",
-      ]),
+      isAssessmentRelatedControlsQueryKey(["risk-controls", "org-1", "list"]),
     ).toBe(false);
   });
 

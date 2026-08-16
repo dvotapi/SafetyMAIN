@@ -59,10 +59,7 @@ export function buildImplementationFormSchema(
     evidenceRequirements: z.array(z.string().trim().min(1)),
     verificationMethodRequirement: hasExistingVerificationMethodRequirement
       ? z.string().trim()
-      : z
-          .string()
-          .trim()
-          .min(1, "Verification method requirement is required"),
+      : z.string().trim().min(1, "Verification method requirement is required"),
     milestones: z.array(milestoneFormSchema),
   });
 }
