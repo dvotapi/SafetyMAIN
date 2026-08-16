@@ -14,7 +14,7 @@ import { apiClient } from "@/services/api/client";
 import { ConflictError } from "@/services/api/errors";
 import type { ApiRequestOptions } from "@/services/api/types";
 
-let currentHasPermission = (_permission: string) => true;
+let currentHasPermission: (permission: string) => boolean = () => true;
 
 vi.mock("@/hooks/auth", () => ({
   useAuth: () => ({
