@@ -8,7 +8,7 @@ export interface HeatmapPlaceholderProps {
 }
 
 export function HeatmapPlaceholder({
-  label = "Heatmap placeholder",
+  label = "Заглушка тепловой карты",
   className,
 }: HeatmapPlaceholderProps) {
   return (

@@ -31,11 +31,11 @@ describe("Timeline", () => {
     expect(screen.getByText("Today event")).toBeInTheDocument();
     expect(screen.getByText("Yesterday event")).toBeInTheDocument();
 
-    const collapseButtons = screen.getAllByRole("button", { name: "Collapse" });
+    const collapseButtons = screen.getAllByRole("button", { name: "Свернуть" });
     await user.click(collapseButtons[0]!);
 
     expect(
-      screen.getAllByRole("button", { name: "Expand" }).length,
+      screen.getAllByRole("button", { name: "Развернуть" }).length,
     ).toBeGreaterThan(0);
   });
 });

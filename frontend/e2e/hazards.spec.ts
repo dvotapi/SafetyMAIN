@@ -74,10 +74,10 @@ function sampleHazard(overrides: Record<string, unknown> = {}) {
 
 async function login(page: Page) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill("user@example.com");
-  await page.getByLabel("Password").fill("secret-password");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await page.getByLabel("Электронная почта").fill("user@example.com");
+  await page.getByLabel("Пароль").fill("secret-password");
+  await page.getByRole("button", { name: "Войти" }).click();
+  await expect(page.getByRole("heading", { name: "Обзор" })).toBeVisible();
 }
 
 test("hazard create activate and registry flow", async ({ page }) => {
@@ -212,23 +212,26 @@ test("hazard create activate and registry flow", async ({ page }) => {
 
   await login(page);
   await page.goto("/safety/hazards");
-  await expect(page.getByRole("heading", { name: "Hazards" })).toBeVisible();
-  await page.getByRole("link", { name: "Create hazard" }).first().click();
-  await page.getByLabel("Code").fill("HZ-E2E");
-  await page.getByLabel("Title").fill("E2E Hazard");
-  await page.getByRole("button", { name: "Create hazard" }).click();
+  await expect(page.getByRole("heading", { name: "Опасности" })).toBeVisible();
+  await page.getByRole("link", { name: "Создать опасность" }).first().click();
+  await page.getByLabel("Код").fill("HZ-E2E");
+  await page.getByLabel("Название").fill("E2E Hazard");
+  await page.getByRole("button", { name: "Создать опасность" }).click();
   await expect(page.getByRole("heading", { name: "E2E Hazard" })).toBeVisible();
-  await page.getByRole("button", { name: "Edit hazard" }).click();
-  await page.getByLabel("Title").fill("E2E Hazard Updated");
-  await page.getByRole("button", { name: "Save changes" }).click();
+  await page.getByRole("button", { name: "Изменить опасность" }).click();
+  await page.getByLabel("Название").fill("E2E Hazard Updated");
+  await page.getByRole("button", { name: "Сохранить изменения" }).click();
   await expect(
     page.getByRole("heading", { name: "E2E Hazard Updated" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Activate hazard" }).click();
-  await page.getByRole("button", { name: "Activate hazard" }).last().click();
-  await expect(page.getByLabel("Status: Active").first()).toBeVisible();
-  await page.getByRole("link", { name: "Back to registry" }).click();
-  await expect(page.getByRole("heading", { name: "Hazards" })).toBeVisible();
+  await page.getByRole("button", { name: "Активировать опасность" }).click();
+  await page
+    .getByRole("button", { name: "Активировать опасность" })
+    .last()
+    .click();
+  await expect(page.getByLabel("Статус: Действует").first()).toBeVisible();
+  await page.getByRole("link", { name: "К реестру" }).click();
+  await expect(page.getByRole("heading", { name: "Опасности" })).toBeVisible();
   await expect(page.getByRole("link", { name: "HZ-E2E" })).toBeVisible();
 });
 
@@ -246,11 +249,11 @@ test("read-only user cannot create hazards", async ({ page }) => {
   });
   await login(page);
   await page.goto("/safety/hazards");
-  await expect(page.getByRole("link", { name: "Create hazard" })).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByRole("link", { name: "Создать опасность" }),
+  ).toHaveCount(0);
   await page.goto("/safety/hazards/new");
-  await expect(page.getByText("Cannot create hazards")).toBeVisible();
+  await expect(page.getByText("Нельзя создать опасности")).toBeVisible();
 });
 
 test("unknown hazard shows not found", async ({ page }) => {
@@ -266,7 +269,7 @@ test("unknown hazard shows not found", async ({ page }) => {
   });
   await login(page);
   await page.goto(`/safety/hazards/${hazardId}`);
-  await expect(page.getByText("Hazard not found")).toBeVisible();
+  await expect(page.getByText("Опасность не найдена")).toBeVisible();
 });
 
 test("stale edit shows conflict dialog", async ({ page }) => {
@@ -313,10 +316,10 @@ test("stale edit shows conflict dialog", async ({ page }) => {
   });
   await login(page);
   await page.goto(`/safety/hazards/${hazardId}`);
-  await page.getByRole("button", { name: "Edit hazard" }).click();
-  await page.getByLabel("Title").fill("Conflict title");
-  await page.getByRole("button", { name: "Save changes" }).click();
+  await page.getByRole("button", { name: "Изменить опасность" }).click();
+  await page.getByLabel("Название").fill("Conflict title");
+  await page.getByRole("button", { name: "Сохранить изменения" }).click();
   await expect(
-    page.getByRole("heading", { name: "Hazard changed elsewhere" }),
+    page.getByRole("heading", { name: "Опасность изменена в другом месте" }),
   ).toBeVisible();
 });

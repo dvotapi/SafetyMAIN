@@ -20,7 +20,7 @@ const baseVerificationFormSchema = z.object({
     "management_review",
     "other",
   ]),
-  method: z.string().trim().min(1, "Method is required"),
+  method: z.string().trim().min(1, "Укажите метод"),
   criteria: z.string().trim(),
   result: z.enum(["effective", "partially_effective", "ineffective"]),
   rating: z.string().trim(),
@@ -72,12 +72,12 @@ export function buildVerificationFormSchema(options: {
       {
         path: ["nextReviewDate"],
         message:
-          "A next review date is required when verifying a control effective.",
+          "При подтверждении эффективности укажите дату следующего пересмотра.",
       },
     )
     .refine((v) => v.evidenceRefs.length > 0 || hasExistingEvidence, {
       path: ["evidenceRefs"],
-      message: "At least one evidence reference is required.",
+      message: "Укажите хотя бы одну ссылку на доказательство.",
     });
 }
 

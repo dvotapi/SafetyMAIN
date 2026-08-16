@@ -20,7 +20,7 @@ export interface ObjectRelationshipsProps {
 
 export function ObjectRelationships({
   items,
-  heading = "Relationships",
+  heading = "Связи",
   className,
 }: ObjectRelationshipsProps) {
   return (

@@ -23,11 +23,11 @@ export const Search = forwardRef<HTMLInputElement, SearchProps>(function Search(
     value,
     onChange,
     onClear,
-    placeholder = "Search…",
+    placeholder = "Поиск…",
     useSearchInput = true,
     className,
     name = "search",
-    "aria-label": ariaLabel = "Search",
+    "aria-label": ariaLabel = "Поиск",
   },
   ref,
 ) {

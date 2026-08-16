@@ -13,7 +13,7 @@ export default async function Page({
     <Suspense
       fallback={
         <div style={{ padding: "var(--sm-space-8)" }}>
-          <LoadingState label="Loading risk control" />
+          <LoadingState label="Загрузка меры управления риском" />
         </div>
       }
     >

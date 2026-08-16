@@ -35,16 +35,16 @@ const VARIANT_COPY: Record<
   { title: string; description: string; alertTitle: string }
 > = {
   version_conflict: {
-    title: "Risk control changed elsewhere",
+    title: "Мера изменена в другом месте",
     description:
-      "Another user updated this control. Your changes were not saved.",
-    alertTitle: "Version conflict",
+      "Другой пользователь обновил эту меру. Ваши изменения не сохранены.",
+    alertTitle: "Конфликт версий",
   },
   duplicate_materialization: {
-    title: "Controls already materialized",
+    title: "Меры уже созданы",
     description:
-      "One or more proposed controls already have a risk control. Materialization is all-or-nothing, so nothing was created. Reload to see the current controls.",
-    alertTitle: "Already materialized",
+      "Для одной или нескольких предложенных мер уже существует запись. Создание выполняется целиком — ничего не создано. Обновите список, чтобы увидеть текущие меры.",
+    alertTitle: "Уже создано",
   },
 };
 
@@ -81,13 +81,13 @@ export function RiskControlConflictDialog({
         <DialogHeader title={copy.title} description={copy.description} />
         <DialogBody>
           <Alert tone="warning" title={copy.alertTitle}>
-            Reload the latest version, then re-apply your edits. The command
-            will not retry automatically.
+            Обновите последнюю версию и повторите действие. Повторная отправка
+            не выполняется автоматически.
           </Alert>
         </DialogBody>
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            Keep my draft
+            Оставить черновик
           </Button>
           <Button
             variant="primary"
@@ -97,7 +97,7 @@ export function RiskControlConflictDialog({
               onOpenChange(false);
             }}
           >
-            Reload latest
+            Обновить
           </Button>
         </DialogFooter>
       </DialogContent>

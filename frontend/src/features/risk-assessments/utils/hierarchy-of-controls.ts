@@ -38,11 +38,11 @@ export function sortControlsByHierarchy<
 
 export function controlTypeLabel(controlType: ControlTypeDto): string {
   const labels: Record<ControlTypeDto, string> = {
-    elimination: "Elimination",
-    substitution: "Substitution",
-    engineering: "Engineering",
-    administrative: "Administrative",
-    ppe: "PPE",
+    elimination: "Устранение",
+    substitution: "Замена",
+    engineering: "Инженерные меры",
+    administrative: "Административные меры",
+    ppe: "СИЗ",
   };
   return labels[controlType];
 }

@@ -4,10 +4,15 @@ import { EmptyState, Heading, Panel, Text } from "@/components";
 
 import type {
   ControlMeasure,
+  ControlTypeDto,
   RelatedRiskControlSummary,
 } from "@/features/risk-assessments/types/risk-assessment-types";
+import { controlTypeLabel } from "@/features/risk-assessments/utils/hierarchy-of-controls";
 import { relatedControlsEmptyKind } from "@/features/risk-assessments/utils/related-controls-empty";
-import { formatRiskAssessmentEnumLabel } from "@/features/risk-assessments/utils/risk-assessment-status";
+import {
+  relatedControlEffectivenessLabel,
+  relatedControlStatusLabel,
+} from "@/features/risk-assessments/utils/risk-assessment-status";
 
 export function RiskAssessmentRelatedControls({
   proposedControls,
@@ -25,8 +30,8 @@ export function RiskAssessmentRelatedControls({
   if (!canView) {
     return (
       <EmptyState
-        title="Related controls unavailable"
-        description="Related Risk Controls require the risk_control:read permission."
+        title="Связанные меры недоступны"
+        description="Для просмотра связанных мер управления риском требуется право risk_control:read."
       />
     );
   }
@@ -34,8 +39,8 @@ export function RiskAssessmentRelatedControls({
   if (loading) {
     return (
       <EmptyState
-        title="Loading related controls"
-        description="Fetching materialized Risk Controls…"
+        title="Загрузка связанных мер"
+        description="Загрузка материализованных мер управления риском…"
       />
     );
   }
@@ -44,16 +49,16 @@ export function RiskAssessmentRelatedControls({
   if (emptyKind === "no_proposed") {
     return (
       <EmptyState
-        title="No proposed controls"
-        description="This assessment has no proposed controls, so no related Risk Controls are expected yet."
+        title="Нет предлагаемых мер"
+        description="У этой оценки нет предлагаемых мер, поэтому связанные меры управления риском пока не ожидаются."
       />
     );
   }
   if (emptyKind === "not_materialized") {
     return (
       <EmptyState
-        title="No materialized Risk Controls"
-        description="Proposed controls exist on this assessment. Use Materialize controls to create operational Risk Controls."
+        title="Нет материализованных мер"
+        description="На оценке есть предлагаемые меры. Используйте «Создать меры», чтобы создать операционные меры управления риском."
         action={actions}
       />
     );
@@ -62,22 +67,22 @@ export function RiskAssessmentRelatedControls({
   return (
     <div style={{ display: "grid", gap: "var(--sm-space-4)" }}>
       <Panel actions={actions}>
-        <Heading level={2}>Related Risk Controls</Heading>
+        <Heading level={2}>Связанные меры управления риском</Heading>
         <Text tone="secondary">
-          Read-only view of materialized controls linked to this assessment.
+          Только чтение материализованных мер, связанных с этой оценкой.
         </Text>
       </Panel>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th align="left">Reference</th>
-              <th align="left">Title</th>
-              <th align="left">Hierarchy</th>
-              <th align="left">Status</th>
-              <th align="left">Owner</th>
-              <th align="left">Effectiveness</th>
-              <th align="left">Next review</th>
+              <th align="left">Код</th>
+              <th align="left">Название</th>
+              <th align="left">Иерархия</th>
+              <th align="left">Статус</th>
+              <th align="left">Владелец</th>
+              <th align="left">Эффективность</th>
+              <th align="left">Следующий пересмотр</th>
             </tr>
           </thead>
           <tbody>
@@ -85,12 +90,14 @@ export function RiskAssessmentRelatedControls({
               <tr key={item.id}>
                 <td>{item.code}</td>
                 <td>{item.title}</td>
-                <td>{formatRiskAssessmentEnumLabel(item.hierarchyLevel)}</td>
-                <td>{formatRiskAssessmentEnumLabel(item.lifecycleStatus)}</td>
+                <td>
+                  {controlTypeLabel(item.hierarchyLevel as ControlTypeDto)}
+                </td>
+                <td>{relatedControlStatusLabel(item.lifecycleStatus)}</td>
                 <td>{item.ownerLabel ?? "—"}</td>
                 <td>
                   {item.latestEffectivenessResult
-                    ? formatRiskAssessmentEnumLabel(
+                    ? relatedControlEffectivenessLabel(
                         item.latestEffectivenessResult,
                       )
                     : "—"}

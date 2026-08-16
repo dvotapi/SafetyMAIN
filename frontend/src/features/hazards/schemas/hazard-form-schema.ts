@@ -77,13 +77,13 @@ export const AFFECTED_SUBJECTS = [
 ] as const satisfies readonly AffectedSubjectDto[];
 
 export const hazardFormSchema = z.object({
-  code: z.string().trim().min(1, "Code is required").max(64),
-  title: z.string().trim().min(1, "Title is required").max(512),
+  code: z.string().trim().min(1, "Укажите код").max(64),
+  title: z.string().trim().min(1, "Укажите название").max(512),
   description: z.string().max(10_000),
   category: z.enum(HAZARD_CATEGORIES),
   safetyDirections: z
     .array(z.enum(SAFETY_DIRECTIONS))
-    .min(1, "Select at least one safety direction"),
+    .min(1, "Выберите хотя бы одно направление безопасности"),
   source: z.enum(HAZARD_SOURCES),
   affectedSubjects: z.array(z.enum(AFFECTED_SUBJECTS)),
   locationReference: z.string().max(512),

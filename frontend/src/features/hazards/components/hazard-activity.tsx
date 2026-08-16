@@ -14,8 +14,8 @@ export function HazardActivity({
   if (!canView) {
     return (
       <EmptyState
-        title="Activity unavailable"
-        description="Hazard activity requires the audit:read permission. No client-generated history is shown."
+        title="История недоступна"
+        description="Для просмотра истории опасности нужно право audit:read. Клиентская история не формируется."
       />
     );
   }
@@ -23,8 +23,8 @@ export function HazardActivity({
   if (loading) {
     return (
       <EmptyState
-        title="Loading activity"
-        description="Fetching audit events…"
+        title="Загрузка истории"
+        description="Получение событий аудита…"
       />
     );
   }
@@ -32,8 +32,8 @@ export function HazardActivity({
   if (items.length === 0) {
     return (
       <EmptyState
-        title="No activity yet"
-        description="No audit events are available for this hazard."
+        title="Истории пока нет"
+        description="Для этой опасности нет событий аудита."
       />
     );
   }
@@ -45,7 +45,7 @@ export function HazardActivity({
     description: [
       item.action,
       item.outcome,
-      item.actorUserId ? `Actor ${item.actorUserId}` : null,
+      item.actorUserId ? `Пользователь ${item.actorUserId}` : null,
     ]
       .filter(Boolean)
       .join(" · "),

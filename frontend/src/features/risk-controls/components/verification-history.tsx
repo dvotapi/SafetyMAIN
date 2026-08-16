@@ -15,7 +15,7 @@ export function VerificationHistory({
   verifications: RiskControlVerification[];
 }) {
   if (verifications.length === 0) {
-    return <EmptyState title="No verification yet" />;
+    return <EmptyState title="Подтверждений пока нет" />;
   }
 
   const newestFirst = [...verifications].reverse();
@@ -42,18 +42,18 @@ export function VerificationHistory({
               ) : (
                 <Text>{effectivenessLabel(verification.result)}</Text>
               )}
-              {index === 0 ? <Badge>Latest</Badge> : null}
+              {index === 0 ? <Badge>Последнее</Badge> : null}
             </div>
             <dl>
               <div>
                 <Text variant="caption" tone="muted">
-                  Verifier
+                  Проверил
                 </Text>
                 <Text>{verification.performedByUserId ?? "—"}</Text>
               </div>
               <div>
                 <Text variant="caption" tone="muted">
-                  Method
+                  Метод
                 </Text>
                 <Text>
                   {formatRiskControlEnumLabel(verification.verificationType)}
@@ -62,25 +62,25 @@ export function VerificationHistory({
               </div>
               <div>
                 <Text variant="caption" tone="muted">
-                  Criteria
+                  Критерии
                 </Text>
                 <Text>{verification.criteria || "—"}</Text>
               </div>
               <div>
                 <Text variant="caption" tone="muted">
-                  Performed at
+                  Выполнено
                 </Text>
                 <Text>{formatDateOnly(verification.performedAt)}</Text>
               </div>
               <div>
                 <Text variant="caption" tone="muted">
-                  Findings
+                  Выводы
                 </Text>
                 <Text>{verification.findings || "—"}</Text>
               </div>
               <div>
                 <Text variant="caption" tone="muted">
-                  Evidence references
+                  Ссылки на доказательства
                 </Text>
                 <Text>
                   {verification.evidenceRefs.length > 0
@@ -90,13 +90,13 @@ export function VerificationHistory({
               </div>
               <div>
                 <Text variant="caption" tone="muted">
-                  Recommendation
+                  Рекомендация
                 </Text>
                 <Text>{verification.nextAction || "—"}</Text>
               </div>
               <div>
                 <Text variant="caption" tone="muted">
-                  Next review date
+                  Дата следующего пересмотра
                 </Text>
                 <Text>{formatDateOnly(verification.nextReviewDate)}</Text>
               </div>

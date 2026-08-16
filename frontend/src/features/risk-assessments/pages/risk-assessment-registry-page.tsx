@@ -36,20 +36,21 @@ import {
   type RiskAssessmentRegistryUrlState,
 } from "@/features/risk-assessments/utils/risk-assessment-filters";
 import {
-  formatRiskAssessmentEnumLabel,
+  assessmentProfileLabel,
   riskAssessmentStatusLabel,
   riskAssessmentStatusToVisual,
   riskLevelLabel,
 } from "@/features/risk-assessments/utils/risk-assessment-status";
 import { useAuth } from "@/hooks/auth";
 import { toUserSafeMessage } from "@/services/api/errors";
+import { APP_LOCALE } from "@/utils/locale";
 
 function formatDate(value: string | null | undefined): string {
   if (!value) {
     return "—";
   }
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(APP_LOCALE, {
       dateStyle: "medium",
     }).format(new Date(value));
   } catch {
@@ -60,7 +61,7 @@ function formatDate(value: string | null | undefined): string {
 function profileTitle(code: string): string {
   return (
     ASSESSMENT_PROFILE_CATALOG.find((entry) => entry.code === code)?.title ??
-    formatRiskAssessmentEnumLabel(code)
+    assessmentProfileLabel(code)
   );
 }
 
@@ -82,7 +83,7 @@ export function RiskAssessmentRegistryPage() {
   const [searchDraft, setSearchDraft] = useState(state.search);
 
   useEffect(() => {
-    document.title = "Risk Assessments · SafetyMAIN";
+    document.title = "Оценки риска · SafetyMAIN";
   }, []);
 
   useEffect(() => {
@@ -111,7 +112,7 @@ export function RiskAssessmentRegistryPage() {
     () => [
       {
         id: "code",
-        header: "Reference",
+        header: "Код",
         enableSorting: false,
         cell: ({ row }) => (
           <Link href={`/safety/risk-assessments/${row.original.id}`}>
@@ -121,7 +122,7 @@ export function RiskAssessmentRegistryPage() {
       },
       {
         id: "hazard",
-        header: "Hazard",
+        header: "Опасность",
         enableSorting: false,
         cell: ({ row }) => (
           <Link href={`/safety/hazards/${row.original.hazardId}`}>
@@ -131,7 +132,7 @@ export function RiskAssessmentRegistryPage() {
       },
       {
         id: "status",
-        header: "Status",
+        header: "Статус",
         enableSorting: false,
         cell: ({ row }) => (
           <StatusBadge
@@ -142,40 +143,40 @@ export function RiskAssessmentRegistryPage() {
       },
       {
         id: "profile",
-        header: "Assessment profile",
+        header: "Профиль оценки",
         enableSorting: false,
         cell: ({ row }) => profileTitle(String(row.original.assessmentProfile)),
       },
       {
         id: "inherent",
-        header: "Inherent risk",
+        header: "Исходный риск",
         enableSorting: false,
         cell: ({ row }) =>
           riskLevelLabel(row.original.inherentRisk?.level) ?? "—",
       },
       {
         id: "residual",
-        header: "Residual risk",
+        header: "Остаточный риск",
         enableSorting: false,
         cell: ({ row }) =>
           riskLevelLabel(row.original.residualRisk?.level) ?? "—",
       },
       {
         id: "nextReview",
-        header: "Next review",
+        header: "Следующий пересмотр",
         enableSorting: false,
         cell: ({ row }) =>
           formatDate(row.original.reviewSchedule.reviewDueDate),
       },
       {
         id: "approvedAt",
-        header: "Approved at",
+        header: "Утверждено",
         enableSorting: false,
         cell: ({ row }) => formatDate(row.original.approvedAt),
       },
       {
         id: "updatedAt",
-        header: "Updated at",
+        header: "Обновлено",
         enableSorting: false,
         cell: ({ row }) => formatDate(row.original.updatedAt),
       },
@@ -187,11 +188,11 @@ export function RiskAssessmentRegistryPage() {
     return (
       <PageContainer>
         <EmptyState
-          title="Risk assessments unavailable"
-          description="You do not have permission to view risk assessments."
+          title="Оценки риска недоступны"
+          description="Недостаточно прав для просмотра оценок риска."
           action={
             <Button asChild variant="secondary">
-              <Link href="/">Back to overview</Link>
+              <Link href="/">К обзору</Link>
             </Button>
           }
         />
@@ -214,18 +215,18 @@ export function RiskAssessmentRegistryPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Risk Assessments"
+        title="Оценки риска"
         description={
           <Text tone="secondary">
-            Create and review risk assessments for hazards in the active
-            organization. Ordering is fixed by the server (newest first).
+            Создавайте и просматривайте оценки риска для опасностей активной
+            организации. Порядок сортировки задаётся сервером (сначала новые).
           </Text>
         }
         actions={
           capabilities.canCreate ? (
             <Button asChild>
               <Link href="/safety/risk-assessments/new">
-                Create risk assessment
+                Создать оценку риска
               </Link>
             </Button>
           ) : null
@@ -237,14 +238,14 @@ export function RiskAssessmentRegistryPage() {
           <Search
             value={searchDraft}
             onChange={setSearchDraft}
-            placeholder="Search code or title"
-            aria-label="Search risk assessments"
+            placeholder="Поиск по коду или названию"
+            aria-label="Поиск оценок риска"
           />
         }
         filters={
           <FilterBar>
             <Select
-              aria-label="Status filter"
+              aria-label="Фильтр по статусу"
               value={state.status || "__all"}
               onValueChange={(value) =>
                 updateState({
@@ -256,16 +257,28 @@ export function RiskAssessmentRegistryPage() {
                 })
               }
               options={[
-                { value: "__all", label: "All statuses" },
-                { value: "draft", label: "Draft" },
-                { value: "under_review", label: "Under Review" },
-                { value: "approved", label: "Approved" },
-                { value: "superseded", label: "Superseded" },
-                { value: "archived", label: "Archived" },
+                { value: "__all", label: "Все статусы" },
+                { value: "draft", label: riskAssessmentStatusLabel("draft") },
+                {
+                  value: "under_review",
+                  label: riskAssessmentStatusLabel("under_review"),
+                },
+                {
+                  value: "approved",
+                  label: riskAssessmentStatusLabel("approved"),
+                },
+                {
+                  value: "superseded",
+                  label: riskAssessmentStatusLabel("superseded"),
+                },
+                {
+                  value: "archived",
+                  label: riskAssessmentStatusLabel("archived"),
+                },
               ]}
             />
             <Select
-              aria-label="Assessment profile filter"
+              aria-label="Фильтр по профилю оценки"
               value={state.assessmentProfile || "__all"}
               onValueChange={(value) =>
                 updateState({
@@ -277,7 +290,7 @@ export function RiskAssessmentRegistryPage() {
                 })
               }
               options={[
-                { value: "__all", label: "All profiles" },
+                { value: "__all", label: "Все профили" },
                 ...ASSESSMENT_PROFILES.map((code) => ({
                   value: code,
                   label: profileTitle(code),
@@ -295,9 +308,7 @@ export function RiskAssessmentRegistryPage() {
                 })
               }
             >
-              {state.includeArchived
-                ? "Including archived"
-                : "Include archived"}
+              {state.includeArchived ? "Архив включён" : "Включить архив"}
             </Button>
             <Button
               type="button"
@@ -311,26 +322,26 @@ export function RiskAssessmentRegistryPage() {
               }
             >
               {state.includeSuperseded
-                ? "Including superseded"
-                : "Hide superseded"}
+                ? "Замещённые включены"
+                : "Скрыть замещённые"}
             </Button>
             {state.status ? (
               <FilterChip
-                label="Status"
+                label="Статус"
                 value={riskAssessmentStatusLabel(state.status)}
                 onRemove={() => updateState({ status: "", page: 1 })}
               />
             ) : null}
             {state.assessmentProfile ? (
               <FilterChip
-                label="Profile"
+                label="Профиль"
                 value={profileTitle(state.assessmentProfile)}
                 onRemove={() => updateState({ assessmentProfile: "", page: 1 })}
               />
             ) : null}
             {state.hazardId ? (
               <FilterChip
-                label="Hazard"
+                label="Опасность"
                 value={state.hazardId}
                 onRemove={() => updateState({ hazardId: "", page: 1 })}
               />
@@ -344,7 +355,7 @@ export function RiskAssessmentRegistryPage() {
                   updateState({ ...DEFAULT_RISK_ASSESSMENT_REGISTRY_STATE })
                 }
               >
-                Clear filters
+                Сбросить фильтры
               </Button>
             ) : null}
           </FilterBar>
@@ -353,7 +364,7 @@ export function RiskAssessmentRegistryPage() {
 
       {query.isError ? (
         <div style={{ display: "grid", gap: 8 }}>
-          <Alert tone="danger" title="Unable to load risk assessments">
+          <Alert tone="danger" title="Не удалось загрузить оценки риска">
             {toUserSafeMessage(query.error)}
           </Alert>
           <Button
@@ -361,22 +372,22 @@ export function RiskAssessmentRegistryPage() {
             size="sm"
             onClick={() => void query.refetch()}
           >
-            Retry
+            Повторить
           </Button>
         </div>
       ) : null}
 
       {query.isLoading && !query.data ? (
-        <LoadingState label="Loading risk assessments" />
+        <LoadingState label="Загрузка оценок риска" />
       ) : empty ? (
         <EmptyState
-          title="No risk assessments yet"
-          description="Create the first risk assessment for this organization."
+          title="Оценок риска пока нет"
+          description="Создайте первую оценку риска для этой организации."
           action={
             capabilities.canCreate ? (
               <Button asChild>
                 <Link href="/safety/risk-assessments/new">
-                  Create risk assessment
+                  Создать оценку риска
                 </Link>
               </Button>
             ) : undefined
@@ -384,8 +395,8 @@ export function RiskAssessmentRegistryPage() {
         />
       ) : filteredEmpty ? (
         <EmptyState
-          title="No matching risk assessments"
-          description="Try adjusting or clearing filters."
+          title="Нет подходящих оценок риска"
+          description="Измените или сбросьте фильтры."
           action={
             <Button
               variant="secondary"
@@ -393,7 +404,7 @@ export function RiskAssessmentRegistryPage() {
                 updateState({ ...DEFAULT_RISK_ASSESSMENT_REGISTRY_STATE })
               }
             >
-              Clear filters
+              Сбросить фильтры
             </Button>
           }
         />
@@ -405,14 +416,14 @@ export function RiskAssessmentRegistryPage() {
             pageSize={state.pageSize}
             loading={query.isFetching && !query.isLoading}
             getRowId={(row) => row.id}
-            emptyMessage="No risk assessments found"
+            emptyMessage="Оценки риска не найдены"
           />
           <RegistryFooter
             pagination={
               <RegistryPagination
                 summary={
                   <Text tone="muted" variant="caption">
-                    {total} total · page {state.page} of {totalPages}
+                    Всего {total} · страница {state.page} из {totalPages}
                   </Text>
                 }
               >
@@ -422,7 +433,7 @@ export function RiskAssessmentRegistryPage() {
                   disabled={state.page <= 1}
                   onClick={() => updateState({ page: state.page - 1 })}
                 >
-                  Previous
+                  Назад
                 </Button>
                 <Button
                   variant="secondary"
@@ -430,7 +441,7 @@ export function RiskAssessmentRegistryPage() {
                   disabled={state.page >= totalPages}
                   onClick={() => updateState({ page: state.page + 1 })}
                 >
-                  Next
+                  Далее
                 </Button>
               </RegistryPagination>
             }

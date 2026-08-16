@@ -154,7 +154,7 @@ describe("MaterializeControlsDialog availability", () => {
     renderDialog();
 
     expect(
-      screen.queryByRole("button", { name: /materialize controls/i }),
+      screen.queryByRole("button", { name: /создать меры/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -169,18 +169,16 @@ describe("MaterializeControlsDialog status gating", () => {
     const dialog = await screen.findByRole("dialog");
     expect(
       screen.getByText(
-        "Controls can only be materialized from an approved risk assessment.",
+        "Меры можно создать только из утверждённой оценки риска.",
       ),
     ).toBeInTheDocument();
     expect(dialog.querySelector('[role="checkbox"]')).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /^materialize$/i }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^создать$/i })).toBeDisabled();
   });
 });
 
 describe("MaterializeControlsDialog already-materialized entries", () => {
-  it("shows a disabled checkbox with 'Already materialized' for a proposed control whose reference is already used", async () => {
+  it("shows a disabled checkbox with 'Уже создано' for a proposed control whose reference is already used", async () => {
     mockApiClient({
       list: () => ({
         items: [
@@ -204,7 +202,7 @@ describe("MaterializeControlsDialog already-materialized entries", () => {
       name: /lockout procedure/i,
     });
     await waitFor(() => expect(alreadyMaterialized).toBeDisabled());
-    expect(screen.getByText("Already materialized")).toBeInTheDocument();
+    expect(screen.getByText("Уже создано")).toBeInTheDocument();
 
     const selectable = screen.getByRole("checkbox", {
       name: /hearing protection/i,
@@ -224,7 +222,7 @@ describe("MaterializeControlsDialog submission", () => {
     await user.click(
       await screen.findByRole("checkbox", { name: /lockout procedure/i }),
     );
-    await user.click(screen.getByRole("button", { name: /^materialize$/i }));
+    await user.click(screen.getByRole("button", { name: /^создать$/i }));
 
     await waitFor(() => {
       expect(requestSpy).toHaveBeenCalledWith({
@@ -242,7 +240,7 @@ describe("MaterializeControlsDialog submission", () => {
     renderDialog({ assessmentStatus: "approved" });
     await screen.findByRole("dialog");
 
-    await user.click(screen.getByRole("button", { name: /^materialize$/i }));
+    await user.click(screen.getByRole("button", { name: /^создать$/i }));
 
     await waitFor(() => {
       expect(requestSpy).toHaveBeenCalledWith({
@@ -259,7 +257,7 @@ describe("MaterializeControlsDialog submission", () => {
 
     renderDialog({ assessmentStatus: "approved" });
     await screen.findByRole("dialog");
-    await user.click(screen.getByRole("button", { name: /^materialize$/i }));
+    await user.click(screen.getByRole("button", { name: /^создать$/i }));
 
     await waitFor(() => expect(requestSpy).toHaveBeenCalled());
 
@@ -280,7 +278,7 @@ describe("MaterializeControlsDialog conflict routing", () => {
     mockApiClient({
       materialize: () => {
         throw new ConflictError({
-          message: "Already materialized",
+          message: "Уже создано",
           status: 409,
           code: "risk_control_already_materialized",
         });
@@ -289,13 +287,11 @@ describe("MaterializeControlsDialog conflict routing", () => {
 
     renderDialog({ assessmentStatus: "approved" });
     await screen.findByRole("dialog");
-    await user.click(screen.getByRole("button", { name: /^materialize$/i }));
+    await user.click(screen.getByRole("button", { name: /^создать$/i }));
 
+    expect(await screen.findByText("Меры уже созданы")).toBeInTheDocument();
     expect(
-      await screen.findByText("Controls already materialized"),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText("Risk control changed elsewhere"),
+      screen.queryByText("Мера изменена в другом месте"),
     ).not.toBeInTheDocument();
   });
 });

@@ -15,7 +15,7 @@ export interface ClearAllProps {
 export function ClearAll({
   onClick,
   disabled = false,
-  label = "Clear all",
+  label = "Сбросить все",
   className,
 }: ClearAllProps) {
   return (

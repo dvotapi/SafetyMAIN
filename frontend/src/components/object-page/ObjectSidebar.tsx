@@ -13,7 +13,7 @@ export function ObjectSidebar({ children, className }: ObjectSidebarProps) {
   return (
     <aside
       className={cx(styles.sidebar, className)}
-      aria-label="Object details"
+      aria-label="Сведения об объекте"
     >
       {children}
     </aside>

@@ -71,7 +71,7 @@ export async function getRiskControl(
   return mapRiskControlDto(dto);
 }
 
-/** RC-local lite reads — must not import Hazard or Risk Assessment internals. */
+/** RC-local lite reads — must not import Hazard or Оценка риска internals. */
 interface RelatedObjectDtoLite {
   id: string;
   code: string;
@@ -121,28 +121,28 @@ interface AuditEventListDto {
 }
 
 const ACTIVITY_TITLES: Record<string, string> = {
-  "safety.risk_control.created": "Risk control created",
-  "safety.risk_control.updated": "Risk control updated",
-  "safety.risk_control.owner_assigned": "Owner assigned",
-  "safety.risk_control.owner_changed": "Owner changed",
-  "safety.risk_control.planned": "Implementation planned",
-  "safety.risk_control.implementation_started": "Implementation started",
-  "safety.risk_control.progress_updated": "Progress updated",
-  "safety.risk_control.evidence_added": "Evidence added",
-  "safety.risk_control.implemented": "Implementation completed",
-  "safety.risk_control.verification_recorded": "Verification recorded",
-  "safety.risk_control.verified_effective": "Verified Effective",
+  "safety.risk_control.created": "Мера управления риском создана",
+  "safety.risk_control.updated": "Мера управления риском обновлена",
+  "safety.risk_control.owner_assigned": "Владелец назначен",
+  "safety.risk_control.owner_changed": "Владелец изменён",
+  "safety.risk_control.planned": "Внедрение запланировано",
+  "safety.risk_control.implementation_started": "Внедрение начато",
+  "safety.risk_control.progress_updated": "Прогресс обновлён",
+  "safety.risk_control.evidence_added": "Добавление доказательства",
+  "safety.risk_control.implemented": "Внедрение завершено",
+  "safety.risk_control.verification_recorded": "Подтверждение записано",
+  "safety.risk_control.verified_effective": "Подтверждена эффективной",
   "safety.risk_control.verified_partially_effective":
-    "Verified Partially Effective",
-  "safety.risk_control.verified_ineffective": "Verified Ineffective",
-  "safety.risk_control.review_scheduled": "Review scheduled",
-  "safety.risk_control.review_completed": "Review completed",
-  "safety.risk_control.suspended": "Suspended",
-  "safety.risk_control.resumed": "Resumed",
-  "safety.risk_control.superseded": "Superseded",
-  "safety.risk_control.archived": "Archived",
-  "safety.risk_control.cancelled": "Cancelled",
-  "safety.risk_control.materialized": "Materialized from risk assessment",
+    "Подтверждена частично эффективной",
+  "safety.risk_control.verified_ineffective": "Подтверждена неэффективной",
+  "safety.risk_control.review_scheduled": "Пересмотр назначен",
+  "safety.risk_control.review_completed": "Пересмотр завершён",
+  "safety.risk_control.suspended": "Приостановлено",
+  "safety.risk_control.resumed": "Возобновлено",
+  "safety.risk_control.superseded": "Замещено",
+  "safety.risk_control.archived": "Архив",
+  "safety.risk_control.cancelled": "Отменено",
+  "safety.risk_control.materialized": "Создано из оценки риска",
 };
 
 export async function listRiskControlActivity(

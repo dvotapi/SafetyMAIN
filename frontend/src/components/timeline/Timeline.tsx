@@ -6,6 +6,8 @@ import { Icon } from "@/icons/Icon";
 import type { IconName } from "@/icons";
 import { Text } from "@/components/primitives/Text";
 import { cx } from "@/utils/cx";
+import { formatPluralRu } from "@/utils/format-plural";
+import { APP_LOCALE } from "@/utils/locale";
 
 import styles from "./Timeline.module.css";
 
@@ -29,7 +31,7 @@ function toDate(value: Date | string): Date {
 }
 
 function formatAbsolute(date: Date): string {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(APP_LOCALE, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
@@ -38,17 +40,25 @@ function formatAbsolute(date: Date): string {
 function formatRelative(date: Date, now: Date): string {
   const diffMs = now.getTime() - date.getTime();
   const diffMinutes = Math.round(diffMs / 60000);
-  if (diffMinutes < 1) return "just now";
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffMinutes < 1) return "только что";
+  if (diffMinutes < 60) {
+    return `${diffMinutes} ${formatPluralRu(diffMinutes, "минуту", "минуты", "минут")} назад`;
+  }
   const diffHours = Math.round(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffHours < 24) {
+    return `${diffHours} ${formatPluralRu(diffHours, "час", "часа", "часов")} назад`;
+  }
   const diffDays = Math.round(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 7) {
+    return `${diffDays} ${formatPluralRu(diffDays, "день", "дня", "дней")} назад`;
+  }
   return formatAbsolute(date);
 }
 
 function dateGroupKey(date: Date): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "long" }).format(date);
+  return new Intl.DateTimeFormat(APP_LOCALE, { dateStyle: "long" }).format(
+    date,
+  );
 }
 
 export function Timeline({
@@ -60,7 +70,7 @@ export function Timeline({
   const now = useMemo(() => new Date(), []);
   const grouped = useMemo(() => {
     if (!groupByDate) {
-      return [{ key: "all", label: "Events", events }];
+      return [{ key: "all", label: "События", events }];
     }
     const map = new Map<string, TimelineEvent[]>();
     for (const event of events) {
@@ -133,7 +143,7 @@ export function Timeline({
                     }))
                   }
                 >
-                  {isExpanded ? "Collapse" : "Expand"}
+                  {isExpanded ? "Свернуть" : "Развернуть"}
                 </button>
               </div>
             ) : null}

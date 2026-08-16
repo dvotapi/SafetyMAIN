@@ -10,16 +10,20 @@ import {
 
 import type { Hazard } from "@/features/hazards/types/hazard-types";
 import {
-  formatHazardEnumLabel,
+  affectedSubjectLabel,
+  hazardCategoryLabel,
+  hazardSourceLabel,
   hazardStatusToVisual,
+  safetyDirectionLabel,
 } from "@/features/hazards/utils/hazard-status";
+import { APP_LOCALE } from "@/utils/locale";
 
 function formatDate(value: string | null): string {
   if (!value) {
     return "—";
   }
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(APP_LOCALE, {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(new Date(value));
@@ -34,37 +38,37 @@ export function HazardSummary({ hazard }: { hazard: Hazard }) {
       <PropertyGrid columns={2}>
         <div>
           <Text variant="caption" tone="muted">
-            Reference
+            Код
           </Text>
           <Text>{hazard.code}</Text>
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Status
+            Статус
           </Text>
           <StatusBadge status={hazardStatusToVisual(hazard.status)} />
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Category
+            Категория
           </Text>
-          <Text>{formatHazardEnumLabel(hazard.category)}</Text>
+          <Text>{hazardCategoryLabel(hazard.category)}</Text>
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Location
+            Место
           </Text>
           <Text>{hazard.locationReference ?? "—"}</Text>
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Updated
+            Обновлено
           </Text>
           <Text>{formatDate(hazard.updatedAt)}</Text>
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Version
+            Версия
           </Text>
           <Text>{hazard.version}</Text>
         </div>
@@ -77,81 +81,81 @@ export function HazardProperties({ hazard }: { hazard: Hazard }) {
   return (
     <div style={{ display: "grid", gap: "var(--sm-space-6)" }}>
       <Panel>
-        <Heading level={2}>Hazard details</Heading>
+        <Heading level={2}>Сведения об опасности</Heading>
         <DescriptionList>
-          <DescriptionItem term="Title" details={hazard.title} />
+          <DescriptionItem term="Название" details={hazard.title} />
           <DescriptionItem
-            term="Description"
+            term="Описание"
             details={hazard.description || "—"}
           />
           <DescriptionItem
-            term="Category"
-            details={formatHazardEnumLabel(hazard.category)}
+            term="Категория"
+            details={hazardCategoryLabel(hazard.category)}
           />
           <DescriptionItem
-            term="Source"
-            details={formatHazardEnumLabel(hazard.source)}
+            term="Источник"
+            details={hazardSourceLabel(hazard.source)}
           />
           <DescriptionItem
-            term="Safety directions"
+            term="Направления безопасности"
             details={
-              hazard.safetyDirections.map(formatHazardEnumLabel).join(", ") ||
+              hazard.safetyDirections.map(safetyDirectionLabel).join(", ") ||
               "—"
             }
           />
           <DescriptionItem
-            term="Affected subjects"
+            term="Затронутые объекты"
             details={
-              hazard.affectedSubjects.map(formatHazardEnumLabel).join(", ") ||
+              hazard.affectedSubjects.map(affectedSubjectLabel).join(", ") ||
               "—"
             }
           />
         </DescriptionList>
       </Panel>
       <Panel>
-        <Heading level={2}>Location and scope</Heading>
+        <Heading level={2}>Место и область</Heading>
         <DescriptionList>
           <DescriptionItem
-            term="Location"
+            term="Место"
             details={hazard.locationReference ?? "—"}
           />
           <DescriptionItem
-            term="Process"
+            term="Процесс"
             details={hazard.processReference ?? "—"}
           />
           <DescriptionItem
-            term="Equipment"
+            term="Оборудование"
             details={hazard.equipmentReference ?? "—"}
           />
         </DescriptionList>
       </Panel>
       <Panel>
-        <Heading level={2}>Lifecycle</Heading>
+        <Heading level={2}>Жизненный цикл</Heading>
         <DescriptionList>
           <DescriptionItem
-            term="Status"
+            term="Статус"
             details={
               <StatusBadge status={hazardStatusToVisual(hazard.status)} />
             }
           />
           <DescriptionItem
-            term="Identified"
+            term="Выявлено"
             details={formatDate(hazard.identifiedAt)}
           />
           <DescriptionItem
-            term="Reviewed"
+            term="Рассмотрено"
             details={formatDate(hazard.reviewedAt)}
           />
           <DescriptionItem
-            term="Archived"
+            term="Архивировано"
             details={formatDate(hazard.archivedAt)}
           />
           <DescriptionItem
-            term="Created"
+            term="Создано"
             details={formatDate(hazard.createdAt)}
           />
           <DescriptionItem
-            term="Updated"
+            term="Обновлено"
             details={formatDate(hazard.updatedAt)}
           />
         </DescriptionList>

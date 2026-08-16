@@ -26,7 +26,7 @@ export function ObjectTabs({
     <div
       className={cx(styles.tabs, className)}
       role="tablist"
-      aria-label="Object sections"
+      aria-label="Разделы объекта"
     >
       {tabs.map((tab) => {
         const active = tab.id === activeTabId;

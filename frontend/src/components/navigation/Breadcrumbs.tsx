@@ -19,7 +19,10 @@ export function Breadcrumbs({
   className?: string;
 }) {
   return (
-    <nav aria-label="Breadcrumb" className={cx(styles.breadcrumbs, className)}>
+    <nav
+      aria-label="Хлебные крошки"
+      className={cx(styles.breadcrumbs, className)}
+    >
       <ol
         style={{
           display: "flex",

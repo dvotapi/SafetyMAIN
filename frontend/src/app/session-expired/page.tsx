@@ -19,12 +19,12 @@ function SessionExpiredContent() {
     <div
       style={{ padding: "var(--sm-space-8)", maxWidth: 560, margin: "0 auto" }}
     >
-      <Heading level={1}>Session expired</Heading>
-      <Alert tone="warning" title="Please sign in again">
-        Your session ended or the refresh token is no longer valid.
+      <Heading level={1}>Сеанс истёк</Heading>
+      <Alert tone="warning" title="Войдите снова">
+        Сеанс завершён или токен обновления больше не действителен.
       </Alert>
       <Text tone="secondary">
-        <Link href={href}>Sign in</Link>
+        <Link href={href}>Войти</Link>
       </Text>
     </div>
   );
@@ -32,7 +32,7 @@ function SessionExpiredContent() {
 
 export default function SessionExpiredPage() {
   return (
-    <Suspense fallback={<LoadingState label="Loading" />}>
+    <Suspense fallback={<LoadingState label="Загрузка" />}>
       <SessionExpiredContent />
     </Suspense>
   );

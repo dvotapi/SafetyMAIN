@@ -10,7 +10,7 @@ export interface ValidationSummaryProps {
 }
 
 export function ValidationSummary({
-  title = "Please fix the following errors",
+  title = "Исправьте следующие ошибки",
   errors,
   className,
 }: ValidationSummaryProps) {

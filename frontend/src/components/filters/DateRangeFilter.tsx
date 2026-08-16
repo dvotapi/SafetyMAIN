@@ -21,8 +21,8 @@ export function DateRangeFilter({
   to,
   onFromChange,
   onToChange,
-  fromLabel = "From",
-  toLabel = "To",
+  fromLabel = "С",
+  toLabel = "По",
   className,
 }: DateRangeFilterProps) {
   return (

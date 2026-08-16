@@ -55,28 +55,28 @@ export function EffectivenessSummary({
       </div>
 
       {latestResult === "ineffective" ? (
-        <Alert tone="danger" title="Control verified ineffective">
+        <Alert tone="danger" title="Мера подтверждена неэффективной">
           <Text>
-            This control did not achieve its intended effect. Review the source
-            risk assessment and plan corrective action.
+            Мера не достигла цели. Просмотрите исходную оценку риска и
+            спланируйте корректирующие действия.
           </Text>
           {riskAssessmentId ? (
             <Link href={`/safety/risk-assessments/${riskAssessmentId}`}>
-              View source risk assessment
+              Открыть исходную оценку риска
             </Link>
           ) : null}
         </Alert>
       ) : null}
 
       {latestResult === "partially_effective" ? (
-        <Alert tone="warning" title="Control verified partially effective">
+        <Alert tone="warning" title="Мера подтверждена частично эффективной">
           <Text>
-            This control partially achieved its intended effect. Review the
-            source risk assessment to decide whether further action is needed.
+            Мера частично достигла цели. Просмотрите исходную оценку риска,
+            чтобы решить, нужны ли дополнительные действия.
           </Text>
           {riskAssessmentId ? (
             <Link href={`/safety/risk-assessments/${riskAssessmentId}`}>
-              View source risk assessment
+              Открыть исходную оценку риска
             </Link>
           ) : null}
         </Alert>

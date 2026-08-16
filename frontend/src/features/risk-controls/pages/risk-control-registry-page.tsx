@@ -79,7 +79,7 @@ export function RiskControlRegistryPage() {
   const [searchDraft, setSearchDraft] = useState(state.search);
 
   useEffect(() => {
-    document.title = "Risk Controls · SafetyMAIN";
+    document.title = "Меры управления риском · SafetyMAIN";
   }, []);
 
   useEffect(() => {
@@ -119,7 +119,7 @@ export function RiskControlRegistryPage() {
     () => [
       {
         id: "code",
-        header: "Reference",
+        header: "Код",
         enableSorting: false,
         cell: ({ row }) => (
           <Link href={`/safety/risk-controls/${row.original.id}`}>
@@ -129,20 +129,20 @@ export function RiskControlRegistryPage() {
       },
       {
         id: "title",
-        header: "Control",
+        header: "Мера",
         enableSorting: false,
         cell: ({ row }) => row.original.title,
       },
       {
         id: "hierarchy",
-        header: "Hierarchy Level",
+        header: "Уровень иерархии",
         enableSorting: false,
         cell: ({ row }) =>
           formatRiskControlEnumLabel(row.original.hierarchyLevel),
       },
       {
         id: "status",
-        header: "Status",
+        header: "Статус",
         enableSorting: false,
         cell: ({ row }) => (
           <StatusBadge
@@ -153,13 +153,13 @@ export function RiskControlRegistryPage() {
       },
       {
         id: "owner",
-        header: "Owner",
+        header: "Владелец",
         enableSorting: false,
-        cell: ({ row }) => row.original.owner?.label ?? "Unassigned",
+        cell: ({ row }) => row.original.owner?.label ?? "Не назначен",
       },
       {
         id: "implementation",
-        header: "Implementation",
+        header: "Внедрение",
         enableSorting: false,
         cell: ({ row }) =>
           implementationStateLabel({
@@ -171,14 +171,14 @@ export function RiskControlRegistryPage() {
       },
       {
         id: "effectiveness",
-        header: "Effectiveness",
+        header: "Эффективность",
         enableSorting: false,
         cell: ({ row }) => {
           const visual = effectivenessToVisual(
             row.original.latestEffectivenessResult,
           );
           if (!visual) {
-            return "Not verified";
+            return "Не подтверждена";
           }
           return (
             <StatusBadge
@@ -190,7 +190,7 @@ export function RiskControlRegistryPage() {
       },
       {
         id: "hazard",
-        header: "Hazard",
+        header: "Опасность",
         enableSorting: false,
         cell: ({ row }) =>
           row.original.hazardId ? (
@@ -203,7 +203,7 @@ export function RiskControlRegistryPage() {
       },
       {
         id: "assessment",
-        header: "Risk Assessment",
+        header: "Оценка риска",
         enableSorting: false,
         cell: ({ row }) =>
           row.original.riskAssessmentId ? (
@@ -218,24 +218,24 @@ export function RiskControlRegistryPage() {
       },
       {
         id: "nextReview",
-        header: "Next Review",
+        header: "Следующий пересмотр",
         enableSorting: false,
         cell: ({ row }) => formatDate(row.original.nextReviewDate),
       },
       {
         id: "overdue",
-        header: "Overdue",
+        header: "Просрочено",
         enableSorting: false,
         cell: ({ row }) =>
           row.original.isOverdue ? (
-            <StatusBadge status="overdue" label="Overdue" />
+            <StatusBadge status="overdue" label="Просрочено" />
           ) : (
             "—"
           ),
       },
       {
         id: "updatedAt",
-        header: "Updated At",
+        header: "Обновлено",
         enableSorting: false,
         cell: ({ row }) => formatDate(row.original.updatedAt),
       },
@@ -247,11 +247,11 @@ export function RiskControlRegistryPage() {
     return (
       <PageContainer>
         <EmptyState
-          title="Risk controls unavailable"
-          description="You do not have permission to view risk controls."
+          title="Меры управления риском недоступны"
+          description="Недостаточно прав для просмотра мер управления риском."
           action={
             <Button asChild variant="secondary">
-              <Link href="/">Back to overview</Link>
+              <Link href="/">Вернуться к обзору</Link>
             </Button>
           }
         />
@@ -271,11 +271,11 @@ export function RiskControlRegistryPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Risk Controls"
+        title="Меры управления риском"
         description={
           <Text tone="secondary">
-            Operational risk controls for the active organization. Ordering is
-            fixed by the server (newest first).
+            Операционные меры управления риском активной организации. Порядок
+            задаёт сервер (сначала новые).
           </Text>
         }
       />
@@ -285,14 +285,14 @@ export function RiskControlRegistryPage() {
           <Search
             value={searchDraft}
             onChange={setSearchDraft}
-            placeholder="Search code, title or description"
-            aria-label="Search risk controls"
+            placeholder="Поиск по коду, названию или описанию"
+            aria-label="Поиск мер управления риском"
           />
         }
         filters={
           <FilterBar>
             <Select
-              aria-label="Status filter"
+              aria-label="Фильтр по статусу"
               value={state.status || "__all"}
               onValueChange={(value) =>
                 updateState({
@@ -304,7 +304,7 @@ export function RiskControlRegistryPage() {
                 })
               }
               options={[
-                { value: "__all", label: "All statuses" },
+                { value: "__all", label: "Все статусы" },
                 ...RISK_CONTROL_STATUSES.map((status) => ({
                   value: status,
                   label: riskControlStatusLabel(status),
@@ -312,7 +312,7 @@ export function RiskControlRegistryPage() {
               ]}
             />
             <Select
-              aria-label="Hierarchy level filter"
+              aria-label="Фильтр по уровню иерархии"
               value={state.hierarchyLevel || "__all"}
               onValueChange={(value) =>
                 updateState({
@@ -324,7 +324,7 @@ export function RiskControlRegistryPage() {
                 })
               }
               options={[
-                { value: "__all", label: "All hierarchy levels" },
+                { value: "__all", label: "Все уровни иерархии" },
                 ...HIERARCHY_LEVELS.map((level) => ({
                   value: level,
                   label: formatRiskControlEnumLabel(level),
@@ -332,7 +332,7 @@ export function RiskControlRegistryPage() {
               ]}
             />
             <Select
-              aria-label="Control nature filter"
+              aria-label="Фильтр по характеру меры"
               value={state.controlNature || "__all"}
               onValueChange={(value) =>
                 updateState({
@@ -344,7 +344,7 @@ export function RiskControlRegistryPage() {
                 })
               }
               options={[
-                { value: "__all", label: "All control natures" },
+                { value: "__all", label: "Все характеры меры" },
                 ...CONTROL_NATURES.map((nature) => ({
                   value: nature,
                   label: formatRiskControlEnumLabel(nature),
@@ -352,7 +352,7 @@ export function RiskControlRegistryPage() {
               ]}
             />
             <Select
-              aria-label="Effectiveness filter"
+              aria-label="Фильтр по эффективности"
               value={state.effectiveness || "__all"}
               onValueChange={(value) =>
                 updateState({
@@ -364,7 +364,7 @@ export function RiskControlRegistryPage() {
                 })
               }
               options={[
-                { value: "__all", label: "All effectiveness results" },
+                { value: "__all", label: "Все результаты эффективности" },
                 ...EFFECTIVENESS_FILTER_VALUES.map((result) => ({
                   value: result,
                   label: effectivenessLabel(result),
@@ -379,7 +379,7 @@ export function RiskControlRegistryPage() {
                 updateState({ overdueOnly: !state.overdueOnly, page: 1 })
               }
             >
-              Overdue only
+              Только просроченные
             </Button>
             <Button
               type="button"
@@ -392,7 +392,7 @@ export function RiskControlRegistryPage() {
                 })
               }
             >
-              Awaiting verification
+              Ожидает подтверждения
             </Button>
             <Button
               type="button"
@@ -405,47 +405,47 @@ export function RiskControlRegistryPage() {
                 })
               }
             >
-              Include closed
+              Показать закрытые
             </Button>
             {state.status ? (
               <FilterChip
-                label="Status"
+                label="Статус"
                 value={riskControlStatusLabel(state.status)}
                 onRemove={() => updateState({ status: "", page: 1 })}
               />
             ) : null}
             {state.hierarchyLevel ? (
               <FilterChip
-                label="Hierarchy"
+                label="Иерархия"
                 value={formatRiskControlEnumLabel(state.hierarchyLevel)}
                 onRemove={() => updateState({ hierarchyLevel: "", page: 1 })}
               />
             ) : null}
             {state.controlNature ? (
               <FilterChip
-                label="Nature"
+                label="Характер"
                 value={formatRiskControlEnumLabel(state.controlNature)}
                 onRemove={() => updateState({ controlNature: "", page: 1 })}
               />
             ) : null}
             {state.effectiveness ? (
               <FilterChip
-                label="Effectiveness"
+                label="Эффективность"
                 value={effectivenessLabel(state.effectiveness)}
                 onRemove={() => updateState({ effectiveness: "", page: 1 })}
               />
             ) : null}
             {state.overdueOnly ? (
               <FilterChip
-                label="Overdue"
-                value="Overdue only"
+                label="Просрочено"
+                value="Только просроченные"
                 onRemove={() => updateState({ overdueOnly: false, page: 1 })}
               />
             ) : null}
             {state.awaitingVerification ? (
               <FilterChip
-                label="Verification"
-                value="Awaiting verification"
+                label="Подтверждение"
+                value="Ожидает подтверждения"
                 onRemove={() =>
                   updateState({ awaitingVerification: false, page: 1 })
                 }
@@ -453,8 +453,8 @@ export function RiskControlRegistryPage() {
             ) : null}
             {state.includeTerminal ? (
               <FilterChip
-                label="Closed"
-                value="Included"
+                label="Закрытые"
+                value="Включено"
                 onRemove={() =>
                   updateState({ includeTerminal: false, page: 1 })
                 }
@@ -469,7 +469,7 @@ export function RiskControlRegistryPage() {
                   updateState({ ...DEFAULT_RISK_CONTROL_REGISTRY_STATE })
                 }
               >
-                Clear filters
+                Сбросить фильтры
               </Button>
             ) : null}
           </FilterBar>
@@ -478,13 +478,16 @@ export function RiskControlRegistryPage() {
 
       {state.includeTerminal ? null : (
         <Text tone="muted" variant="caption">
-          Superseded, archived and cancelled controls are hidden by default.
+          Замещённые, архивные и отменённые меры по умолчанию скрыты.
         </Text>
       )}
 
       {query.isError ? (
         <div style={{ display: "grid", gap: 8 }}>
-          <Alert tone="danger" title="Unable to load risk controls">
+          <Alert
+            tone="danger"
+            title="Не удалось загрузить меры управления риском"
+          >
             {toUserSafeMessage(query.error)}
           </Alert>
           <Button
@@ -492,22 +495,22 @@ export function RiskControlRegistryPage() {
             size="sm"
             onClick={() => void query.refetch()}
           >
-            Retry
+            Повторить
           </Button>
         </div>
       ) : null}
 
       {query.isLoading && !query.data ? (
-        <LoadingState label="Loading risk controls" />
+        <LoadingState label="Загрузка мер управления риском" />
       ) : empty ? (
         <EmptyState
-          title="No risk controls yet"
-          description="Risk controls appear here once they are materialized from an approved risk assessment."
+          title="Мер управления риском пока нет"
+          description="Меры появятся здесь после создания из утверждённой оценки риска."
         />
       ) : filteredEmpty ? (
         <EmptyState
-          title="No matching risk controls"
-          description="Try adjusting or clearing filters."
+          title="Нет подходящих мер управления риском"
+          description="Измените или сбросьте фильтры."
           action={
             <Button
               variant="secondary"
@@ -515,7 +518,7 @@ export function RiskControlRegistryPage() {
                 updateState({ ...DEFAULT_RISK_CONTROL_REGISTRY_STATE })
               }
             >
-              Clear filters
+              Сбросить фильтры
             </Button>
           }
         />
@@ -527,14 +530,14 @@ export function RiskControlRegistryPage() {
             pageSize={state.pageSize}
             loading={query.isFetching && !query.isLoading}
             getRowId={(row) => row.id}
-            emptyMessage="No risk controls found"
+            emptyMessage="Меры управления риском не найдены"
           />
           <RegistryFooter
             pagination={
               <RegistryPagination
                 summary={
                   <Text tone="muted" variant="caption">
-                    {total} total · page {state.page} of {totalPages}
+                    Всего {total} · страница {state.page} из {totalPages}
                   </Text>
                 }
               >

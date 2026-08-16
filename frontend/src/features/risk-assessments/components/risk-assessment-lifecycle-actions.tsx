@@ -33,14 +33,17 @@ import {
   validateApproveAcceptance,
   type ApproveAcceptanceInput,
 } from "@/features/risk-assessments/utils/approve-acceptance";
-import { formatRiskAssessmentEnumLabel } from "@/features/risk-assessments/utils/risk-assessment-status";
+import {
+  acceptanceDecisionLabel,
+  riskAssessmentStatusLabel,
+} from "@/features/risk-assessments/utils/risk-assessment-status";
 
 export type { ApproveAcceptanceInput };
 
 const ACTION_LABELS: Record<RiskAssessmentLifecycleAction, string> = {
-  submit_for_review: "Submit for review",
-  approve: "Approve assessment",
-  archive: "Archive assessment",
+  submit_for_review: "Отправить на рассмотрение",
+  approve: "Утвердить оценку",
+  archive: "Архивировать оценку",
 };
 
 export function RiskAssessmentLifecycleActions({
@@ -76,8 +79,8 @@ export function RiskAssessmentLifecycleActions({
     return (
       <Panel>
         <Text tone="secondary">
-          No lifecycle actions are available for this risk assessment in its
-          current state.
+          Для этой оценки риска в текущем состоянии нет доступных действий
+          жизненного цикла.
         </Text>
       </Panel>
     );
@@ -96,8 +99,8 @@ export function RiskAssessmentLifecycleActions({
   return (
     <Panel>
       <NextActionCard
-        title="Lifecycle"
-        description={`Current status: ${formatRiskAssessmentEnumLabel(assessment.status)}. Choose the next permitted action.`}
+        title="Жизненный цикл"
+        description={`Текущий статус: ${riskAssessmentStatusLabel(assessment.status)}. Выберите следующее разрешённое действие.`}
         actions={
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {actions.map((action) => (
@@ -126,7 +129,7 @@ export function RiskAssessmentLifecycleActions({
         }
       />
       {errorMessage ? (
-        <Alert tone="danger" title="Lifecycle action failed">
+        <Alert tone="danger" title="Не удалось выполнить действие">
           {errorMessage}
         </Alert>
       ) : null}
@@ -134,9 +137,9 @@ export function RiskAssessmentLifecycleActions({
       <ConfirmationDialog
         open={submitOpen}
         onOpenChange={setSubmitOpen}
-        title="Submit for review"
-        description={`Submit this draft for review using version ${assessment.version}?`}
-        confirmLabel="Submit for review"
+        title="Отправить на рассмотрение"
+        description={`Отправить этот черновик на рассмотрение с версией ${assessment.version}?`}
+        confirmLabel="Отправить на рассмотрение"
         loading={busyAction === "submit_for_review"}
         onConfirm={() => {
           void onSubmitForReview();
@@ -146,24 +149,24 @@ export function RiskAssessmentLifecycleActions({
       <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
         <DialogContent>
           <DialogHeader
-            title="Approve assessment"
-            description={`Approve using version ${assessment.version}. Approval may automatically supersede a previous approved assessment in the same scope.`}
+            title="Утвердить оценку"
+            description={`Утверждение с версией ${assessment.version}. При утверждении предыдущая оценка в той же области может быть автоматически замещена.`}
           />
           <DialogBody>
             <div style={{ display: "grid", gap: 12 }}>
-              <Alert tone="warning" title="Superseding">
-                If another approved assessment exists for the same
-                hazard/profile/object scope, the backend will supersede it. This
-                UI does not choose which assessment is superseded.
+              <Alert tone="warning" title="Замещение">
+                Если в той же области (опасность/профиль/объект) уже есть
+                утверждённая оценка, сервер заместит её. Интерфейс не выбирает,
+                какая оценка будет замещена.
               </Alert>
               <Text tone="secondary">
-                Reviewers can confirm or override the acceptance decision before
-                approval. Values below are pre-filled from the assessment when
-                available.
+                Рецензент может подтвердить или изменить решение о принятии
+                перед утверждением. Ниже подставлены значения из оценки, если
+                они есть.
               </Text>
               <div style={{ display: "grid", gap: 8 }}>
                 <Label htmlFor="approve-acceptance" required>
-                  Acceptance decision
+                  Решение о принятии
                 </Label>
                 <Select
                   id="approve-acceptance"
@@ -174,16 +177,16 @@ export function RiskAssessmentLifecycleActions({
                     )
                   }
                   options={[
-                    { value: "", label: "Select decision" },
+                    { value: "", label: "Выберите решение" },
                     ...ACCEPTANCE_DECISIONS.map((value) => ({
                       value,
-                      label: formatRiskAssessmentEnumLabel(value),
+                      label: acceptanceDecisionLabel(value),
                     })),
                   ]}
                 />
               </div>
               <div style={{ display: "grid", gap: 8 }}>
-                <Label htmlFor="approve-justification">Justification</Label>
+                <Label htmlFor="approve-justification">Обоснование</Label>
                 <TextArea
                   id="approve-justification"
                   rows={3}
@@ -194,7 +197,7 @@ export function RiskAssessmentLifecycleActions({
                 />
               </div>
               {approveError ? (
-                <Alert tone="danger" title="Acceptance required">
+                <Alert tone="danger" title="Требуется принятие">
                   {approveError}
                 </Alert>
               ) : null}
@@ -202,7 +205,7 @@ export function RiskAssessmentLifecycleActions({
           </DialogBody>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setApproveOpen(false)}>
-              Cancel
+              Отмена
             </Button>
             <Button
               variant="primary"
@@ -219,7 +222,7 @@ export function RiskAssessmentLifecycleActions({
                 }
                 const payload = toApproveAcceptanceInput(draft);
                 if (!payload) {
-                  setApproveError("Acceptance decision is required");
+                  setApproveError("Укажите решение о принятии");
                   return;
                 }
                 setApproveError(null);
@@ -231,7 +234,7 @@ export function RiskAssessmentLifecycleActions({
                 })();
               }}
             >
-              Approve assessment
+              Утвердить оценку
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -247,13 +250,13 @@ export function RiskAssessmentLifecycleActions({
       >
         <DialogContent>
           <DialogHeader
-            title="Archive assessment"
-            description={`This action uses version ${assessment.version}.`}
+            title="Архивировать оценку"
+            description={`Действие выполняется с версией ${assessment.version}.`}
           />
           <DialogBody>
             <div style={{ display: "grid", gap: 8 }}>
               <Label htmlFor="archive-reason" required>
-                Reason
+                Причина
               </Label>
               <TextArea
                 id="archive-reason"
@@ -262,7 +265,7 @@ export function RiskAssessmentLifecycleActions({
                 rows={3}
               />
               {archiveError ? (
-                <Alert tone="danger" title="Reason required">
+                <Alert tone="danger" title="Требуется причина">
                   {archiveError}
                 </Alert>
               ) : null}
@@ -277,14 +280,14 @@ export function RiskAssessmentLifecycleActions({
                 setArchiveError(null);
               }}
             >
-              Cancel
+              Отмена
             </Button>
             <Button
               variant="primary"
               loading={busyAction === "archive"}
               onClick={() => {
                 if (archiveReason.trim().length === 0) {
-                  setArchiveError("Reason is required");
+                  setArchiveError("Укажите причину");
                   return;
                 }
                 const value = archiveReason.trim();
@@ -299,7 +302,7 @@ export function RiskAssessmentLifecycleActions({
                 })();
               }}
             >
-              Archive assessment
+              Архивировать оценку
             </Button>
           </DialogFooter>
         </DialogContent>

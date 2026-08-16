@@ -31,14 +31,14 @@ export function validateApproveAcceptance(
   draft: ApproveAcceptanceDraft,
 ): string | null {
   if (!draft.decision) {
-    return "Acceptance decision is required";
+    return "Укажите решение о принятии";
   }
   if (
     (draft.decision === "accepted" ||
       draft.decision === "conditionally_accepted") &&
     draft.justification.trim().length === 0
   ) {
-    return "Justification is required for accepted risks";
+    return "Для принятого риска укажите обоснование";
   }
   return null;
 }

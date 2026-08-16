@@ -15,30 +15,30 @@ export default function HomePage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Overview"
+        title="Обзор"
         description={
           <Text tone="secondary">
-            Frontend bootstrap shell — placeholder content only. Business
-            screens are deferred.
+            Базовая оболочка приложения. Предметные разделы добавляются
+            поэтапно.
           </Text>
         }
         actions={
           <PageActions>
-            <Button variant="secondary">Notifications</Button>
-            <Button>Primary action</Button>
+            <Button variant="secondary">Уведомления</Button>
+            <Button>Основное действие</Button>
           </PageActions>
         }
       />
       <PageSection>
-        <Alert tone="info" title="Foundation ready">
-          Design tokens, themes, shared primitives, and the application shell
-          are available for upcoming feature work.
+        <Alert tone="info" title="Основа готова">
+          Токены дизайна, темы, общие компоненты и оболочка приложения готовы
+          для следующих функций.
         </Alert>
       </PageSection>
       <PageSection>
         <ContentGrid>
           <Card>
-            <Text variant="label">Sample statuses</Text>
+            <Text variant="label">Примеры статусов</Text>
             <div
               style={{
                 display: "flex",
@@ -55,10 +55,10 @@ export default function HomePage() {
             </div>
           </Card>
           <Card>
-            <Text variant="label">Shell regions</Text>
+            <Text variant="label">Области оболочки</Text>
             <Text tone="secondary" style={{ marginTop: "var(--sm-space-2)" }}>
-              Top bar, left navigation, main content, organization and user
-              placeholders are structural only.
+              Верхняя панель, боковая навигация, основная область, организация и
+              пользователь образуют структуру приложения.
             </Text>
           </Card>
         </ContentGrid>

@@ -121,17 +121,17 @@ async function login(
   password = "secret-password",
 ) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await page.getByLabel("Электронная почта").fill(email);
+  await page.getByLabel("Пароль").fill(password);
+  await page.getByRole("button", { name: "Войти" }).click();
+  await expect(page.getByRole("heading", { name: "Обзор" })).toBeVisible();
 }
 
 async function logout(page: Page, displayName = "Test User") {
   await page
     .getByRole("button", { name: new RegExp(displayName, "i") })
     .click();
-  await page.getByRole("menuitem", { name: "Sign out" }).click();
+  await page.getByRole("menuitem", { name: "Выйти" }).click();
   await expect(page).toHaveURL(/\/login/);
 }
 
@@ -139,7 +139,7 @@ async function logout(page: Page, displayName = "Test User") {
  * so a lingering success toast never intercepts the next click. */
 async function dismissToasts(page: Page) {
   const dismissButtons = page.getByRole("button", {
-    name: "Dismiss notification",
+    name: "Закрыть уведомление",
   });
   let count = await dismissButtons.count();
   while (count > 0) {
@@ -217,7 +217,7 @@ function conflictBody() {
   return JSON.stringify({
     error: {
       code: "risk_control_version_conflict",
-      message: "Version conflict",
+      message: "Конфликт версий",
     },
   });
 }
@@ -226,7 +226,7 @@ function notFoundBody() {
   return JSON.stringify({
     error: {
       code: "risk_control_not_found",
-      message: "Risk control not found",
+      message: "Мера управления риском не найдена",
     },
   });
 }
@@ -559,7 +559,7 @@ test.describe("Risk Control lifecycle — main workflow", () => {
       organization_id: orgId,
       hazard_id: hazardId,
       code: "RA-E2E",
-      title: "E2E Risk Assessment",
+      title: "E2E Оценка риска",
       assessment_profile: "simple_5x5",
       assessed_object: { object_type: "workplace", reference: "Line A" },
       assessor_id: userId,
@@ -658,139 +658,142 @@ test.describe("Risk Control lifecycle — main workflow", () => {
     await login(page);
     await page.goto(`/safety/risk-assessments/${riskAssessmentId}`);
     await expect(
-      page.getByRole("heading", { name: "E2E Risk Assessment" }),
+      page.getByRole("heading", { name: "E2E Оценка риска" }),
     ).toBeVisible();
 
-    await page.getByRole("tab", { name: "Related controls" }).click();
-    await page.getByRole("button", { name: "Materialize controls" }).click();
+    await page.getByRole("tab", { name: "Связанные меры" }).click();
+    await page.getByRole("button", { name: "Создать меры" }).click();
     await page
-      .getByRole("checkbox", { name: /Engineering — Install guard rail/ })
+      .getByRole("checkbox", { name: /Инженерные меры — Install guard rail/ })
       .check();
-    await page.getByRole("button", { name: "Materialize" }).click();
-    await expect(page.getByText(/Materialized 1 risk control/)).toBeVisible();
+    await page.getByRole("button", { name: "Создать" }).click();
+    await expect(page.getByText(/Создано мер: 1/)).toBeVisible();
 
     await page.goto(`/safety/risk-controls/${riskControlId}`);
     await expect(
       page.getByRole("heading", { name: "E2E Risk Control", level: 1 }),
     ).toBeVisible();
 
-    // Assign owner
-    await page.getByRole("button", { name: "Assign owner" }).click();
-    await page.getByLabel("Owner reference").fill("jane.doe");
-    await page.getByLabel("Display name").fill("Jane Doe");
+    // Назначить владельца
+    await page.getByRole("button", { name: "Назначить владельца" }).click();
+    await page.getByLabel("Ссылка на владельца").fill("jane.doe");
+    await page.getByLabel("Отображаемое имя").fill("Jane Doe");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Assign owner" })
+      .getByRole("button", { name: "Назначить владельца" })
       .click();
     await expect(page.getByText("Jane Doe").first()).toBeVisible();
     await dismissToasts(page);
 
-    // Plan implementation
-    await page.getByRole("tab", { name: "Implementation" }).click();
+    // Спланировать внедрение
+    await page.getByRole("tab", { name: "Внедрение" }).click();
     await page
-      .getByRole("button", { name: "Plan implementation" })
+      .getByRole("button", { name: "Спланировать внедрение" })
       .first()
       .click();
-    await page.getByLabel("Target completion date").fill("2026-09-30");
+    await page.getByLabel("Плановая дата завершения").fill("2026-09-30");
     await page
-      .getByLabel("Verification method requirement")
+      .getByLabel("Требование к методу подтверждения")
       .fill("Visual inspection");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Plan implementation" })
+      .getByRole("button", { name: "Спланировать внедрение" })
       .click();
-    await expect(page.getByLabel("Status: Planned").first()).toBeVisible();
+    await expect(
+      page.getByLabel("Статус: Запланировано").first(),
+    ).toBeVisible();
     await dismissToasts(page);
 
-    // Start implementation
+    // Начать внедрение
     await page
-      .getByRole("button", { name: "Start implementation" })
+      .getByRole("button", { name: "Начать внедрение" })
       .first()
       .click();
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Start implementation" })
+      .getByRole("button", { name: "Начать внедрение" })
       .click();
-    await expect(
-      page.getByLabel("Status: In Implementation").first(),
-    ).toBeVisible();
+    await expect(page.getByLabel("Статус: Внедряется").first()).toBeVisible();
     await dismissToasts(page);
 
-    // Update progress
-    await page.getByRole("button", { name: "Update progress" }).click();
-    await page.getByLabel("Progress (%)").fill("50");
+    // Обновить прогресс
+    await page.getByRole("button", { name: "Обновить прогресс" }).click();
+    await page.getByLabel("Прогресс (%)").fill("50");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Update progress" })
+      .getByRole("button", { name: "Обновить прогресс" })
       .click();
     await dismissToasts(page);
 
-    // Add evidence
-    await page.getByRole("tab", { name: "Evidence" }).click();
-    await page.getByRole("button", { name: "Add evidence" }).click();
-    await page.getByLabel("External reference").fill("DOC-100");
-    await page.getByLabel("Title").fill("Guard rail photo");
+    // Добавить доказательство
+    await page.getByRole("tab", { name: "Доказательства" }).click();
+    await page.getByRole("button", { name: "Добавить доказательство" }).click();
+    await page.getByLabel("Внешняя ссылка").fill("DOC-100");
+    await page.getByLabel("Название").fill("Guard rail photo");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Add evidence" })
+      .getByRole("button", { name: "Добавить доказательство" })
       .click();
     await expect(page.getByText("Guard rail photo")).toBeVisible();
     await dismissToasts(page);
 
-    // Complete implementation
-    await page.getByRole("tab", { name: "Implementation" }).click();
+    // Завершить внедрение
+    await page.getByRole("tab", { name: "Внедрение" }).click();
     await page
-      .getByRole("button", { name: "Complete implementation" })
+      .getByRole("button", { name: "Завершить внедрение" })
       .first()
       .click();
     await page
-      .getByLabel("Completion summary")
+      .getByLabel("Сводка по завершению")
       .fill("Guard rail installed and verified in place.");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Complete implementation" })
+      .getByRole("button", { name: "Завершить внедрение" })
       .click();
-    await expect(page.getByLabel("Status: Implemented").first()).toBeVisible();
+    await expect(page.getByLabel("Статус: Внедрено").first()).toBeVisible();
     await dismissToasts(page);
 
-    // Record effectiveness verification
-    await page.getByRole("tab", { name: "Verification" }).click();
-    await page.getByRole("button", { name: "Record verification" }).click();
-    await page.getByLabel("Method").fill("Site inspection");
-    await page.getByRole("radio", { name: "Verified Effective" }).check();
-    await page.getByLabel("Next review date").fill("2027-02-01");
+    // Подтвердить эффективность
+    await page.getByRole("tab", { name: "Подтверждение" }).click();
+    await page.getByRole("button", { name: "Записать подтверждение" }).click();
+    await page.getByLabel("Метод").fill("Site inspection");
+    await page.getByRole("radio", { name: "Подтверждена эффективной" }).check();
+    await page.getByLabel("Дата следующего пересмотра").fill("2027-02-01");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Record verification" })
+      .getByRole("button", { name: "Записать подтверждение" })
       .click();
     await expect(
-      page.getByText("Verified Effective", { exact: true }).first(),
+      page.getByText("Подтверждена эффективной", { exact: true }).first(),
     ).toBeVisible();
     await dismissToasts(page);
 
-    // Schedule review
-    await page.getByRole("tab", { name: "Overview" }).click();
-    await page.getByRole("button", { name: "Schedule review" }).first().click();
-    await page.getByLabel("Next review date").fill("2027-03-01");
+    // Назначить пересмотр
+    await page.getByRole("tab", { name: "Обзор" }).click();
+    await page
+      .getByRole("button", { name: "Назначить пересмотр" })
+      .first()
+      .click();
+    await page.getByLabel("Дата следующего пересмотра").fill("2027-03-01");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Schedule review" })
+      .getByRole("button", { name: "Назначить пересмотр" })
       .click();
 
     // Final Object Page assertions
     await expect(
-      page.getByLabel("Status: Verified Effective").first(),
+      page.getByLabel("Статус: Подтверждена эффективной").first(),
     ).toBeVisible();
     await expect(
-      page.getByText("Verified Effective", { exact: true }).first(),
+      page.getByText("Подтверждена эффективной", { exact: true }).first(),
     ).toBeVisible();
     await expect(page.getByText("Jane Doe").first()).toBeVisible();
-    await expect(page.getByText("Mar 1, 2027").first()).toBeVisible();
+    await expect(page.getByText(/1.*мар.*2027/i).first()).toBeVisible();
 
-    await page.getByRole("tab", { name: "Evidence" }).click();
+    await page.getByRole("tab", { name: "Доказательства" }).click();
     await expect(page.getByText("Guard rail photo")).toBeVisible();
 
-    await page.getByRole("tab", { name: "Verification" }).click();
+    await page.getByRole("tab", { name: "Подтверждение" }).click();
     await expect(page.getByText("Site inspection")).toBeVisible();
   });
 });
@@ -837,21 +840,23 @@ test.describe("Risk Control lifecycle — effectiveness results", () => {
 
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
-    await page.getByRole("tab", { name: "Verification" }).click();
-    await page.getByRole("button", { name: "Record verification" }).click();
-    await page.getByLabel("Method").fill("Site inspection");
-    await page.getByRole("radio", { name: "Verified Effective" }).check();
-    await page.getByLabel("Next review date").fill("2027-01-01");
+    await page.getByRole("tab", { name: "Подтверждение" }).click();
+    await page.getByRole("button", { name: "Записать подтверждение" }).click();
+    await page.getByLabel("Метод").fill("Site inspection");
+    await page.getByRole("radio", { name: "Подтверждена эффективной" }).check();
+    await page.getByLabel("Дата следующего пересмотра").fill("2027-01-01");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Record verification" })
+      .getByRole("button", { name: "Записать подтверждение" })
       .click();
 
     await expect(
-      page.getByText("Verified Effective", { exact: true }).first(),
+      page.getByText("Подтверждена эффективной", { exact: true }).first(),
     ).toBeVisible();
-    await expect(page.getByText("Verified Partially Effective")).toHaveCount(0);
-    await expect(page.getByText("Verified Ineffective")).toHaveCount(0);
+    await expect(
+      page.getByText("Подтверждена частично эффективной"),
+    ).toHaveCount(0);
+    await expect(page.getByText("Подтверждена неэффективной")).toHaveCount(0);
   });
 
   test("ineffective result renders its own label and hides the others", async ({
@@ -879,22 +884,26 @@ test.describe("Risk Control lifecycle — effectiveness results", () => {
 
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
-    await page.getByRole("tab", { name: "Verification" }).click();
-    await page.getByRole("button", { name: "Record verification" }).click();
-    await page.getByLabel("Method").fill("Site inspection");
-    await page.getByRole("radio", { name: "Verified Ineffective" }).check();
+    await page.getByRole("tab", { name: "Подтверждение" }).click();
+    await page.getByRole("button", { name: "Записать подтверждение" }).click();
+    await page.getByLabel("Метод").fill("Site inspection");
+    await page
+      .getByRole("radio", { name: "Подтверждена неэффективной" })
+      .check();
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Record verification" })
+      .getByRole("button", { name: "Записать подтверждение" })
       .click();
 
     await expect(
-      page.getByText("Verified Ineffective", { exact: true }).first(),
+      page.getByText("Подтверждена неэффективной", { exact: true }).first(),
     ).toBeVisible();
     await expect(
-      page.getByText("Verified Effective", { exact: true }),
+      page.getByText("Подтверждена эффективной", { exact: true }),
     ).toHaveCount(0);
-    await expect(page.getByText("Verified Partially Effective")).toHaveCount(0);
+    await expect(
+      page.getByText("Подтверждена частично эффективной"),
+    ).toHaveCount(0);
   });
 
   test("partially effective result never collapses into effective or ineffective, and leaves the status badge unchanged", async ({
@@ -922,31 +931,33 @@ test.describe("Risk Control lifecycle — effectiveness results", () => {
 
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
-    await expect(page.getByLabel("Status: Implemented").first()).toBeVisible();
+    await expect(page.getByLabel("Статус: Внедрено").first()).toBeVisible();
 
-    await page.getByRole("tab", { name: "Verification" }).click();
-    await page.getByRole("button", { name: "Record verification" }).click();
-    await page.getByLabel("Method").fill("Site inspection");
+    await page.getByRole("tab", { name: "Подтверждение" }).click();
+    await page.getByRole("button", { name: "Записать подтверждение" }).click();
+    await page.getByLabel("Метод").fill("Site inspection");
     await page
-      .getByRole("radio", { name: "Verified Partially Effective" })
+      .getByRole("radio", { name: "Подтверждена частично эффективной" })
       .check();
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Record verification" })
+      .getByRole("button", { name: "Записать подтверждение" })
       .click();
 
     await expect(
-      page.getByText("Verified Partially Effective", { exact: true }).first(),
+      page
+        .getByText("Подтверждена частично эффективной", { exact: true })
+        .first(),
     ).toBeVisible();
     await expect(
-      page.getByText("Verified Effective", { exact: true }),
+      page.getByText("Подтверждена эффективной", { exact: true }),
     ).toHaveCount(0);
     await expect(
-      page.getByText("Verified Ineffective", { exact: true }),
+      page.getByText("Подтверждена неэффективной", { exact: true }),
     ).toHaveCount(0);
 
     // Lifecycle status badge is unchanged — still "Implemented".
-    await expect(page.getByLabel("Status: Implemented").first()).toBeVisible();
+    await expect(page.getByLabel("Статус: Внедрено").first()).toBeVisible();
   });
 });
 
@@ -973,16 +984,16 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
     ).toBeVisible();
 
     await expect(
-      page.getByRole("button", { name: "Assign owner" }),
+      page.getByRole("button", { name: "Назначить владельца" }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("button", { name: "Plan implementation" }),
+      page.getByRole("button", { name: "Спланировать внедрение" }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("button", { name: "Verify effectiveness" }),
+      page.getByRole("button", { name: "Подтвердить эффективность" }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("button", { name: "Archive control" }),
+      page.getByRole("button", { name: "Архивировать меру" }),
     ).toHaveCount(0);
   });
 
@@ -998,7 +1009,7 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
       page.getByRole("heading", { name: "E2E Risk Control", level: 1 }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Verify effectiveness" }),
+      page.getByRole("button", { name: "Подтвердить эффективность" }),
     ).toHaveCount(0);
   });
 
@@ -1013,17 +1024,17 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
     await expect(
-      page.getByRole("button", { name: "Verify effectiveness" }),
+      page.getByRole("button", { name: "Подтвердить эффективность" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Schedule review" }),
+      page.getByRole("button", { name: "Назначить пересмотр" }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("button", { name: "Plan implementation" }),
+      page.getByRole("button", { name: "Спланировать внедрение" }),
     ).toHaveCount(0);
   });
 
-  test("review-only user sees Schedule review but not Verify", async ({
+  test("review-only user sees Назначить пересмотр but not Verify", async ({
     page,
   }) => {
     await mockAuth(page, REVIEWER);
@@ -1034,10 +1045,10 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
     await expect(
-      page.getByRole("button", { name: "Schedule review" }).first(),
+      page.getByRole("button", { name: "Назначить пересмотр" }).first(),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Verify effectiveness" }),
+      page.getByRole("button", { name: "Подтвердить эффективность" }),
     ).toHaveCount(0);
   });
 
@@ -1049,7 +1060,9 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
 
     await login(page);
     await page.goto(`/safety/risk-controls/${otherControlId}`);
-    await expect(page.getByText("Risk control not found")).toBeVisible();
+    await expect(
+      page.getByText("Мера управления риском не найдена"),
+    ).toBeVisible();
   });
 
   test("cross-tenant control shows the identical not-found copy", async ({
@@ -1064,7 +1077,9 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
     // A control id belonging to another organization — the backend answers
     // with 404, indistinguishable from a genuinely unknown id.
     await page.goto(`/safety/risk-controls/${otherControlId}`);
-    await expect(page.getByText("Risk control not found")).toBeVisible();
+    await expect(
+      page.getByText("Мера управления риском не найдена"),
+    ).toBeVisible();
     await expect(page.getByText(/denied/i)).toHaveCount(0);
     await expect(page.getByText(/forbidden/i)).toHaveCount(0);
   });
@@ -1112,14 +1127,14 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
 
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
-    await page.getByRole("button", { name: "Resume control" }).click();
+    await page.getByRole("button", { name: "Возобновить меру" }).click();
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Resume control" })
+      .getByRole("button", { name: "Возобновить меру" })
       .click();
 
     await expect(
-      page.getByRole("heading", { name: "Risk control changed elsewhere" }),
+      page.getByRole("heading", { name: "Мера изменена в другом месте" }),
     ).toBeVisible();
     expect(resumeAttempts).toBe(1);
   });
@@ -1135,7 +1150,7 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
       organization_id: orgId,
       hazard_id: hazardId,
       code: "RA-E2E",
-      title: "E2E Risk Assessment",
+      title: "E2E Оценка риска",
       assessment_profile: "simple_5x5",
       assessed_object: { object_type: "workplace", reference: "Line A" },
       assessor_id: userId,
@@ -1219,15 +1234,15 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
 
     await login(page);
     await page.goto(`/safety/risk-assessments/${riskAssessmentId}`);
-    await page.getByRole("tab", { name: "Related controls" }).click();
-    await page.getByRole("button", { name: "Materialize controls" }).click();
+    await page.getByRole("tab", { name: "Связанные меры" }).click();
+    await page.getByRole("button", { name: "Создать меры" }).click();
     await page
-      .getByRole("checkbox", { name: /Engineering — Install guard rail/ })
+      .getByRole("checkbox", { name: /Инженерные меры — Install guard rail/ })
       .check();
-    await page.getByRole("button", { name: "Materialize" }).click();
+    await page.getByRole("button", { name: "Создать" }).click();
 
     await expect(
-      page.getByRole("heading", { name: "Controls already materialized" }),
+      page.getByRole("heading", { name: "Меры уже созданы" }),
     ).toBeVisible();
   });
 
@@ -1274,20 +1289,22 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
 
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
-    await page.getByRole("tab", { name: "Implementation" }).click();
+    await page.getByRole("tab", { name: "Внедрение" }).click();
     await page
-      .getByRole("button", { name: "Start implementation" })
+      .getByRole("button", { name: "Начать внедрение" })
       .first()
       .click();
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Start implementation" })
+      .getByRole("button", { name: "Начать внедрение" })
       .click();
 
     await expect(
       page.getByText("Cannot start implementation from status planned."),
     ).toBeVisible();
-    await expect(page.getByLabel("Status: Planned").first()).toBeVisible();
+    await expect(
+      page.getByLabel("Статус: Запланировано").first(),
+    ).toBeVisible();
   });
 
   test("logout clears data — re-login as a different org shows no stale rows", async ({
@@ -1328,7 +1345,9 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
     await login(page, "user2@example.com");
     await page.goto("/safety/risk-controls");
     await expect(page.getByText("RC-ORG-A")).toHaveCount(0);
-    await expect(page.getByText("No risk controls yet")).toBeVisible();
+    await expect(
+      page.getByText("Мер управления риском пока нет"),
+    ).toBeVisible();
   });
 
   test("no delete affordance exists on any reachable status", async ({
@@ -1377,22 +1396,22 @@ test.describe("Risk Control lifecycle — terminal commands", () => {
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
 
-    await page.getByRole("button", { name: "Suspend control" }).click();
-    await page.getByLabel("Reason").fill("Waiting on parts");
+    await page.getByRole("button", { name: "Приостановить меру" }).click();
+    await page.getByLabel("Причина").fill("Waiting on parts");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Suspend control" })
-      .click();
-    await expect(page.getByLabel("Status: Suspended").first()).toBeVisible();
-
-    await page.getByRole("button", { name: "Resume control" }).click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Resume control" })
+      .getByRole("button", { name: "Приостановить меру" })
       .click();
     await expect(
-      page.getByLabel("Status: In Implementation").first(),
+      page.getByLabel("Статус: Приостановлено").first(),
     ).toBeVisible();
+
+    await page.getByRole("button", { name: "Возобновить меру" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Возобновить меру" })
+      .click();
+    await expect(page.getByLabel("Статус: Внедряется").first()).toBeVisible();
   });
 
   test("archive leaves the control readable by direct link", async ({
@@ -1405,21 +1424,23 @@ test.describe("Risk Control lifecycle — terminal commands", () => {
 
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
-    await page.getByRole("button", { name: "Archive control" }).click();
-    await page.getByLabel("Reason").fill("Control retired");
+    await page.getByRole("button", { name: "Архивировать меру" }).click();
+    await page.getByLabel("Причина").fill("Control retired");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Archive control" })
+      .getByRole("button", { name: "Архивировать меру" })
       .click();
-    await expect(page.getByLabel("Status: Archived").first()).toBeVisible();
+    await expect(page.getByLabel("Статус: Архив").first()).toBeVisible();
 
     // Archiving is not deletion — the control stays readable by direct link.
     await page.goto(`/safety/risk-controls/${riskControlId}`);
     await expect(
       page.getByRole("heading", { name: "E2E Risk Control", level: 1 }),
     ).toBeVisible();
-    await expect(page.getByLabel("Status: Archived").first()).toBeVisible();
-    await expect(page.getByText("Risk control not found")).toHaveCount(0);
+    await expect(page.getByLabel("Статус: Архив").first()).toBeVisible();
+    await expect(
+      page.getByText("Мера управления риском не найдена"),
+    ).toHaveCount(0);
   });
 
   test("cancel moves the control to cancelled", async ({ page }) => {
@@ -1430,15 +1451,15 @@ test.describe("Risk Control lifecycle — terminal commands", () => {
 
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
-    await page.getByRole("button", { name: "Cancel control" }).click();
+    await page.getByRole("button", { name: "Отменить меру" }).click();
     await page
-      .getByLabel("Reason")
+      .getByLabel("Причина")
       .fill("Assessment superseded before implementation");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Cancel control" })
+      .getByRole("button", { name: "Отменить меру" })
       .click();
-    await expect(page.getByLabel("Status: Cancelled").first()).toBeVisible();
+    await expect(page.getByLabel("Статус: Отменено").first()).toBeVisible();
   });
 
   test("supersede moves the control to superseded", async ({ page }) => {
@@ -1449,15 +1470,15 @@ test.describe("Risk Control lifecycle — terminal commands", () => {
 
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
-    await page.getByRole("button", { name: "Supersede control" }).click();
-    await page.getByLabel("Replacement control ID").fill(replacementControlId);
+    await page.getByRole("button", { name: "Заместить меру" }).click();
+    await page.getByLabel("ID замещающей меры").fill(replacementControlId);
     await page
-      .getByLabel("Reason")
+      .getByLabel("Причина")
       .fill("Replaced by an improved guard design");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Supersede control" })
+      .getByRole("button", { name: "Заместить меру" })
       .click();
-    await expect(page.getByLabel("Status: Superseded").first()).toBeVisible();
+    await expect(page.getByLabel("Статус: Замещено").first()).toBeVisible();
   });
 });

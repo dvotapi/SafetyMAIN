@@ -12,19 +12,19 @@ import { formatDateOnly } from "@/utils/format-date";
 /** Read-only. The snapshot is immutable once materialized — no edit affordance. */
 export function SourceSnapshot({ source }: { source: RiskControlSource }) {
   return (
-    <Panel heading="Immutable snapshot captured when this control was materialized.">
+    <Panel heading="Неизменяемый снимок на момент создания меры.">
       {source.snapshot ? (
         <DescriptionList>
           <DescriptionItem
-            term="Source type"
+            term="Тип источника"
             details={formatRiskControlEnumLabel(source.sourceType)}
           />
           <DescriptionItem
-            term="Source control reference"
+            term="Ссылка на исходную меру"
             details={source.sourceControlReference ?? "—"}
           />
           <DescriptionItem
-            term="Assessment version"
+            term="Версия оценки"
             details={
               source.assessmentVersion !== null
                 ? String(source.assessmentVersion)
@@ -32,30 +32,30 @@ export function SourceSnapshot({ source }: { source: RiskControlSource }) {
             }
           />
           <DescriptionItem
-            term="Assessment approved at"
+            term="Оценка утверждена"
             details={formatDateOnly(source.assessmentApprovedAt)}
           />
           <DescriptionItem
-            term="Residual level"
+            term="Остаточный уровень"
             details={source.residualLevel ?? "—"}
           />
           <DescriptionItem
-            term="Control type"
+            term="Тип меры"
             details={source.snapshot.control_type ?? "—"}
           />
           <DescriptionItem
-            term="Description"
+            term="Описание"
             details={source.snapshot.description ?? "—"}
           />
           <DescriptionItem
-            term="Responsible"
+            term="Ответственный"
             details={source.snapshot.responsible ?? "—"}
           />
         </DescriptionList>
       ) : (
         <EmptyState
-          title="No source snapshot"
-          description="This control was not created from a risk assessment proposed control."
+          title="Нет снимка источника"
+          description="Мера не создана из предложенной меры оценки риска."
         />
       )}
     </Panel>

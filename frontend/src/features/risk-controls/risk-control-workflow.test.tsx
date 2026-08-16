@@ -69,7 +69,7 @@ import type {
 import { apiClient } from "@/services/api/client";
 
 // Used only by the RiskControlObjectPage render test below — grants every
-// permission so capability gating never hides the Complete review button,
+// permission so capability gating never hides the Завершить пересмотр button,
 // and pins a stable organizationId so the query and mutation hooks (which
 // both key their cache entries off it) stay in sync.
 vi.mock("@/hooks/auth", () => ({
@@ -150,7 +150,7 @@ describe("ControlOwnerSection", () => {
     renderSection({ status: "draft" });
 
     expect(
-      screen.getByRole("button", { name: /assign owner/i }),
+      screen.getByRole("button", { name: /назначить владельца/i }),
     ).toBeInTheDocument();
   });
 
@@ -160,15 +160,15 @@ describe("ControlOwnerSection", () => {
 
     const dialog = await screen.findByRole("dialog");
     await user.type(
-      within(dialog).getByLabelText(/display name/i),
+      within(dialog).getByLabelText(/отображаемое имя/i),
       "Site Safety Team",
     );
     await user.click(
-      within(dialog).getByRole("button", { name: /assign owner/i }),
+      within(dialog).getByRole("button", { name: /назначить владельца/i }),
     );
 
     expect(
-      within(dialog).getByText("Owner reference is required"),
+      within(dialog).getByText("Укажите ссылку на владельца"),
     ).toBeInTheDocument();
     expect(onAssign).not.toHaveBeenCalled();
   });
@@ -237,7 +237,7 @@ describe("ImplementationPlanSection", () => {
       screen.queryByRole("button", { name: /plan implementation/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText("Assign an owner before planning implementation."),
+      screen.getByText("Назначьте владельца перед планированием внедрения."),
     ).toBeInTheDocument();
   });
 
@@ -253,7 +253,7 @@ describe("ImplementationPlanSection", () => {
     renderPlanSection();
 
     expect(
-      screen.getByRole("button", { name: /plan implementation/i }),
+      screen.getByRole("button", { name: /спланировать внедрение/i }),
     ).toBeInTheDocument();
   });
 
@@ -263,18 +263,18 @@ describe("ImplementationPlanSection", () => {
 
     const dialog = await screen.findByRole("dialog");
     await user.type(
-      within(dialog).getByLabelText(/target completion date/i),
+      within(dialog).getByLabelText(/плановая дата завершения/i),
       "2026-09-01",
     );
     await user.click(
-      within(dialog).getByRole("button", { name: /add milestone/i }),
+      within(dialog).getByRole("button", { name: /добавить веху/i }),
     );
     await user.click(
-      within(dialog).getByRole("button", { name: /plan implementation/i }),
+      within(dialog).getByRole("button", { name: /спланировать внедрение/i }),
     );
 
     expect(
-      within(dialog).getByText("Milestone title is required"),
+      within(dialog).getByText("Укажите название вехи"),
     ).toBeInTheDocument();
     expect(onPlan).not.toHaveBeenCalled();
   });
@@ -368,9 +368,7 @@ describe("buildImplementationFormSchema verificationMethodRequirement conditiona
       const issue = result.error.issues.find((candidate) =>
         candidate.path.includes("verificationMethodRequirement"),
       );
-      expect(issue?.message).toBe(
-        "Verification method requirement is required",
-      );
+      expect(issue?.message).toBe("Укажите требование к методу подтверждения");
     }
   });
 
@@ -515,7 +513,7 @@ describe("ImplementationProgressSection", () => {
   it("shows the start button only when status is planned", () => {
     renderProgressSection({ control: buildControl({ status: "planned" }) });
     expect(
-      screen.getByRole("button", { name: /start implementation/i }),
+      screen.getByRole("button", { name: /начать внедрение/i }),
     ).toBeInTheDocument();
 
     cleanup();
@@ -531,10 +529,10 @@ describe("ImplementationProgressSection", () => {
       control: buildControl({ status: "in_implementation" }),
     });
     expect(
-      screen.getByRole("button", { name: /update progress/i }),
+      screen.getByRole("button", { name: /обновить прогресс/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /complete implementation/i }),
+      screen.getByRole("button", { name: /завершить внедрение/i }),
     ).toBeInTheDocument();
 
     cleanup();
@@ -557,19 +555,19 @@ describe("ImplementationProgressSection", () => {
 
     const dialog = await screen.findByRole("dialog");
     expect(
-      within(dialog).getByLabelText(/evidence waiver reason/i),
+      within(dialog).getByLabelText(/причин.*отказа/i),
     ).toBeInTheDocument();
 
     await user.type(
-      within(dialog).getByLabelText(/completion summary/i),
+      within(dialog).getByLabelText(/сводка/i),
       "Guarding installed and verified in the field",
     );
     await user.click(
-      within(dialog).getByRole("button", { name: /complete implementation/i }),
+      within(dialog).getByRole("button", { name: /завершить внедрение/i }),
     );
 
     expect(
-      within(dialog).getByText("Evidence waiver reason is required"),
+      within(dialog).getByText("Укажите причину отказа от доказательств"),
     ).toBeInTheDocument();
     expect(onComplete).not.toHaveBeenCalled();
   });
@@ -612,7 +610,7 @@ describe("ImplementationProgressSection", () => {
       completeOpen: true,
     });
     expect(
-      screen.getByRole("checkbox", { name: /allow incomplete milestones/i }),
+      screen.getByRole("checkbox", { name: /незаверш/i }),
     ).toBeInTheDocument();
 
     cleanup();
@@ -761,7 +759,9 @@ describe("EvidenceForm", () => {
     renderEvidenceForm({ status: "in_implementation" });
     const dialog = await screen.findByRole("dialog");
     expect(
-      within(dialog).queryByLabelText(/add evidence after implementation/i),
+      within(dialog).queryByLabelText(
+        /добавить доказательство после внедрения/i,
+      ),
     ).not.toBeInTheDocument();
     cleanup();
 
@@ -774,12 +774,12 @@ describe("EvidenceForm", () => {
       const implementedDialog = await screen.findByRole("dialog");
       expect(
         within(implementedDialog).getByLabelText(
-          /add evidence after implementation/i,
+          /добавить доказательство после внедрения/i,
         ),
       ).toBeInTheDocument();
       expect(
         within(implementedDialog).getByText(
-          "This control is already implemented. Adding evidence now is an explicit append to the record.",
+          "Мера уже внедрена. Добавление доказательства сейчас — явное дополнение записи.",
         ),
       ).toBeInTheDocument();
       cleanup();
@@ -792,21 +792,22 @@ describe("EvidenceForm", () => {
 
     const dialog = await screen.findByRole("dialog");
     await user.type(
-      within(dialog).getByLabelText(/external reference/i),
+      within(dialog).getByLabelText(/внешняя ссылка/i),
       "DOC-123",
     );
-    await user.type(within(dialog).getByLabelText(/title/i), "Install photo");
+    await user.type(
+      within(dialog).getByLabelText(/название/i),
+      "Install photo",
+    );
     await user.click(
-      within(dialog).getByRole("button", { name: /add evidence/i }),
+      within(dialog).getByRole("button", { name: /добавить доказательство/i }),
     );
 
     expect(onSubmit).not.toHaveBeenCalled();
 
+    await user.click(within(dialog).getByLabelText(/после внедрения/i));
     await user.click(
-      within(dialog).getByLabelText(/add evidence after implementation/i),
-    );
-    await user.click(
-      within(dialog).getByRole("button", { name: /add evidence/i }),
+      within(dialog).getByRole("button", { name: /добавить доказательство/i }),
     );
 
     expect(onSubmit).toHaveBeenCalledWith(
@@ -819,13 +820,16 @@ describe("EvidenceForm", () => {
     const { onSubmit } = renderEvidenceForm();
 
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText(/title/i), "Install photo");
+    await user.type(
+      within(dialog).getByLabelText(/название/i),
+      "Install photo",
+    );
     await user.click(
-      within(dialog).getByRole("button", { name: /add evidence/i }),
+      within(dialog).getByRole("button", { name: /добавить доказательство/i }),
     );
 
     expect(
-      within(dialog).getByText("External reference is required"),
+      within(dialog).getByText("Укажите внешнюю ссылку"),
     ).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -951,21 +955,21 @@ describe("VerificationForm availability", () => {
   it("renders when permitted and status is implemented", () => {
     renderVerificationForm({ status: "implemented" });
     expect(
-      screen.getByRole("button", { name: /record verification/i }),
+      screen.getByRole("button", { name: /записать подтверждение/i }),
     ).toBeInTheDocument();
   });
 
   it("renders when status is verified_effective or verified_ineffective", () => {
     renderVerificationForm({ status: "verified_effective" });
     expect(
-      screen.getByRole("button", { name: /record verification/i }),
+      screen.getByRole("button", { name: /записать подтверждение/i }),
     ).toBeInTheDocument();
 
     cleanup();
 
     renderVerificationForm({ status: "verified_ineffective" });
     expect(
-      screen.getByRole("button", { name: /record verification/i }),
+      screen.getByRole("button", { name: /записать подтверждение/i }),
     ).toBeInTheDocument();
   });
 });
@@ -976,15 +980,15 @@ describe("VerificationForm result options", () => {
     const dialog = await screen.findByRole("dialog");
 
     expect(
-      within(dialog).getByRole("radio", { name: "Verified Effective" }),
+      within(dialog).getByRole("radio", { name: "Подтверждена эффективной" }),
     ).toBeInTheDocument();
     expect(
       within(dialog).getByRole("radio", {
-        name: "Verified Partially Effective",
+        name: "Подтверждена частично эффективной",
       }),
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByRole("radio", { name: "Verified Ineffective" }),
+      within(dialog).getByRole("radio", { name: "Подтверждена неэффективной" }),
     ).toBeInTheDocument();
     expect(
       within(dialog).queryByRole("radio", { name: /not verified/i }),
@@ -1007,19 +1011,19 @@ describe("VerificationForm submit validation", () => {
 
     const dialog = await screen.findByRole("dialog");
     await user.type(
-      within(dialog).getByLabelText(/method/i),
+      within(dialog).getByLabelText(/метод/i),
       "Field inspection",
     );
     await user.click(
-      within(dialog).getByRole("radio", { name: "Verified Effective" }),
+      within(dialog).getByRole("radio", { name: "Подтверждена эффективной" }),
     );
     await user.click(
-      within(dialog).getByRole("button", { name: /record verification/i }),
+      within(dialog).getByRole("button", { name: /записать подтверждение/i }),
     );
 
     expect(
       within(dialog).getByText(
-        "A next review date is required when verifying a control effective.",
+        "При подтверждении эффективности укажите дату следующего пересмотра.",
       ),
     ).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -1035,14 +1039,14 @@ describe("VerificationForm submit validation", () => {
 
     const dialog = await screen.findByRole("dialog");
     await user.type(
-      within(dialog).getByLabelText(/method/i),
+      within(dialog).getByLabelText(/метод/i),
       "Field inspection",
     );
     await user.click(
-      within(dialog).getByRole("radio", { name: "Verified Effective" }),
+      within(dialog).getByRole("radio", { name: "Подтверждена эффективной" }),
     );
     await user.click(
-      within(dialog).getByRole("button", { name: /record verification/i }),
+      within(dialog).getByRole("button", { name: /записать подтверждение/i }),
     );
 
     expect(onSubmit).toHaveBeenCalled();
@@ -1058,18 +1062,20 @@ describe("VerificationForm submit validation", () => {
 
     const dialog = await screen.findByRole("dialog");
     await user.type(
-      within(dialog).getByLabelText(/method/i),
+      within(dialog).getByLabelText(/метод/i),
       "Field inspection",
     );
     await user.click(
-      within(dialog).getByRole("radio", { name: "Verified Ineffective" }),
+      within(dialog).getByRole("radio", { name: "Подтверждена неэффективной" }),
     );
     await user.click(
-      within(dialog).getByRole("button", { name: /record verification/i }),
+      within(dialog).getByRole("button", { name: /записать подтверждение/i }),
     );
 
     expect(
-      within(dialog).getByText("At least one evidence reference is required."),
+      within(dialog).getByText(
+        "Укажите хотя бы одну ссылку на доказательство.",
+      ),
     ).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -1084,14 +1090,14 @@ describe("VerificationForm submit validation", () => {
 
     const dialog = await screen.findByRole("dialog");
     await user.type(
-      within(dialog).getByLabelText(/method/i),
+      within(dialog).getByLabelText(/метод/i),
       "Field inspection",
     );
     await user.click(
-      within(dialog).getByRole("radio", { name: "Verified Ineffective" }),
+      within(dialog).getByRole("radio", { name: "Подтверждена неэффективной" }),
     );
     await user.click(
-      within(dialog).getByRole("button", { name: /record verification/i }),
+      within(dialog).getByRole("button", { name: /записать подтверждение/i }),
     );
 
     expect(onSubmit).toHaveBeenCalled();
@@ -1230,7 +1236,7 @@ function buildVerification(
 }
 
 describe("partially_effective never collapses into effective or ineffective", () => {
-  it("never renders 'Verified Effective' or 'Verified Ineffective' anywhere when the latest result is partially_effective", () => {
+  it("never renders 'Подтверждена эффективной' or 'Подтверждена неэффективной' anywhere when the latest result is partially_effective", () => {
     const verification = buildVerification({ result: "partially_effective" });
     const { container } = render(
       <>
@@ -1243,9 +1249,11 @@ describe("partially_effective never collapses into effective or ineffective", ()
       </>,
     );
 
-    expect(container.textContent).toContain("Verified Partially Effective");
-    expect(container.textContent).not.toContain("Verified Effective");
-    expect(container.textContent).not.toContain("Verified Ineffective");
+    expect(container.textContent).toContain(
+      "Подтверждена частично эффективной",
+    );
+    expect(container.textContent).not.toContain("Подтверждена эффективной");
+    expect(container.textContent).not.toContain("Подтверждена неэффективной");
   });
 });
 
@@ -1277,7 +1285,7 @@ describe("VerificationHistory is append-only", () => {
     expect(
       screen.queryAllByRole("link", { name: /edit|delete|remove/i }),
     ).toHaveLength(0);
-    expect(screen.getAllByText("Latest")).toHaveLength(1);
+    expect(screen.getAllByText("Последнее")).toHaveLength(1);
   });
 });
 
@@ -1346,7 +1354,7 @@ function renderReviewSection(
 }
 
 describe("ReviewScheduleSection availability", () => {
-  it("does not render Schedule review without risk_control:review", () => {
+  it("does not render Назначить пересмотр without risk_control:review", () => {
     renderReviewSection({
       capabilities: { ...REVIEW_CAPABILITIES, canReview: false },
     });
@@ -1356,7 +1364,7 @@ describe("ReviewScheduleSection availability", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("does not render Schedule review when status is terminal-inactive", () => {
+  it("does not render Назначить пересмотр when status is terminal-inactive", () => {
     renderReviewSection({ status: "archived" });
 
     expect(
@@ -1364,51 +1372,51 @@ describe("ReviewScheduleSection availability", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders Schedule review when permitted and status is not terminal-inactive", () => {
+  it("renders Назначить пересмотр when permitted and status is not terminal-inactive", () => {
     renderReviewSection({ status: "implemented" });
 
     expect(
-      screen.getByRole("button", { name: /schedule review/i }),
+      screen.getByRole("button", { name: /назначить пересмотр/i }),
     ).toBeInTheDocument();
   });
 
-  it("does not render Complete review when review is not required", () => {
+  it("does not render Завершить пересмотр when review is not required", () => {
     renderReviewSection({
       reviewSchedule: buildReviewSchedule({ reviewRequired: false }),
     });
 
     expect(
-      screen.queryByRole("button", { name: /complete review/i }),
+      screen.queryByRole("button", { name: /завершить пересмотр/i }),
     ).not.toBeInTheDocument();
   });
 
-  it("does not render Complete review when there is no next review date", () => {
+  it("does not render Завершить пересмотр when there is no next review date", () => {
     renderReviewSection({
       reviewSchedule: buildReviewSchedule({ nextReviewDate: null }),
     });
 
     expect(
-      screen.queryByRole("button", { name: /complete review/i }),
+      screen.queryByRole("button", { name: /завершить пересмотр/i }),
     ).not.toBeInTheDocument();
   });
 
-  it("renders Complete review when permitted, review is required, and a next review date exists", () => {
+  it("renders Завершить пересмотр when permitted, review is required, and a next review date exists", () => {
     renderReviewSection();
 
     expect(
-      screen.getByRole("button", { name: /complete review/i }),
+      screen.getByRole("button", { name: /завершить пересмотр/i }),
     ).toBeInTheDocument();
   });
 });
 
-describe("ReviewScheduleSection overdue presentation keys off isOverdue only", () => {
+describe("ReviewScheduleSection overdue presentation keys off isOverdue", () => {
   it("renders the overdue banner with the exact copy when isOverdue is true", () => {
     renderReviewSection({ isOverdue: true });
 
-    expect(screen.getByText("Review overdue")).toBeInTheDocument();
+    expect(screen.getByText("Пересмотр просрочен")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "The scheduled review date has passed. Complete the review to bring this control back into compliance.",
+        "Запланированная дата пересмотра прошла. Завершите пересмотр, чтобы вернуть меру в соответствие.",
       ),
     ).toBeInTheDocument();
   });
@@ -1424,10 +1432,10 @@ describe("ReviewScheduleSection overdue presentation keys off isOverdue only", (
       }),
     });
 
-    expect(screen.queryByText("Review overdue")).not.toBeInTheDocument();
+    expect(screen.queryByText("Пересмотр просрочен")).not.toBeInTheDocument();
     expect(
       screen.queryByText(
-        "The scheduled review date has passed. Complete the review to bring this control back into compliance.",
+        "Запланированная дата пересмотра прошла. Завершите пересмотр, чтобы вернуть меру в соответствие.",
       ),
     ).not.toBeInTheDocument();
   });
@@ -1727,7 +1735,7 @@ describe("completeRiskControlReview version trap", () => {
 });
 
 describe("RiskControlObjectPage renders the version the server returns (TRAP 2, end to end)", () => {
-  it("shows Version 7 after completing a review with a verification that the server double-bumps, never a client-computed 6", async () => {
+  it("shows Версия 7 after completing a review with a verification that the server double-bumps, never a client-computed 6", async () => {
     const user = userEvent.setup();
     const detailDto = buildRiskControlDto({
       version: 5,
@@ -1779,21 +1787,21 @@ describe("RiskControlObjectPage renders the version the server returns (TRAP 2, 
     );
 
     // Initial load reflects version 5 from the detail query.
-    expect(await screen.findByText("Version 5")).toBeInTheDocument();
+    expect(await screen.findByText("Версия 5")).toBeInTheDocument();
 
     await user.click(
-      await screen.findByRole("button", { name: /complete review/i }),
+      await screen.findByRole("button", { name: /завершить пересмотр/i }),
     );
     const dialog = await screen.findByRole("dialog");
     await user.click(
-      within(dialog).getByRole("button", { name: /complete review/i }),
+      within(dialog).getByRole("button", { name: /завершить пересмотр/i }),
     );
 
     // The mutation's onSuccess must feed the response straight into the
     // object page's rendered state (via the detail query cache) — not a
     // client-computed expected_version + 1, and not a stale cached prop.
-    expect(await screen.findByText("Version 7")).toBeInTheDocument();
-    expect(screen.queryByText("Version 6")).not.toBeInTheDocument();
+    expect(await screen.findByText("Версия 7")).toBeInTheDocument();
+    expect(screen.queryByText("Версия 6")).not.toBeInTheDocument();
 
     requestSpy.mockRestore();
   });
@@ -1873,7 +1881,7 @@ describe("RiskControlLifecycleActions", () => {
     renderLifecycleActions({ control: buildControl({ status: "archived" }) });
     expect(
       screen.getByText(
-        "No lifecycle actions are available for this control in its current state.",
+        "Для этой меры в текущем состоянии нет доступных действий жизненного цикла.",
       ),
     ).toBeInTheDocument();
   });
@@ -1892,7 +1900,7 @@ describe("RiskControlLifecycleActions", () => {
       control: buildControl({ status: "draft", owner }),
     });
     await user.click(
-      screen.getByRole("button", { name: /plan implementation/i }),
+      screen.getByRole("button", { name: /спланировать внедрение/i }),
     );
     expect(onPlan).toHaveBeenCalledTimes(1);
     // The click must never open a dialog of its own — plan has no form here.
@@ -1904,13 +1912,15 @@ describe("RiskControlLifecycleActions", () => {
     const { onSuspend } = renderLifecycleActions({
       control: buildControl({ status: "implemented" }),
     });
-    await user.click(screen.getByRole("button", { name: /suspend control/i }));
+    await user.click(
+      screen.getByRole("button", { name: /приостановить меру/i }),
+    );
     const dialog = await screen.findByRole("dialog");
     await user.click(
-      within(dialog).getByRole("button", { name: /suspend control/i }),
+      within(dialog).getByRole("button", { name: /приостановить меру/i }),
     );
     expect(onSuspend).not.toHaveBeenCalled();
-    expect(within(dialog).getByText(/reason is required/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/укажите причину/i)).toBeInTheDocument();
   });
 
   it("submits suspend with the reason and optional resolution date", async () => {
@@ -1918,14 +1928,16 @@ describe("RiskControlLifecycleActions", () => {
     const { onSuspend } = renderLifecycleActions({
       control: buildControl({ status: "implemented" }),
     });
-    await user.click(screen.getByRole("button", { name: /suspend control/i }));
+    await user.click(
+      screen.getByRole("button", { name: /приостановить меру/i }),
+    );
     const dialog = await screen.findByRole("dialog");
     await user.type(
-      within(dialog).getByLabelText(/reason/i),
+      within(dialog).getByLabelText(/причин/i),
       "Waiting on parts",
     );
     await user.click(
-      within(dialog).getByRole("button", { name: /suspend control/i }),
+      within(dialog).getByRole("button", { name: /приостановить меру/i }),
     );
     expect(onSuspend).toHaveBeenCalledWith(
       expect.objectContaining({ reason: "Waiting on parts" }),
@@ -1937,10 +1949,10 @@ describe("RiskControlLifecycleActions", () => {
     const { onResume } = renderLifecycleActions({
       control: buildControl({ status: "suspended" }),
     });
-    await user.click(screen.getByRole("button", { name: /resume control/i }));
+    await user.click(screen.getByRole("button", { name: /возобновить меру/i }));
     const dialog = await screen.findByRole("dialog");
     await user.click(
-      within(dialog).getByRole("button", { name: /resume control/i }),
+      within(dialog).getByRole("button", { name: /возобновить меру/i }),
     );
     expect(onResume).toHaveBeenCalledTimes(1);
   });
@@ -1950,20 +1962,15 @@ describe("RiskControlLifecycleActions", () => {
     const { onSupersede } = renderLifecycleActions({
       control: buildControl({ status: "implemented" }),
     });
-    await user.click(
-      screen.getByRole("button", { name: /supersede control/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /заместить меру/i }));
     const dialog = await screen.findByRole("dialog");
-    await user.type(
-      within(dialog).getByLabelText(/replacement control id/i),
-      "not-a-uuid",
-    );
-    await user.type(within(dialog).getByLabelText(/reason/i), "Redesigned");
+    await user.type(within(dialog).getByLabelText(/замещающ/i), "not-a-uuid");
+    await user.type(within(dialog).getByLabelText(/причин/i), "Redesigned");
     await user.click(
-      within(dialog).getByRole("button", { name: /supersede control/i }),
+      within(dialog).getByRole("button", { name: /заместить меру/i }),
     );
     expect(onSupersede).not.toHaveBeenCalled();
-    expect(within(dialog).getByText(/valid uuid/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/корректный uuid/i)).toBeInTheDocument();
   });
 
   it("states the supersede copy verbatim and does not validate replacement existence", async () => {
@@ -1971,23 +1978,18 @@ describe("RiskControlLifecycleActions", () => {
     const { onSupersede } = renderLifecycleActions({
       control: buildControl({ status: "implemented" }),
     });
-    await user.click(
-      screen.getByRole("button", { name: /supersede control/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /заместить меру/i }));
     const dialog = await screen.findByRole("dialog");
     expect(
       within(dialog).getByText(
-        "Superseding is not deletion — the control stays readable in its history.",
+        "Замещение — не удаление: мера остаётся доступной в истории.",
       ),
     ).toBeInTheDocument();
     const replacementId = "11111111-1111-4111-8111-111111111111";
-    await user.type(
-      within(dialog).getByLabelText(/replacement control id/i),
-      replacementId,
-    );
-    await user.type(within(dialog).getByLabelText(/reason/i), "Redesigned");
+    await user.type(within(dialog).getByLabelText(/замещающ/i), replacementId);
+    await user.type(within(dialog).getByLabelText(/причин/i), "Redesigned");
     await user.click(
-      within(dialog).getByRole("button", { name: /supersede control/i }),
+      within(dialog).getByRole("button", { name: /заместить меру/i }),
     );
     expect(onSupersede).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -2002,18 +2004,18 @@ describe("RiskControlLifecycleActions", () => {
     const { onCancel } = renderLifecycleActions({
       control: buildControl({ status: "draft" }),
     });
-    await user.click(screen.getByRole("button", { name: /cancel control/i }));
+    await user.click(screen.getByRole("button", { name: /отменить меру/i }));
     const dialog = await screen.findByRole("dialog");
     await user.click(
-      within(dialog).getByRole("button", { name: /cancel control/i }),
+      within(dialog).getByRole("button", { name: /отменить меру/i }),
     );
     expect(onCancel).not.toHaveBeenCalled();
     await user.type(
-      within(dialog).getByLabelText(/reason/i),
+      within(dialog).getByLabelText(/причин/i),
       "No longer needed",
     );
     await user.click(
-      within(dialog).getByRole("button", { name: /cancel control/i }),
+      within(dialog).getByRole("button", { name: /отменить меру/i }),
     );
     expect(onCancel).toHaveBeenCalledWith(
       expect.objectContaining({ reason: "No longer needed" }),
@@ -2025,20 +2027,22 @@ describe("RiskControlLifecycleActions", () => {
     const { onArchive } = renderLifecycleActions({
       control: buildControl({ status: "cancelled" }),
     });
-    await user.click(screen.getByRole("button", { name: /archive control/i }));
+    await user.click(
+      screen.getByRole("button", { name: /архивировать меру/i }),
+    );
     const dialog = await screen.findByRole("dialog");
     expect(
       within(dialog).getByText(
-        "Archiving is not deletion. The control remains readable by direct link.",
+        "Архивирование — не удаление. Мера остаётся доступной по прямой ссылке.",
       ),
     ).toBeInTheDocument();
     await user.click(
-      within(dialog).getByRole("button", { name: /archive control/i }),
+      within(dialog).getByRole("button", { name: /архивировать меру/i }),
     );
     expect(onArchive).not.toHaveBeenCalled();
-    await user.type(within(dialog).getByLabelText(/reason/i), "Retired");
+    await user.type(within(dialog).getByLabelText(/причин/i), "Retired");
     await user.click(
-      within(dialog).getByRole("button", { name: /archive control/i }),
+      within(dialog).getByRole("button", { name: /архивировать меру/i }),
     );
     expect(onArchive).toHaveBeenCalledWith(
       expect.objectContaining({ reason: "Retired" }),
@@ -2238,7 +2242,7 @@ describe("Accessibility", () => {
       </QueryClientProvider>,
     );
 
-    expect(await screen.findByText("Version 5")).toBeInTheDocument();
+    expect(await screen.findByText("Версия 5")).toBeInTheDocument();
     await expectNoSeriousA11yViolations(container);
 
     requestSpy.mockRestore();
@@ -2257,12 +2261,14 @@ describe("Accessibility", () => {
       />,
     );
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByLabelText(/owner type/i)).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/тип владельца/i)).toBeInTheDocument();
     expect(
-      within(dialog).getByLabelText(/owner reference/i),
+      within(dialog).getByLabelText(/ссылка на владельца/i),
     ).toBeInTheDocument();
-    expect(within(dialog).getByLabelText(/display name/i)).toBeInTheDocument();
-    expect(within(dialog).getByLabelText(/reason/i)).toBeInTheDocument();
+    expect(
+      within(dialog).getByLabelText(/отображаемое имя/i),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/причин/i)).toBeInTheDocument();
     await expectNoSeriousA11yViolations(dialog);
   });
 
@@ -2281,10 +2287,10 @@ describe("Accessibility", () => {
     );
     const dialog = await screen.findByRole("dialog");
     expect(
-      within(dialog).getByLabelText(/target completion date/i),
+      within(dialog).getByLabelText(/плановая дата завершения/i),
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByLabelText(/verification method requirement/i),
+      within(dialog).getByLabelText(/требование к методу подтверждения/i),
     ).toBeInTheDocument();
     await expectNoSeriousA11yViolations(dialog);
   });
@@ -2292,11 +2298,13 @@ describe("Accessibility", () => {
   it("evidence form: every control is labeled and has no violations", async () => {
     renderEvidenceForm({ open: true });
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByLabelText(/evidence type/i)).toBeInTheDocument();
     expect(
-      within(dialog).getByLabelText(/external reference/i),
+      within(dialog).getByLabelText(/тип доказательства/i),
     ).toBeInTheDocument();
-    expect(within(dialog).getByLabelText(/title/i)).toBeInTheDocument();
+    expect(
+      within(dialog).getByLabelText(/внешняя ссылка/i),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/название/i)).toBeInTheDocument();
     await expectNoSeriousA11yViolations(dialog);
   });
 
@@ -2306,7 +2314,7 @@ describe("Accessibility", () => {
     const dialog = await screen.findByRole("dialog");
 
     const radioGroup = within(dialog).getByRole("radiogroup", {
-      name: /result/i,
+      name: /результат/i,
     });
     const radios = within(radioGroup).getAllByRole("radio");
     expect(radios).toHaveLength(3);
@@ -2314,9 +2322,9 @@ describe("Accessibility", () => {
     // own textContent (Radix's indicator button has no text node of its
     // own) — this is the same association `getByLabelText` relies on.
     expect(radios.map((radio) => radio.closest("label")?.textContent)).toEqual([
-      "Verified Effective",
-      "Verified Partially Effective",
-      "Verified Ineffective",
+      "Подтверждена эффективной",
+      "Подтверждена частично эффективной",
+      "Подтверждена неэффективной",
     ]);
 
     // The default result ("effective") is pre-checked; each `Radio` is a
@@ -2343,7 +2351,7 @@ describe("Accessibility", () => {
     renderReviewSection({ scheduleOpen: true });
     const scheduleDialog = await screen.findByRole("dialog");
     expect(
-      within(scheduleDialog).getByLabelText(/review required/i),
+      within(scheduleDialog).getByLabelText(/пересмотр требуется/i),
     ).toBeInTheDocument();
     await expectNoSeriousA11yViolations(scheduleDialog);
     cleanup();
@@ -2351,7 +2359,9 @@ describe("Accessibility", () => {
     renderReviewSection({ completeOpen: true });
     const completeDialog = await screen.findByRole("dialog");
     expect(
-      within(completeDialog).getByLabelText(/record a verification/i),
+      within(completeDialog).getByLabelText(
+        /записать подтверждение в рамках этого пересмотра/i,
+      ),
     ).toBeInTheDocument();
     await expectNoSeriousA11yViolations(completeDialog);
   });
@@ -2363,7 +2373,7 @@ describe("Accessibility", () => {
     });
 
     const suspendTrigger = screen.getByRole("button", {
-      name: /suspend control/i,
+      name: /приостановить меру/i,
     });
     await user.click(suspendTrigger);
     const dialog = await screen.findByRole("dialog");
@@ -2389,7 +2399,7 @@ describe("Accessibility", () => {
     const user = userEvent.setup();
 
     renderLifecycleActions({ control: buildControl({ status: "suspended" }) });
-    await user.click(screen.getByRole("button", { name: /resume control/i }));
+    await user.click(screen.getByRole("button", { name: /возобновить меру/i }));
     let dialog = await screen.findByRole("dialog");
     await expectNoSeriousA11yViolations(dialog);
     cleanup();
@@ -2397,21 +2407,21 @@ describe("Accessibility", () => {
     renderLifecycleActions({
       control: buildControl({ status: "implemented" }),
     });
-    await user.click(
-      screen.getByRole("button", { name: /supersede control/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /заместить меру/i }));
     dialog = await screen.findByRole("dialog");
     await expectNoSeriousA11yViolations(dialog);
     cleanup();
 
     renderLifecycleActions({ control: buildControl({ status: "draft" }) });
-    await user.click(screen.getByRole("button", { name: /cancel control/i }));
+    await user.click(screen.getByRole("button", { name: /отменить меру/i }));
     dialog = await screen.findByRole("dialog");
     await expectNoSeriousA11yViolations(dialog);
     cleanup();
 
     renderLifecycleActions({ control: buildControl({ status: "cancelled" }) });
-    await user.click(screen.getByRole("button", { name: /archive control/i }));
+    await user.click(
+      screen.getByRole("button", { name: /архивировать меру/i }),
+    );
     dialog = await screen.findByRole("dialog");
     await expectNoSeriousA11yViolations(dialog);
   });
@@ -2421,18 +2431,18 @@ describe("Accessibility", () => {
     renderLifecycleActions({
       control: buildControl({ status: "implemented" }),
     });
-    await user.click(screen.getByRole("button", { name: /suspend control/i }));
+    await user.click(
+      screen.getByRole("button", { name: /приостановить меру/i }),
+    );
     const dialog = await screen.findByRole("dialog");
     await user.click(
-      within(dialog).getByRole("button", { name: /suspend control/i }),
+      within(dialog).getByRole("button", { name: /приостановить меру/i }),
     );
     // The static warning banner is also role="alert" — the field error is
     // a second, distinct alert region, not the only one in the dialog.
     const alerts = within(dialog).getAllByRole("alert");
     expect(
-      alerts.some((alert) =>
-        /reason is required/i.test(alert.textContent ?? ""),
-      ),
+      alerts.some((alert) => /укажите причину/i.test(alert.textContent ?? "")),
     ).toBe(true);
   });
 
@@ -2446,7 +2456,7 @@ describe("Accessibility", () => {
     );
     const dialog = await screen.findByRole("dialog");
     expect(
-      within(dialog).getByRole("button", { name: /reload latest/i }),
+      within(dialog).getByRole("button", { name: /обновить/i }),
     ).toBeInTheDocument();
     await expectNoSeriousA11yViolations(container);
   });
@@ -2459,7 +2469,7 @@ describe("Accessibility", () => {
         riskAssessmentId={null}
       />,
     );
-    expect(screen.getByText("Verified Ineffective")).toBeInTheDocument();
+    expect(screen.getByText("Подтверждена неэффективной")).toBeInTheDocument();
 
     cleanup();
 
@@ -2473,7 +2483,7 @@ describe("Accessibility", () => {
       />,
     );
     expect(
-      screen.getByText("Verified Partially Effective"),
+      screen.getByText("Подтверждена частично эффективной"),
     ).toBeInTheDocument();
   });
 });

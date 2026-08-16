@@ -51,7 +51,7 @@ async function mockAuthApis(page: import("@playwright/test").Page) {
 test("anonymous user is redirected to login", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/login/);
-  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Вход" })).toBeVisible();
 });
 
 test("session restore unlocks the shell without login form", async ({
@@ -72,7 +72,7 @@ test("session restore unlocks the shell without login form", async ({
     );
   });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Обзор" })).toBeVisible();
   await expect(page.getByText("Acme Safety")).toBeVisible();
 });
 
@@ -82,20 +82,22 @@ test("login unlocks shell and logout returns to login", async ({ page }) => {
   await mockAuthApis(page);
 
   await page.goto("/login");
-  await page.getByLabel("Email").fill("admin@example.com");
-  await page.getByLabel("Password").fill("secret-password");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Электронная почта").fill("admin@example.com");
+  await page.getByLabel("Пароль").fill("secret-password");
+  await page.getByRole("button", { name: "Войти" }).click();
 
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Обзор" })).toBeVisible();
   await expect(page.getByRole("banner")).toBeVisible();
   await expect(page.getByText("Acme Safety")).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Administration" }),
+    page.getByRole("navigation", { name: "Основная" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Администрирование" }),
   ).toBeVisible();
 
   await page.getByRole("button", { name: /Admin User/i }).click();
-  await page.getByRole("menuitem", { name: "Sign out" }).click();
+  await page.getByRole("menuitem", { name: "Выйти" }).click();
   await expect(page).toHaveURL(/\/login/);
   expect(errors).toEqual([]);
 });
@@ -138,14 +140,14 @@ test("permission-aware navigation hides administration", async ({ page }) => {
   });
 
   await page.goto("/login");
-  await page.getByLabel("Email").fill("member@example.com");
-  await page.getByLabel("Password").fill("secret-password");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Administration" })).toHaveCount(
-    0,
-  );
+  await page.getByLabel("Электронная почта").fill("member@example.com");
+  await page.getByLabel("Пароль").fill("secret-password");
+  await page.getByRole("button", { name: "Войти" }).click();
+  await expect(page.getByRole("heading", { name: "Обзор" })).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Safety", exact: true }),
+    page.getByRole("link", { name: "Администрирование" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Безопасность", exact: true }),
   ).toBeVisible();
 });

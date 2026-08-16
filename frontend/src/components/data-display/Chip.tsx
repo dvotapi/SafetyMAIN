@@ -16,7 +16,7 @@ export interface ChipProps extends HTMLAttributes<HTMLSpanElement> {
 export function Chip({
   children,
   onRemove,
-  removeLabel = "Remove",
+  removeLabel = "Удалить",
   className,
   ...rest
 }: ChipProps) {

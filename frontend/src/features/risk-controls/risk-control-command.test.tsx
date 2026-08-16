@@ -28,13 +28,13 @@ function ReasonCommandHost({
     <RiskControlCommandDialog
       open={open}
       onOpenChange={setOpen}
-      title="Suspend control"
+      title="Приостановить меру"
       version={4}
       errorMessage={validationError ?? errorMessage}
-      confirmLabel="Suspend control"
+      confirmLabel="Приостановить меру"
       onConfirm={() => {
         if (!reason.trim()) {
-          setValidationError("Reason is required");
+          setValidationError("Укажите причину");
           return;
         }
         setValidationError(null);
@@ -43,7 +43,7 @@ function ReasonCommandHost({
     >
       <div style={{ display: "grid", gap: 8 }}>
         <Label htmlFor="suspend-reason" required>
-          Reason
+          Причина
         </Label>
         <TextArea
           id="suspend-reason"
@@ -61,13 +61,15 @@ describe("RiskControlCommandDialog", () => {
       <RiskControlCommandDialog
         open
         onOpenChange={() => {}}
-        title="Suspend control"
+        title="Приостановить меру"
         version={7}
         onConfirm={() => {}}
       />,
     );
 
-    expect(screen.getByText("This action uses version 7.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Действие выполняется для версии 7."),
+    ).toBeInTheDocument();
   });
 
   it("does not fire confirm when a required reason is left blank", async () => {
@@ -76,13 +78,17 @@ describe("RiskControlCommandDialog", () => {
 
     render(<ReasonCommandHost onConfirmed={onConfirmed} />);
 
-    await user.click(screen.getByRole("button", { name: "Suspend control" }));
+    await user.click(
+      screen.getByRole("button", { name: "Приостановить меру" }),
+    );
 
     expect(onConfirmed).not.toHaveBeenCalled();
-    expect(screen.getByText("Reason is required")).toBeInTheDocument();
+    expect(screen.getByText("Укажите причину")).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText(/Reason/i), "No longer needed");
-    await user.click(screen.getByRole("button", { name: "Suspend control" }));
+    await user.type(screen.getByLabelText(/причин/i), "No longer needed");
+    await user.click(
+      screen.getByRole("button", { name: "Приостановить меру" }),
+    );
 
     await waitFor(() => {
       expect(onConfirmed).toHaveBeenCalledWith("No longer needed");
@@ -94,7 +100,7 @@ describe("RiskControlCommandDialog", () => {
       <RiskControlCommandDialog
         open
         onOpenChange={() => {}}
-        title="Suspend control"
+        title="Приостановить меру"
         version={2}
         errorMessage="location: Reason must be at least 3 characters"
         onConfirm={() => {}}
@@ -111,7 +117,7 @@ describe("RiskControlCommandDialog", () => {
       <RiskControlCommandDialog
         open
         onOpenChange={() => {}}
-        title="Suspend control"
+        title="Приостановить меру"
         version={2}
         onConfirm={() => {}}
       >

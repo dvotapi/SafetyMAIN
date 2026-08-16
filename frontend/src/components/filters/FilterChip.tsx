@@ -17,7 +17,7 @@ export function FilterChip({
   label,
   value,
   onRemove,
-  removeLabel = "Remove filter",
+  removeLabel = "Удалить фильтр",
   className,
 }: FilterChipProps) {
   return (

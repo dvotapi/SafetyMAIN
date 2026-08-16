@@ -16,7 +16,7 @@ export interface AdvancedFilterProps {
 }
 
 export function AdvancedFilter({
-  label = "Advanced filters",
+  label = "Расширенные фильтры",
   children,
   defaultOpen = false,
   className,

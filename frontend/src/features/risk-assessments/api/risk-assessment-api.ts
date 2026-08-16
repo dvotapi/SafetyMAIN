@@ -266,11 +266,11 @@ interface AuditEventListDto {
 }
 
 const ACTIVITY_TITLES: Record<string, string> = {
-  "safety.risk.created": "Risk assessment created",
-  "safety.risk.updated": "Risk assessment updated",
-  "safety.risk.approved": "Risk assessment approved",
-  "safety.risk.superseded": "Risk assessment superseded",
-  "safety.risk.archived": "Risk assessment archived",
+  "safety.risk.created": "Оценка риска создана",
+  "safety.risk.updated": "Оценка риска изменена",
+  "safety.risk.approved": "Оценка риска утверждена",
+  "safety.risk.superseded": "Оценка риска замещена",
+  "safety.risk.archived": "Оценка риска архивирована",
 };
 
 export async function listRiskAssessmentActivity(

@@ -6,7 +6,7 @@ import styles from "./Feedback.module.css";
 
 export function Spinner({
   className,
-  label = "Loading",
+  label = "Загрузка",
   ...rest
 }: HTMLAttributes<HTMLDivElement> & { label?: string }) {
   return (
@@ -85,7 +85,7 @@ export function EmptyState({
 }
 
 export function LoadingState({
-  label = "Loading",
+  label = "Загрузка",
   description,
   className,
 }: {

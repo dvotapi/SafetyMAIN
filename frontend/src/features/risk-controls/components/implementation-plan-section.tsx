@@ -133,7 +133,7 @@ export function ImplementationPlanSection({
   return (
     <>
       <Panel
-        heading={<Text variant="label">Implementation plan</Text>}
+        heading={<Text variant="label">План внедрения</Text>}
         actions={
           canPlan ? (
             <Button
@@ -141,19 +141,19 @@ export function ImplementationPlanSection({
               size="sm"
               onClick={() => onOpenChange(true)}
             >
-              Plan implementation
+              Спланировать внедрение
             </Button>
           ) : null
         }
       >
         {canPlan ? (
           <Text tone="muted">
-            No implementation plan yet. Plan implementation to set target dates
-            and milestones.
+            Плана внедрения пока нет. Спланируйте внедрение, чтобы задать сроки
+            и вехи.
           </Text>
         ) : (
           <BlockingReason>
-            Assign an owner before planning implementation.
+            Назначьте владельца перед планированием внедрения.
           </BlockingReason>
         )}
       </Panel>
@@ -161,16 +161,16 @@ export function ImplementationPlanSection({
       <RiskControlCommandDialog
         open={open}
         onOpenChange={onOpenChange}
-        title="Plan implementation"
+        title="Спланировать внедрение"
         version={version}
         errorMessage={errorMessage}
-        confirmLabel="Plan implementation"
+        confirmLabel="Спланировать внедрение"
         loading={loading}
         onConfirm={handleSubmit((values) => onPlan(values))}
       >
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "grid", gap: 8 }}>
-            <Label htmlFor="plan-target-start-date">Target start date</Label>
+            <Label htmlFor="plan-target-start-date">Плановая дата начала</Label>
             <Input
               id="plan-target-start-date"
               type="date"
@@ -184,7 +184,7 @@ export function ImplementationPlanSection({
 
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="plan-target-completion-date" required>
-              Target completion date
+              Плановая дата завершения
             </Label>
             <Input
               id="plan-target-completion-date"
@@ -198,9 +198,7 @@ export function ImplementationPlanSection({
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <Label htmlFor="plan-implementation-method">
-              Implementation method
-            </Label>
+            <Label htmlFor="plan-implementation-method">Метод внедрения</Label>
             <Input
               id="plan-implementation-method"
               {...register("implementationMethod")}
@@ -209,12 +207,12 @@ export function ImplementationPlanSection({
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <Label htmlFor="plan-resource-notes">Resource notes</Label>
+            <Label htmlFor="plan-resource-notes">Заметки о ресурсах</Label>
             <TextArea id="plan-resource-notes" {...register("resourceNotes")} />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <Label htmlFor="plan-dependencies">Dependencies</Label>
+            <Label htmlFor="plan-dependencies">Зависимости</Label>
             <Controller
               control={control}
               name="dependencies"
@@ -229,13 +227,13 @@ export function ImplementationPlanSection({
               )}
             />
             <Text variant="caption" tone="muted">
-              One dependency per line.
+              По одной зависимости в строке.
             </Text>
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="plan-evidence-requirements">
-              Evidence requirements
+              Требования к доказательствам
             </Label>
             <Controller
               control={control}
@@ -251,7 +249,7 @@ export function ImplementationPlanSection({
               )}
             />
             <Text variant="caption" tone="muted">
-              One evidence requirement per line.
+              По одному требованию в строке.
             </Text>
           </div>
 
@@ -260,7 +258,7 @@ export function ImplementationPlanSection({
               htmlFor="plan-verification-method-requirement"
               required={!hasExistingVerificationMethodRequirement}
             >
-              Verification method requirement
+              Требование к методу подтверждения
             </Label>
             <Input
               id="plan-verification-method-requirement"
@@ -275,7 +273,7 @@ export function ImplementationPlanSection({
           </div>
 
           <div style={{ display: "grid", gap: 12 }}>
-            <Heading level={3}>Milestones</Heading>
+            <Heading level={3}>Вехи</Heading>
             {fields.map((field, index) => (
               <div
                 key={field.id}
@@ -288,7 +286,7 @@ export function ImplementationPlanSection({
               >
                 <div style={{ display: "grid", gap: 8 }}>
                   <Label htmlFor={`plan-milestone-title-${index}`} required>
-                    Title
+                    Название
                   </Label>
                   <Input
                     id={`plan-milestone-title-${index}`}
@@ -304,7 +302,7 @@ export function ImplementationPlanSection({
 
                 <div style={{ display: "grid", gap: 8 }}>
                   <Label htmlFor={`plan-milestone-description-${index}`}>
-                    Description
+                    Описание
                   </Label>
                   <TextArea
                     id={`plan-milestone-description-${index}`}
@@ -315,7 +313,7 @@ export function ImplementationPlanSection({
 
                 <div style={{ display: "grid", gap: 8 }}>
                   <Label htmlFor={`plan-milestone-due-date-${index}`}>
-                    Due date
+                    Срок
                   </Label>
                   <Input
                     id={`plan-milestone-due-date-${index}`}
@@ -326,7 +324,7 @@ export function ImplementationPlanSection({
 
                 <div style={{ display: "grid", gap: 8 }}>
                   <Label htmlFor={`plan-milestone-status-${index}`}>
-                    Status
+                    Статус
                   </Label>
                   <Controller
                     control={control}
@@ -348,7 +346,7 @@ export function ImplementationPlanSection({
                   size="sm"
                   onClick={() => remove(index)}
                 >
-                  Remove milestone
+                  Удалить веху
                 </Button>
               </div>
             ))}
@@ -358,7 +356,7 @@ export function ImplementationPlanSection({
               size="sm"
               onClick={() => append(DEFAULT_MILESTONE)}
             >
-              Add milestone
+              Добавить веху
             </Button>
           </div>
         </div>

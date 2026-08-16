@@ -21,12 +21,38 @@ import {
   SAFETY_DIRECTIONS,
   type HazardFormValues,
 } from "@/features/hazards/schemas/hazard-form-schema";
-import { formatHazardEnumLabel } from "@/features/hazards/utils/hazard-status";
+import {
+  affectedSubjectLabel,
+  hazardCategoryLabel,
+  hazardSourceLabel,
+  safetyDirectionLabel,
+} from "@/features/hazards/utils/hazard-status";
 
-function enumOptions(values: readonly string[]) {
-  return values.map((value) => ({
+function categoryOptions() {
+  return HAZARD_CATEGORIES.map((value) => ({
     value,
-    label: formatHazardEnumLabel(value),
+    label: hazardCategoryLabel(value),
+  }));
+}
+
+function directionOptions() {
+  return SAFETY_DIRECTIONS.map((value) => ({
+    value,
+    label: safetyDirectionLabel(value),
+  }));
+}
+
+function sourceOptions() {
+  return HAZARD_SOURCES.map((value) => ({
+    value,
+    label: hazardSourceLabel(value),
+  }));
+}
+
+function subjectOptions() {
+  return AFFECTED_SUBJECTS.map((value) => ({
+    value,
+    label: affectedSubjectLabel(value),
   }));
 }
 
@@ -59,11 +85,11 @@ export function HazardForm({
       {summaryErrors.length > 0 ? (
         <ValidationSummary errors={summaryErrors} />
       ) : null}
-      <FormSection title="Hazard details">
+      <FormSection title="Сведения об опасности">
         {showCode ? (
           <FormRow>
             <Label htmlFor="hazard-code" required>
-              Code
+              Код
             </Label>
             <Input
               id="hazard-code"
@@ -79,7 +105,7 @@ export function HazardForm({
         ) : null}
         <FormRow>
           <Label htmlFor="hazard-title" required>
-            Title
+            Название
           </Label>
           <Input
             id="hazard-title"
@@ -92,7 +118,7 @@ export function HazardForm({
           ) : null}
         </FormRow>
         <FormRow>
-          <Label htmlFor="hazard-description">Description</Label>
+          <Label htmlFor="hazard-description">Описание</Label>
           <TextArea
             id="hazard-description"
             rows={4}
@@ -101,10 +127,10 @@ export function HazardForm({
           />
         </FormRow>
       </FormSection>
-      <FormSection title="Classification">
+      <FormSection title="Классификация">
         <FormRow>
           <Label htmlFor="hazard-category" required>
-            Category
+            Категория
           </Label>
           <Controller
             control={control}
@@ -114,7 +140,7 @@ export function HazardForm({
                 id="hazard-category"
                 value={field.value}
                 onValueChange={field.onChange}
-                options={enumOptions(HAZARD_CATEGORIES)}
+                options={categoryOptions()}
                 disabled={readOnly}
                 invalid={Boolean(errors.category)}
               />
@@ -123,7 +149,7 @@ export function HazardForm({
         </FormRow>
         <FormRow>
           <Label htmlFor="hazard-directions" required>
-            Safety directions
+            Направления безопасности
           </Label>
           <Controller
             control={control}
@@ -133,7 +159,7 @@ export function HazardForm({
                 id="hazard-directions"
                 values={field.value}
                 onValuesChange={field.onChange}
-                options={enumOptions(SAFETY_DIRECTIONS)}
+                options={directionOptions()}
                 disabled={readOnly}
                 invalid={Boolean(errors.safetyDirections)}
               />
@@ -145,7 +171,7 @@ export function HazardForm({
         </FormRow>
         <FormRow>
           <Label htmlFor="hazard-source" required>
-            Source
+            Источник
           </Label>
           <Controller
             control={control}
@@ -155,7 +181,7 @@ export function HazardForm({
                 id="hazard-source"
                 value={field.value}
                 onValueChange={field.onChange}
-                options={enumOptions(HAZARD_SOURCES)}
+                options={sourceOptions()}
                 disabled={readOnly || !sourceEditable}
                 invalid={Boolean(errors.source)}
               />
@@ -163,7 +189,7 @@ export function HazardForm({
           />
         </FormRow>
         <FormRow>
-          <Label htmlFor="hazard-subjects">Affected subjects</Label>
+          <Label htmlFor="hazard-subjects">Затронутые объекты</Label>
           <Controller
             control={control}
             name="affectedSubjects"
@@ -172,16 +198,16 @@ export function HazardForm({
                 id="hazard-subjects"
                 values={field.value}
                 onValuesChange={field.onChange}
-                options={enumOptions(AFFECTED_SUBJECTS)}
+                options={subjectOptions()}
                 disabled={readOnly}
               />
             )}
           />
         </FormRow>
       </FormSection>
-      <FormSection title="Location and scope">
+      <FormSection title="Место и область">
         <FormRow>
-          <Label htmlFor="hazard-location">Location reference</Label>
+          <Label htmlFor="hazard-location">Место</Label>
           <Input
             id="hazard-location"
             {...register("locationReference")}
@@ -189,7 +215,7 @@ export function HazardForm({
           />
         </FormRow>
         <FormRow>
-          <Label htmlFor="hazard-process">Process reference</Label>
+          <Label htmlFor="hazard-process">Процесс</Label>
           <Input
             id="hazard-process"
             {...register("processReference")}
@@ -197,7 +223,7 @@ export function HazardForm({
           />
         </FormRow>
         <FormRow>
-          <Label htmlFor="hazard-equipment">Equipment reference</Label>
+          <Label htmlFor="hazard-equipment">Оборудование</Label>
           <Input
             id="hazard-equipment"
             {...register("equipmentReference")}

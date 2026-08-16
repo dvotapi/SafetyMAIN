@@ -21,7 +21,7 @@ export interface OverflowMenuItem {
 
 export function OverflowMenu({
   items,
-  label = "More actions",
+  label = "Другие действия",
   className,
 }: {
   items: OverflowMenuItem[];

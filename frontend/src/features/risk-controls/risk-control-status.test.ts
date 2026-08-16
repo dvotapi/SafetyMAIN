@@ -38,14 +38,16 @@ describe("effectiveness", () => {
     );
     expect(effectivenessToVisual("ineffective")).toBe("verified_ineffective");
     expect(effectivenessLabel("partially_effective")).toBe(
-      "Verified Partially Effective",
+      "Подтверждена частично эффективной",
     );
-    expect(effectivenessLabel("effective")).toBe("Verified Effective");
-    expect(effectivenessLabel("ineffective")).toBe("Verified Ineffective");
+    expect(effectivenessLabel("effective")).toBe("Подтверждена эффективной");
+    expect(effectivenessLabel("ineffective")).toBe(
+      "Подтверждена неэффективной",
+    );
   });
 
   it("renders no verification as an explicit label, not a blank", () => {
-    expect(effectivenessLabel(null)).toBe("Not verified");
+    expect(effectivenessLabel(null)).toBe("Не подтверждена");
     expect(effectivenessToVisual(null)).toBeNull();
   });
 
@@ -66,35 +68,35 @@ describe("implementationStateLabel", () => {
         progress: 0,
         actualCompletionDate: null,
       }),
-    ).toBe("Not planned");
+    ).toBe("Не запланировано");
     expect(
       implementationStateLabel({
         status: "planned",
         progress: 0,
         actualCompletionDate: null,
       }),
-    ).toBe("Planned");
+    ).toBe("Запланировано");
     expect(
       implementationStateLabel({
         status: "in_implementation",
         progress: 40,
         actualCompletionDate: null,
       }),
-    ).toBe("In progress — 40%");
+    ).toBe("В работе — 40%");
     expect(
       implementationStateLabel({
         status: "implemented",
         progress: 100,
         actualCompletionDate: "2026-08-01T00:00:00Z",
       }),
-    ).toBe("Implemented");
+    ).toBe("Внедрено");
   });
 });
 
 describe("formatRiskControlEnumLabel", () => {
-  it("title-cases snake_case values", () => {
+  it("maps known enum wire values", () => {
     expect(formatRiskControlEnumLabel("organizational_unit")).toBe(
-      "Organizational Unit",
+      "Подразделение",
     );
   });
 });

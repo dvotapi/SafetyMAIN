@@ -52,8 +52,8 @@ function arrayToLines(value: string[]): string {
  * `ImplementationPlanSection`). `result` is a `RadioGroup` over
  * `VERIFIABLE_RESULTS` only — `not_verified` and `not_applicable` always
  * 422 on the backend and are never offered — and each option renders a
- * visible text label (`Verified Effective`, `Verified Partially Effective`,
- * `Verified Ineffective`), never colour alone. `partially_effective` must
+ * visible text label (`Подтверждена эффективной`, `Подтверждена частично эффективной`,
+ * `Подтверждена неэффективной`), never colour alone. `partially_effective` must
  * never be presented as, or collapse into, either of the other two results.
  */
 export function VerificationForm({
@@ -123,37 +123,37 @@ export function VerificationForm({
   return (
     <>
       <Panel
-        heading={<Text variant="label">Record verification</Text>}
+        heading={<Text variant="label">Записать подтверждение</Text>}
         actions={
           <Button
             variant="secondary"
             size="sm"
             onClick={() => onOpenChange(true)}
           >
-            Record verification
+            Записать подтверждение
           </Button>
         }
       >
         <Text variant="caption" tone="muted">
-          Recording a partially effective result does not change the
-          control&apos;s lifecycle status — only the effectiveness result.
+          Частичная эффективность не меняет статус жизненного цикла — только
+          результат эффективности.
         </Text>
       </Panel>
 
       <RiskControlCommandDialog
         open={open}
         onOpenChange={onOpenChange}
-        title="Record verification"
+        title="Записать подтверждение"
         version={version}
         errorMessage={errorMessage}
-        confirmLabel="Record verification"
+        confirmLabel="Записать подтверждение"
         loading={loading}
         onConfirm={handleSubmit((values) => onSubmit(values))}
       >
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="verification-type" required>
-              Verification type
+              Тип подтверждения
             </Label>
             <Controller
               control={control}
@@ -172,7 +172,7 @@ export function VerificationForm({
 
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="verification-method" required>
-              Method
+              Метод
             </Label>
             <Input
               id="verification-method"
@@ -185,12 +185,12 @@ export function VerificationForm({
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <Label htmlFor="verification-criteria">Criteria</Label>
+            <Label htmlFor="verification-criteria">Критерии</Label>
             <TextArea id="verification-criteria" {...register("criteria")} />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <Label required>Result</Label>
+            <Label required>Результат</Label>
             <Controller
               control={control}
               name="result"
@@ -198,7 +198,7 @@ export function VerificationForm({
                 <RadioGroup
                   value={field.value}
                   onValueChange={field.onChange}
-                  aria-label="Result"
+                  aria-label="Результат"
                 >
                   {VERIFIABLE_RESULTS.map((value) => (
                     <Radio
@@ -219,24 +219,24 @@ export function VerificationForm({
 
           {result === "partially_effective" ? (
             <Text variant="caption" tone="muted">
-              Partially effective does not change the control&apos;s lifecycle
-              status — only the effectiveness result.
+              Частичная эффективность не меняет статус жизненного цикла — только
+              результат эффективности.
             </Text>
           ) : null}
 
           <div style={{ display: "grid", gap: 8 }}>
-            <Label htmlFor="verification-rating">Rating</Label>
+            <Label htmlFor="verification-rating">Оценка</Label>
             <Input id="verification-rating" {...register("rating")} />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <Label htmlFor="verification-findings">Findings</Label>
+            <Label htmlFor="verification-findings">Выводы</Label>
             <TextArea id="verification-findings" {...register("findings")} />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="verification-evidence-refs">
-              Evidence references
+              Ссылки на доказательства
             </Label>
             <Controller
               control={control}
@@ -248,7 +248,7 @@ export function VerificationForm({
                   onChange={(event) =>
                     field.onChange(linesToArray(event.target.value))
                   }
-                  placeholder="One reference per line"
+                  placeholder="По одной ссылке в строке"
                 />
               )}
             />
@@ -259,7 +259,7 @@ export function VerificationForm({
 
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="verification-next-action">
-              Recommendation / next action
+              Рекомендация / следующее действие
             </Label>
             <TextArea
               id="verification-next-action"
@@ -269,7 +269,7 @@ export function VerificationForm({
 
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="verification-next-review-date">
-              Next review date
+              Дата следующего пересмотра
             </Label>
             <Input
               id="verification-next-review-date"

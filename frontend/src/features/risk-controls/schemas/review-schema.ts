@@ -12,7 +12,7 @@ import type {
 } from "@/features/risk-controls/types/risk-control-dto";
 
 /* ----------------------------------------------------------------------
- * Schedule review
+ * Назначить пересмотр
  * ---------------------------------------------------------------------- */
 
 /**
@@ -34,9 +34,9 @@ const reviewBasisEnum = z.enum([
 const reviewScheduleBaseSchema = z.object({
   reviewRequired: z.boolean(),
   reviewFrequencyDays: z
-    .number({ invalid_type_error: "Review frequency is required" })
-    .int("Review frequency must be a whole number")
-    .min(1, "Review frequency must be at least 1 day")
+    .number({ invalid_type_error: "Укажите частоту пересмотра" })
+    .int("Частота пересмотра должна быть целым числом")
+    .min(1, "Частота пересмотра — не менее 1 дня")
     .nullable(),
   nextReviewDate: z.string().trim(),
   reviewBasis: reviewBasisEnum,
@@ -65,7 +65,7 @@ export const DEFAULT_REVIEW_SCHEDULE_FORM_VALUES: ReviewScheduleFormValues = {
 export const reviewScheduleFormSchema = reviewScheduleBaseSchema
   .refine((v) => v.reviewRequired || Boolean(v.noReviewReason), {
     path: ["noReviewReason"],
-    message: "A no-review reason is required when review is not required.",
+    message: "Укажите причину, если пересмотр не требуется.",
   })
   .refine(
     (v) =>
@@ -75,7 +75,7 @@ export const reviewScheduleFormSchema = reviewScheduleBaseSchema
     {
       path: ["reviewFrequencyDays"],
       message:
-        "Review frequency is required when no next review date is given.",
+        "Укажите частоту пересмотра, если дата следующего пересмотра не задана.",
     },
   );
 
@@ -113,7 +113,7 @@ export function reviewScheduleFormValuesToRequest(
 }
 
 /* ----------------------------------------------------------------------
- * Complete review — with an optional nested verification.
+ * Завершить пересмотр — with an optional nested verification.
  * ---------------------------------------------------------------------- */
 
 /**

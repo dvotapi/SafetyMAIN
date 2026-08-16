@@ -137,9 +137,9 @@ describe("StatusBadge", () => {
   it("exposes textual status not color alone", () => {
     render(<StatusBadge status="verified_ineffective" />);
     expect(
-      screen.getByLabelText("Status: Verified Ineffective"),
+      screen.getByLabelText("Статус: Подтверждена неэффективной"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Verified Ineffective")).toBeInTheDocument();
+    expect(screen.getByText("Подтверждена неэффективной")).toBeInTheDocument();
   });
 
   it("covers required visual statuses", () => {
@@ -160,7 +160,7 @@ describe("StatusBadge", () => {
     ] as const;
     for (const status of statuses) {
       const { unmount } = render(<StatusBadge status={status} />);
-      expect(screen.getByLabelText(new RegExp(`Status:`))).toBeInTheDocument();
+      expect(screen.getByLabelText(new RegExp(`Статус:`))).toBeInTheDocument();
       unmount();
     }
   });
@@ -229,9 +229,9 @@ describe("AppShell", () => {
     );
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(
-      screen.getByRole("navigation", { name: "Primary" }),
+      screen.getByRole("navigation", { name: "Основная" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("main")).toBeInTheDocument();
-    expect(screen.getByLabelText("Theme mode")).toBeInTheDocument();
+    expect(screen.getByLabelText("Режим темы")).toBeInTheDocument();
   });
 });

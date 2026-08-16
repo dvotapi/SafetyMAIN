@@ -8,7 +8,7 @@ export interface TrendPlaceholderProps {
 }
 
 export function TrendPlaceholder({
-  label = "Trend chart placeholder",
+  label = "Заглушка графика динамики",
   className,
 }: TrendPlaceholderProps) {
   return (

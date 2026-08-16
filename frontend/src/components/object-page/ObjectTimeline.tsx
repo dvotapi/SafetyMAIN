@@ -12,7 +12,7 @@ export interface ObjectTimelineProps {
 
 export function ObjectTimeline({
   events,
-  heading = "Timeline",
+  heading = "Хронология",
   className,
 }: ObjectTimelineProps) {
   return (

@@ -75,14 +75,13 @@ function applyCreateFailure(
     applyMappedValidationErrors(
       setError,
       error.details,
-      error.message || "Validation failed.",
+      error.message || "Ошибка проверки данных.",
     );
     return;
   }
   if (error instanceof ConflictError) {
     setError("code", {
-      message:
-        error.message || "A risk assessment with this code already exists.",
+      message: error.message || "Оценка риска с таким кодом уже существует.",
     });
     return;
   }
@@ -143,7 +142,7 @@ export function RiskAssessmentCreatePage() {
   }, [hazardOptionsQuery.data, prefillHazardQuery.data]);
 
   useEffect(() => {
-    document.title = "Create Risk Assessment · SafetyMAIN";
+    document.title = "Создать оценку риска · SafetyMAIN";
   }, []);
 
   useEffect(() => {
@@ -156,11 +155,11 @@ export function RiskAssessmentCreatePage() {
     return (
       <PageContainer>
         <EmptyState
-          title="Cannot create risk assessments"
-          description="You do not have permission to create risk assessments."
+          title="Нельзя создать оценки риска"
+          description="Недостаточно прав для создания оценок риска."
           action={
             <Button asChild variant="secondary">
-              <Link href="/safety/risk-assessments">Back to registry</Link>
+              <Link href="/safety/risk-assessments">К реестру</Link>
             </Button>
           }
         />
@@ -171,7 +170,7 @@ export function RiskAssessmentCreatePage() {
   if (hazardOptionsQuery.isLoading && !hazardOptionsQuery.data) {
     return (
       <PageContainer>
-        <LoadingState label="Loading hazards" />
+        <LoadingState label="Загрузка опасностей" />
       </PageContainer>
     );
   }
@@ -227,9 +226,9 @@ export function RiskAssessmentCreatePage() {
         setPartialDraft(result.assessment);
         toast({
           tone: "warning",
-          title: "Draft created with incomplete details",
+          title: "Черновик создан с неполными данными",
           description:
-            "The risk assessment draft exists, but additional risk details were not saved. Use “Retry saving risk details” — this will not create another draft.",
+            "Черновик оценки риска создан, но дополнительные сведения о риске не сохранены. Нажмите «Повторить сохранение сведений о риске» — новый черновик не будет создан.",
         });
         applyCreateFailure(form.setError, result.patchError);
         // Recoverable: allow retry of PATCH (not Create). Keep lock released for retry button.
@@ -244,7 +243,7 @@ export function RiskAssessmentCreatePage() {
       );
       toast({
         tone: "success",
-        title: "Risk assessment created",
+        title: "Оценка риска создана",
         description: result.assessment.code,
       });
       // Keep submit lock acquired after success so a second click before
@@ -290,7 +289,7 @@ export function RiskAssessmentCreatePage() {
       setPartialDraft(null);
       toast({
         tone: "success",
-        title: "Risk details saved",
+        title: "Сведения о риске сохранены",
         description: result.assessment.code,
       });
       // Keep UI busy after success; do not re-enable Create.
@@ -310,12 +309,12 @@ export function RiskAssessmentCreatePage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Create risk assessment"
-        description="Creates a draft first, then saves optional risk inputs with a follow-up update."
+        title="Создать оценку риска"
+        description="Сначала создаётся черновик, затем необязательные сведения о риске сохраняются отдельным обновлением."
         actions={
           <PageActions>
             <Button asChild variant="secondary">
-              <Link href="/safety/risk-assessments">Cancel</Link>
+              <Link href="/safety/risk-assessments">Отмена</Link>
             </Button>
             {partialDraft ? (
               <Button
@@ -326,7 +325,7 @@ export function RiskAssessmentCreatePage() {
                   void onRetryPatch();
                 }}
               >
-                Retry saving risk details
+                Повторить сохранение сведений о риске
               </Button>
             ) : (
               <Button
@@ -335,17 +334,17 @@ export function RiskAssessmentCreatePage() {
                 loading={submitting}
                 disabled={createDisabled}
               >
-                Create draft
+                Создать черновик
               </Button>
             )}
           </PageActions>
         }
       />
       {partialDraft ? (
-        <Alert tone="warning" title="Draft created with incomplete details">
-          Draft {partialDraft.code} was created, but additional risk details
-          were not saved. Retry saves those details only and will not create
-          another draft.
+        <Alert tone="warning" title="Черновик создан с неполными данными">
+          Черновик {partialDraft.code} создан, но дополнительные сведения о
+          риске не сохранены. Повтор сохраняет только эти сведения и не создаёт
+          новый черновик.
         </Alert>
       ) : null}
       {form.formState.errors.root?.message ? (
@@ -353,17 +352,17 @@ export function RiskAssessmentCreatePage() {
           tone="danger"
           title={
             partialDraft
-              ? "Could not save risk details"
-              : "Could not create risk assessment"
+              ? "Не удалось сохранить сведения о риске"
+              : "Не удалось создать оценку риска"
           }
         >
           {form.formState.errors.root.message}
         </Alert>
       ) : null}
       {prefillHazardId && prefillHazardQuery.isError ? (
-        <Alert tone="warning" title="Hazard context unavailable">
-          The linked hazard could not be loaded. Choose another active hazard
-          before creating.
+        <Alert tone="warning" title="Контекст опасности недоступен">
+          Связанную опасность не удалось загрузить. Выберите другую активную
+          опасность перед созданием.
         </Alert>
       ) : null}
       <RiskAssessmentForm

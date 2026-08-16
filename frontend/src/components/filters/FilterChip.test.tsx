@@ -17,7 +17,7 @@ describe("FilterChip", () => {
     expect(screen.getByText("Status:")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Remove filter" }));
+    await user.click(screen.getByRole("button", { name: "Удалить фильтр" }));
     expect(onRemove).toHaveBeenCalledOnce();
   });
 });

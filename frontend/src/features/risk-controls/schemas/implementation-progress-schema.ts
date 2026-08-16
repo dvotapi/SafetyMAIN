@@ -7,10 +7,10 @@ import type {
 
 export const progressFormSchema = z.object({
   progress: z
-    .number({ invalid_type_error: "Progress is required" })
-    .int("Progress must be a whole number")
-    .min(0, "Progress must be between 0 and 100")
-    .max(100, "Progress must be between 0 and 100"),
+    .number({ invalid_type_error: "Укажите прогресс" })
+    .int("Прогресс должен быть целым числом")
+    .min(0, "Прогресс должен быть от 0 до 100")
+    .max(100, "Прогресс должен быть от 0 до 100"),
   summary: z.string().trim(),
 });
 
@@ -51,9 +51,9 @@ export function buildCompleteImplementationFormSchema(
   evidenceIsEmpty: boolean,
 ) {
   return z.object({
-    summary: z.string().trim().min(1, "Completion summary is required"),
+    summary: z.string().trim().min(1, "Укажите сводку по завершению"),
     evidenceWaiverReason: evidenceIsEmpty
-      ? z.string().trim().min(1, "Evidence waiver reason is required")
+      ? z.string().trim().min(1, "Укажите причину отказа от доказательств")
       : z.string().trim(),
     allowIncompleteMilestones: z.boolean(),
   });

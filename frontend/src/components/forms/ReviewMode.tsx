@@ -13,12 +13,12 @@ export interface ReviewModeProps {
 
 export function ReviewMode({
   children,
-  message = "Review mode — fields are read-only",
+  message = "Режим проверки — поля доступны только для чтения",
   className,
 }: ReviewModeProps) {
   return (
     <div className={cx(styles.reviewMode, className)} aria-readonly="true">
-      <Alert tone="info" title="Review" className={styles.reviewModeBanner}>
+      <Alert tone="info" title="Проверка" className={styles.reviewModeBanner}>
         {message}
       </Alert>
       {children}

@@ -39,18 +39,18 @@ export function LoginForm() {
   return (
     <div className={styles.page}>
       <form className={styles.card} onSubmit={onSubmit} noValidate>
-        <Heading level={1}>Sign in</Heading>
+        <Heading level={1}>Вход</Heading>
         <Text tone="secondary">
-          Authenticate to access the SafetyMAIN workspace.
+          Войдите, чтобы открыть рабочее пространство SafetyMAIN.
         </Text>
         {message ? (
-          <Alert tone="danger" title="Sign-in failed">
+          <Alert tone="danger" title="Не удалось войти">
             <span role="alert">{message}</span>
           </Alert>
         ) : null}
         <div className={styles.field}>
           <Label htmlFor="login-email" required>
-            Email
+            Электронная почта
           </Label>
           <Input
             id="login-email"
@@ -65,7 +65,7 @@ export function LoginForm() {
         </div>
         <div className={styles.field}>
           <Label htmlFor="login-password" required>
-            Password
+            Пароль
           </Label>
           <Input
             id="login-password"
@@ -79,7 +79,7 @@ export function LoginForm() {
           />
         </div>
         <Button type="submit" loading={busy} disabled={busy}>
-          Sign in
+          Войти
         </Button>
       </form>
     </div>

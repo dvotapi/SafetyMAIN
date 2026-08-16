@@ -19,7 +19,7 @@ export function RegistrySelection({
   if (count <= 0) return null;
   return (
     <div className={cx(styles.selectionBar, className)} role="status">
-      <Text variant="label">{count} selected</Text>
+      <Text variant="label">Выбрано: {count}</Text>
       {actions}
     </div>
   );

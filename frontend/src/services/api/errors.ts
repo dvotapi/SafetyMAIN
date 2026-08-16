@@ -170,22 +170,22 @@ export function toUserSafeMessage(error: unknown): string {
   if (error instanceof ApiClientError) {
     switch (error.kind) {
       case "network":
-        return "Network error. Check your connection and try again.";
+        return "Нет сети. Проверьте подключение и повторите попытку.";
       case "authentication":
-        return "Authentication required.";
+        return "Требуется вход.";
       case "permission":
-        return "You do not have permission to perform this action.";
+        return "Недостаточно прав для этого действия.";
       case "not_found":
-        return "The requested resource was not found.";
+        return "Запрашиваемый объект не найден.";
       case "conflict":
-        return "This record was updated elsewhere. Refresh and try again.";
+        return "Запись изменена в другом месте. Обновите и повторите.";
       case "tenant_context":
-        return "Organization context mismatch.";
+        return "Несовпадение контекста организации.";
       case "validation":
-        return error.message || "Please correct the highlighted fields.";
+        return error.message || "Исправьте выделенные поля.";
       default:
-        return "Something went wrong. Try again later.";
+        return "Что-то пошло не так. Повторите позже.";
     }
   }
-  return "Something went wrong. Try again later.";
+  return "Что-то пошло не так. Повторите позже.";
 }

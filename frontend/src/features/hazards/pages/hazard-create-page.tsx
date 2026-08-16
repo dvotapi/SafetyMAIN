@@ -42,16 +42,16 @@ export function HazardCreatePage() {
   });
 
   useEffect(() => {
-    document.title = "Create Hazard · SafetyMAIN";
+    document.title = "Создать опасность · SafetyMAIN";
   }, []);
 
   if (!capabilities.canCreate) {
     return (
       <PageContainer>
         <EmptyState
-          title="Cannot create hazards"
-          description="You do not have permission to create hazards."
-          action={<Link href="/safety/hazards">Back to registry</Link>}
+          title="Нельзя создать опасности"
+          description="Недостаточно прав для создания опасностей."
+          action={<Link href="/safety/hazards">К реестру</Link>}
         />
       </PageContainer>
     );
@@ -64,7 +64,7 @@ export function HazardCreatePage() {
       );
       toast({
         tone: "success",
-        title: "Hazard created",
+        title: "Опасность создана",
         description: hazard.code,
       });
       router.push(`/safety/hazards/${hazard.id}`);
@@ -79,7 +79,7 @@ export function HazardCreatePage() {
       }
       if (error instanceof ConflictError) {
         form.setError("code", {
-          message: error.message || "A hazard with this code already exists.",
+          message: error.message || "Опасность с таким кодом уже существует.",
         });
         return;
       }
@@ -94,12 +94,12 @@ export function HazardCreatePage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Create hazard"
-        description="Capture hazard identification details. New hazards start in draft."
+        title="Создать опасность"
+        description="Зафиксируйте сведения об идентификации. Новые опасности создаются в статусе «Черновик»."
         actions={
           <PageActions>
             <Button asChild variant="secondary">
-              <Link href="/safety/hazards">Cancel</Link>
+              <Link href="/safety/hazards">Отмена</Link>
             </Button>
             <Button
               type="submit"
@@ -107,13 +107,13 @@ export function HazardCreatePage() {
               loading={mutation.isPending}
               disabled={mutation.isPending}
             >
-              Create hazard
+              Создать опасность
             </Button>
           </PageActions>
         }
       />
       {form.formState.errors.root?.message ? (
-        <Alert tone="danger" title="Could not create hazard">
+        <Alert tone="danger" title="Не удалось создать опасность">
           {form.formState.errors.root.message}
         </Alert>
       ) : null}

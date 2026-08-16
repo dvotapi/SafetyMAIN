@@ -34,13 +34,17 @@ import {
   getAssessmentProfileCatalogEntry,
 } from "@/features/risk-assessments/utils/assessment-profiles";
 import { controlTypeLabel } from "@/features/risk-assessments/utils/hierarchy-of-controls";
-import { formatRiskAssessmentEnumLabel } from "@/features/risk-assessments/utils/risk-assessment-status";
+import {
+  acceptanceDecisionLabel,
+  assessedObjectTypeLabel,
+  riskFactorLabel,
+} from "@/features/risk-assessments/utils/risk-assessment-status";
 import { resetEvaluationForProfile } from "@/features/risk-assessments/utils/create-workflow";
 
-function enumOptions(values: readonly string[]) {
+function assessedObjectTypeOptions(values: readonly string[]) {
   return values.map((value) => ({
     value,
-    label: formatRiskAssessmentEnumLabel(value),
+    label: assessedObjectTypeLabel(value),
   }));
 }
 
@@ -72,7 +76,7 @@ function RiskEvaluationFields({
     <>
       <FormRow>
         <Label htmlFor={`${section}-probability`} required>
-          Probability (1–{maxScore})
+          Вероятность (1–{maxScore})
         </Label>
         <Controller
           control={control}
@@ -84,7 +88,7 @@ function RiskEvaluationFields({
               onValueChange={(value) =>
                 field.onChange(value === "" ? null : Number.parseInt(value, 10))
               }
-              options={[{ value: "", label: "Not set" }, ...scoreOptions]}
+              options={[{ value: "", label: "Не задано" }, ...scoreOptions]}
               disabled={Boolean(readOnly)}
               invalid={Boolean(sectionErrors?.probabilityScore)}
             />
@@ -96,7 +100,7 @@ function RiskEvaluationFields({
       </FormRow>
       <FormRow>
         <Label htmlFor={`${section}-severity`} required>
-          Severity (1–{maxScore})
+          Тяжесть (1–{maxScore})
         </Label>
         <Controller
           control={control}
@@ -108,7 +112,7 @@ function RiskEvaluationFields({
               onValueChange={(value) =>
                 field.onChange(value === "" ? null : Number.parseInt(value, 10))
               }
-              options={[{ value: "", label: "Not set" }, ...scoreOptions]}
+              options={[{ value: "", label: "Не задано" }, ...scoreOptions]}
               disabled={Boolean(readOnly)}
               invalid={Boolean(sectionErrors?.severityScore)}
             />
@@ -121,7 +125,7 @@ function RiskEvaluationFields({
       {extraFactors.map((factorId) => (
         <FormRow key={`${section}-${factorId}`}>
           <Label htmlFor={`${section}-${factorId}`} required>
-            {formatRiskAssessmentEnumLabel(factorId)} (1–{maxScore})
+            {riskFactorLabel(factorId)} (1–{maxScore})
           </Label>
           <Controller
             control={control}
@@ -139,7 +143,7 @@ function RiskEvaluationFields({
                     value === "" ? null : Number.parseInt(value, 10),
                   )
                 }
-                options={[{ value: "", label: "Not set" }, ...scoreOptions]}
+                options={[{ value: "", label: "Не задано" }, ...scoreOptions]}
                 disabled={Boolean(readOnly)}
                 invalid={Boolean(
                   sectionErrors?.extraFactorScores?.[factorId as never],
@@ -158,7 +162,7 @@ function RiskEvaluationFields({
         </FormRow>
       ))}
       <FormRow>
-        <Label htmlFor={`${section}-explanation`}>Explanation</Label>
+        <Label htmlFor={`${section}-explanation`}>Пояснение</Label>
         <TextArea
           id={`${section}-explanation`}
           rows={3}
@@ -225,10 +229,10 @@ export function RiskAssessmentForm({
         <ValidationSummary errors={summaryErrors} />
       ) : null}
 
-      <FormSection title="Assessment identity">
+      <FormSection title="Идентификация оценки">
         <FormRow>
           <Label htmlFor="ra-hazard" required>
-            Hazard
+            Опасность
           </Label>
           <Controller
             control={control}
@@ -239,7 +243,7 @@ export function RiskAssessmentForm({
                 value={field.value}
                 onValueChange={field.onChange}
                 options={[
-                  { value: "", label: "Select hazard" },
+                  { value: "", label: "Выберите опасность" },
                   ...hazardOptions.map((hazard) => ({
                     value: hazard.id,
                     label: `${hazard.code} — ${hazard.title}`,
@@ -256,7 +260,7 @@ export function RiskAssessmentForm({
         </FormRow>
         <FormRow>
           <Label htmlFor="ra-code" required>
-            Code
+            Код
           </Label>
           <Input
             id="ra-code"
@@ -271,7 +275,7 @@ export function RiskAssessmentForm({
         </FormRow>
         <FormRow>
           <Label htmlFor="ra-title" required>
-            Title
+            Название
           </Label>
           <Input
             id="ra-title"
@@ -285,7 +289,7 @@ export function RiskAssessmentForm({
         </FormRow>
         <FormRow>
           <Label htmlFor="ra-profile" required>
-            Assessment profile
+            Профиль оценки
           </Label>
           <Controller
             control={control}
@@ -303,7 +307,7 @@ export function RiskAssessmentForm({
                     typeof window !== "undefined" &&
                     field.value !== next &&
                     !window.confirm(
-                      "Changing the assessment profile clears entered risk scores. Continue?",
+                      "Смена профиля оценки сбросит введённые баллы риска. Продолжить?",
                     )
                   ) {
                     return;
@@ -333,7 +337,7 @@ export function RiskAssessmentForm({
         </FormRow>
         <FormRow>
           <Label htmlFor="ra-object-type" required>
-            Assessed object type
+            Тип объекта оценки
           </Label>
           <Controller
             control={control}
@@ -343,7 +347,7 @@ export function RiskAssessmentForm({
                 id="ra-object-type"
                 value={field.value}
                 onValueChange={field.onChange}
-                options={enumOptions(ASSESSED_OBJECT_TYPES)}
+                options={assessedObjectTypeOptions(ASSESSED_OBJECT_TYPES)}
                 disabled={Boolean(readOnly)}
                 invalid={Boolean(errors.assessedObjectType)}
               />
@@ -352,7 +356,7 @@ export function RiskAssessmentForm({
         </FormRow>
         <FormRow>
           <Label htmlFor="ra-object-ref" required>
-            Assessed object reference
+            Ссылка на объект оценки
           </Label>
           <Input
             id="ra-object-ref"
@@ -365,7 +369,7 @@ export function RiskAssessmentForm({
           ) : null}
         </FormRow>
         <FormRow>
-          <Label htmlFor="ra-assessment-date">Assessment date</Label>
+          <Label htmlFor="ra-assessment-date">Дата оценки</Label>
           <Input
             id="ra-assessment-date"
             type="date"
@@ -375,9 +379,9 @@ export function RiskAssessmentForm({
         </FormRow>
       </FormSection>
 
-      <FormSection title="Review schedule (optional)">
+      <FormSection title="График пересмотра (необязательно)">
         <FormRow>
-          <Label htmlFor="ra-review-due">Review due date</Label>
+          <Label htmlFor="ra-review-due">Срок пересмотра</Label>
           <Input
             id="ra-review-due"
             type="date"
@@ -386,7 +390,9 @@ export function RiskAssessmentForm({
           />
         </FormRow>
         <FormRow>
-          <Label htmlFor="ra-review-frequency">Review frequency (days)</Label>
+          <Label htmlFor="ra-review-frequency">
+            Периодичность пересмотра (дней)
+          </Label>
           <Input
             id="ra-review-frequency"
             inputMode="numeric"
@@ -395,7 +401,7 @@ export function RiskAssessmentForm({
           />
         </FormRow>
         <FormRow>
-          <Label htmlFor="ra-review-reason">Review reason</Label>
+          <Label htmlFor="ra-review-reason">Причина пересмотра</Label>
           <Input
             id="ra-review-reason"
             {...register("reviewReason")}
@@ -405,11 +411,11 @@ export function RiskAssessmentForm({
       </FormSection>
 
       <FormSection
-        title="Competency requirements (optional)"
-        description="One requirement per line."
+        title="Требования к компетенции (необязательно)"
+        description="Одно требование на строку."
       >
         <FormRow>
-          <Label htmlFor="ra-competency">Requirements</Label>
+          <Label htmlFor="ra-competency">Требования</Label>
           <TextArea
             id="ra-competency"
             rows={3}
@@ -430,8 +436,8 @@ export function RiskAssessmentForm({
       </FormSection>
 
       <FormSection
-        title="Inherent risk"
-        description="Optional on create. Saved with a follow-up update after the draft is created. Risk level is calculated by the server."
+        title="Исходный риск"
+        description="Необязательно при создании. Сохраняется отдельным обновлением после создания черновика. Уровень риска рассчитывает сервер."
       >
         <RiskEvaluationFields
           form={form}
@@ -442,7 +448,7 @@ export function RiskAssessmentForm({
         />
       </FormSection>
 
-      <FormSection title="Proposed controls (optional)">
+      <FormSection title="Предлагаемые меры (необязательно)">
         {fields.map((field, index) => (
           <div
             key={field.id}
@@ -455,7 +461,7 @@ export function RiskAssessmentForm({
           >
             <FormRow>
               <Label htmlFor={`ra-control-type-${index}`} required>
-                Control type
+                Тип меры
               </Label>
               <Controller
                 control={control}
@@ -476,7 +482,7 @@ export function RiskAssessmentForm({
             </FormRow>
             <FormRow>
               <Label htmlFor={`ra-control-desc-${index}`} required>
-                Description
+                Описание
               </Label>
               <TextArea
                 id={`ra-control-desc-${index}`}
@@ -487,7 +493,7 @@ export function RiskAssessmentForm({
             </FormRow>
             <FormRow>
               <Label htmlFor={`ra-control-responsible-${index}`}>
-                Responsible
+                Ответственный
               </Label>
               <Input
                 id={`ra-control-responsible-${index}`}
@@ -502,7 +508,7 @@ export function RiskAssessmentForm({
                 size="sm"
                 onClick={() => remove(index)}
               >
-                Remove control
+                Удалить меру
               </Button>
             ) : null}
           </div>
@@ -523,14 +529,14 @@ export function RiskAssessmentForm({
               })
             }
           >
-            Add proposed control
+            Добавить предлагаемую меру
           </Button>
         ) : null}
       </FormSection>
 
       <FormSection
-        title="Residual risk"
-        description="Optional. Enter after proposed controls when applicable."
+        title="Остаточный риск"
+        description="Необязательно. Заполняйте после предлагаемых мер, если применимо."
       >
         <RiskEvaluationFields
           form={form}
@@ -541,9 +547,9 @@ export function RiskAssessmentForm({
         />
       </FormSection>
 
-      <FormSection title="Acceptance (optional)">
+      <FormSection title="Принятие (необязательно)">
         <FormRow>
-          <Label htmlFor="ra-acceptance">Decision</Label>
+          <Label htmlFor="ra-acceptance">Решение</Label>
           <Controller
             control={control}
             name="acceptanceDecision"
@@ -555,10 +561,10 @@ export function RiskAssessmentForm({
                   field.onChange(value === "" ? null : value)
                 }
                 options={[
-                  { value: "", label: "Not set" },
+                  { value: "", label: "Не задано" },
                   ...ACCEPTANCE_DECISIONS.map((value) => ({
                     value,
-                    label: formatRiskAssessmentEnumLabel(value),
+                    label: acceptanceDecisionLabel(value),
                   })),
                 ]}
                 disabled={Boolean(readOnly)}
@@ -567,7 +573,7 @@ export function RiskAssessmentForm({
           />
         </FormRow>
         <FormRow>
-          <Label htmlFor="ra-acceptance-justification">Justification</Label>
+          <Label htmlFor="ra-acceptance-justification">Обоснование</Label>
           <TextArea
             id="ra-acceptance-justification"
             rows={3}

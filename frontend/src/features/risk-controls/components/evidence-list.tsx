@@ -44,7 +44,7 @@ export function EvidenceList({
   return (
     <>
       <Panel
-        heading={<Text variant="label">Evidence</Text>}
+        heading={<Text variant="label">Доказательства</Text>}
         actions={
           canAdd ? (
             <Button
@@ -52,25 +52,25 @@ export function EvidenceList({
               size="sm"
               onClick={() => onOpenChange(true)}
             >
-              Add evidence
+              Добавить доказательство
             </Button>
           ) : null
         }
       >
         {evidence.length === 0 ? (
           <EmptyState
-            title="No evidence yet"
-            description="Evidence references are added during implementation."
+            title="Доказательств пока нет"
+            description="Ссылки на доказательства добавляются при внедрении."
           />
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                <th style={{ textAlign: "left" }}>Title</th>
-                <th style={{ textAlign: "left" }}>Type</th>
-                <th style={{ textAlign: "left" }}>External reference</th>
-                <th style={{ textAlign: "left" }}>Captured at</th>
-                <th style={{ textAlign: "left" }}>Captured by</th>
+                <th style={{ textAlign: "left" }}>Название</th>
+                <th style={{ textAlign: "left" }}>Тип</th>
+                <th style={{ textAlign: "left" }}>Внешняя ссылка</th>
+                <th style={{ textAlign: "left" }}>Зафиксировано</th>
+                <th style={{ textAlign: "left" }}>Зафиксировал</th>
               </tr>
             </thead>
             <tbody>

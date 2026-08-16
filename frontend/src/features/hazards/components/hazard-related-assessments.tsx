@@ -3,7 +3,10 @@ import Link from "next/link";
 import { EmptyState, Heading, Panel, Text } from "@/components";
 
 import type { RiskAssessmentSummary } from "@/features/hazards/types/hazard-types";
-import { formatHazardEnumLabel } from "@/features/hazards/utils/hazard-status";
+import {
+  assessmentProfileLabel,
+  relatedAssessmentStatusLabel,
+} from "@/features/hazards/utils/hazard-status";
 
 export function HazardRiskSummary({
   assessments,
@@ -15,7 +18,7 @@ export function HazardRiskSummary({
   if (loading) {
     return (
       <Panel>
-        <Text tone="muted">Loading risk summary…</Text>
+        <Text tone="muted">Загрузка сводки по рискам…</Text>
       </Panel>
     );
   }
@@ -29,22 +32,22 @@ export function HazardRiskSummary({
 
   return (
     <Panel>
-      <Heading level={2}>Risk summary</Heading>
+      <Heading level={2}>Сводка по рискам</Heading>
       <Text tone="secondary">
-        Linked assessments: {assessments.length}. Approved: {approved.length}.
+        Связанных оценок: {assessments.length}. Утверждённых: {approved.length}.
       </Text>
       {latestApproved ? (
         <Text>
-          Latest approved:{" "}
+          Последняя утверждённая:{" "}
           <Link href={`/safety/risk-assessments/${latestApproved.id}`}>
             {latestApproved.code}
           </Link>
           {latestApproved.residualRiskLabel
-            ? ` · residual ${latestApproved.residualRiskLabel}`
+            ? ` · остаточный ${latestApproved.residualRiskLabel}`
             : ""}
         </Text>
       ) : (
-        <Text tone="muted">No approved assessments yet.</Text>
+        <Text tone="muted">Утверждённых оценок пока нет.</Text>
       )}
     </Panel>
   );
@@ -62,21 +65,21 @@ export function HazardRelatedAssessments({
   if (!canView) {
     return (
       <EmptyState
-        title="Risk assessments unavailable"
-        description="You do not have permission to view related risk assessments."
+        title="Оценки риска недоступны"
+        description="Недостаточно прав для просмотра связанных оценок риска."
       />
     );
   }
 
   if (loading) {
-    return <Text tone="muted">Loading related risk assessments…</Text>;
+    return <Text tone="muted">Загрузка связанных оценок риска…</Text>;
   }
 
   if (assessments.length === 0) {
     return (
       <EmptyState
-        title="No related risk assessments"
-        description="No risk assessments are currently linked to this hazard."
+        title="Нет связанных оценок риска"
+        description="К этой опасности пока не привязаны оценки риска."
       />
     );
   }
@@ -86,12 +89,12 @@ export function HazardRelatedAssessments({
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
-            <th align="left">Reference</th>
-            <th align="left">Title</th>
-            <th align="left">Status</th>
-            <th align="left">Profile</th>
-            <th align="left">Inherent</th>
-            <th align="left">Residual</th>
+            <th align="left">Код</th>
+            <th align="left">Название</th>
+            <th align="left">Статус</th>
+            <th align="left">Профиль</th>
+            <th align="left">Исходный</th>
+            <th align="left">Остаточный</th>
           </tr>
         </thead>
         <tbody>
@@ -107,8 +110,8 @@ export function HazardRelatedAssessments({
                   {item.title}
                 </Link>
               </td>
-              <td>{formatHazardEnumLabel(item.status)}</td>
-              <td>{formatHazardEnumLabel(item.assessmentProfile)}</td>
+              <td>{relatedAssessmentStatusLabel(item.status)}</td>
+              <td>{assessmentProfileLabel(item.assessmentProfile)}</td>
               <td>{item.inherentRiskLabel ?? "—"}</td>
               <td>{item.residualRiskLabel ?? "—"}</td>
             </tr>

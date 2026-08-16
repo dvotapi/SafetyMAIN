@@ -8,12 +8,12 @@ export default function UnauthorizedPage() {
     <div
       style={{ padding: "var(--sm-space-8)", maxWidth: 560, margin: "0 auto" }}
     >
-      <Heading level={1}>Authentication required</Heading>
-      <Alert tone="warning" title="401 Unauthorized">
-        You need to sign in to continue.
+      <Heading level={1}>Требуется вход</Heading>
+      <Alert tone="warning" title="Ошибка 401">
+        Войдите, чтобы продолжить.
       </Alert>
       <Text tone="secondary">
-        <Link href="/login">Go to sign in</Link>
+        <Link href="/login">Перейти ко входу</Link>
       </Text>
     </div>
   );

@@ -69,7 +69,7 @@ export const proposedControlFormSchema = z.object({
   controlType: z.enum(
     CONTROL_TYPES as unknown as [ControlTypeDto, ...ControlTypeDto[]],
   ),
-  description: z.string().trim().min(1, "Description is required").max(4000),
+  description: z.string().trim().min(1, "Укажите описание").max(4000),
   responsible: z.string().max(512),
   implemented: z.boolean(),
   effective: z.boolean().nullable(),
@@ -92,13 +92,13 @@ function refineEvaluationSection(
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: [section, "probabilityScore"],
-      message: "Probability is required when entering risk evaluation",
+      message: "Укажите вероятность при вводе оценки риска",
     });
   } else if (values.probabilityScore > maxScore) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: [section, "probabilityScore"],
-      message: `Probability must be between 1 and ${maxScore} for this profile`,
+      message: `Вероятность должна быть от 1 до ${maxScore} для этого профиля`,
     });
   }
 
@@ -106,13 +106,13 @@ function refineEvaluationSection(
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: [section, "severityScore"],
-      message: "Severity is required when entering risk evaluation",
+      message: "Укажите тяжесть при вводе оценки риска",
     });
   } else if (values.severityScore > maxScore) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: [section, "severityScore"],
-      message: `Severity must be between 1 and ${maxScore} for this profile`,
+      message: `Тяжесть должна быть от 1 до ${maxScore} для этого профиля`,
     });
   }
 
@@ -121,7 +121,7 @@ function refineEvaluationSection(
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: [section, "extraFactorScores", factorId],
-        message: `Score must be between 1 and ${maxScore} for this profile`,
+        message: `Оценка должна быть от 1 до ${maxScore} для этого профиля`,
       });
     }
   }
@@ -139,13 +139,13 @@ function refineEvaluationSection(
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: [section, "extraFactorScores", factorId],
-        message: `${factorId} is required for this assessment profile`,
+        message: `Для этого профиля требуется фактор «${factorId}»`,
       });
     } else if (score > maxScore) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: [section, "extraFactorScores", factorId],
-        message: `Score must be between 1 and ${maxScore} for this profile`,
+        message: `Оценка должна быть от 1 до ${maxScore} для этого профиля`,
       });
     }
   }
@@ -153,9 +153,9 @@ function refineEvaluationSection(
 
 export const riskAssessmentFormSchema = z
   .object({
-    hazardId: z.string().trim().min(1, "Hazard is required"),
-    code: z.string().trim().min(1, "Code is required").max(64),
-    title: z.string().trim().min(1, "Title is required").max(512),
+    hazardId: z.string().trim().min(1, "Укажите опасность"),
+    code: z.string().trim().min(1, "Укажите код").max(64),
+    title: z.string().trim().min(1, "Укажите название").max(512),
     assessmentProfile: z.enum(
       ASSESSMENT_PROFILES as unknown as [
         AssessmentProfileDto,
@@ -166,7 +166,7 @@ export const riskAssessmentFormSchema = z
     assessedObjectReference: z
       .string()
       .trim()
-      .min(1, "Assessed object reference is required")
+      .min(1, "Укажите ссылку на оцениваемый объект")
       .max(256),
     assessmentDate: z.string(),
     reviewDueDate: z.string(),

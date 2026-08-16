@@ -8,7 +8,7 @@ export default function Page() {
     <Suspense
       fallback={
         <div style={{ padding: "var(--sm-space-8)" }}>
-          <LoadingState label="Loading risk assessments" />
+          <LoadingState label="Загрузка оценок риска" />
         </div>
       }
     >

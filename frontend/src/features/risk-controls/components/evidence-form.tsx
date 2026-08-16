@@ -90,24 +90,24 @@ export function EvidenceForm({
     <RiskControlCommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Add evidence"
+      title="Добавить доказательство"
       version={version}
       errorMessage={errorMessage}
-      confirmLabel="Add evidence"
+      confirmLabel="Добавить доказательство"
       loading={loading}
       onConfirm={handleSubmit((values) => onSubmit(values))}
     >
       <div style={{ display: "grid", gap: 12 }}>
         {isPostImplementation ? (
           <Alert tone="warning">
-            This control is already implemented. Adding evidence now is an
-            explicit append to the record.
+            Мера уже внедрена. Добавление доказательства сейчас — явное
+            дополнение записи.
           </Alert>
         ) : null}
 
         <div style={{ display: "grid", gap: 8 }}>
           <Label htmlFor="evidence-type" required>
-            Evidence type
+            Тип доказательства
           </Label>
           <Controller
             control={control}
@@ -129,7 +129,7 @@ export function EvidenceForm({
 
         <div style={{ display: "grid", gap: 8 }}>
           <Label htmlFor="evidence-external-reference" required>
-            External reference
+            Внешняя ссылка
           </Label>
           <Input
             id="evidence-external-reference"
@@ -143,7 +143,7 @@ export function EvidenceForm({
 
         <div style={{ display: "grid", gap: 8 }}>
           <Label htmlFor="evidence-title" required>
-            Title
+            Название
           </Label>
           <Input
             id="evidence-title"
@@ -156,12 +156,12 @@ export function EvidenceForm({
         </div>
 
         <div style={{ display: "grid", gap: 8 }}>
-          <Label htmlFor="evidence-description">Description</Label>
+          <Label htmlFor="evidence-description">Описание</Label>
           <TextArea id="evidence-description" {...register("description")} />
         </div>
 
         <div style={{ display: "grid", gap: 8 }}>
-          <Label htmlFor="evidence-checksum">Checksum</Label>
+          <Label htmlFor="evidence-checksum">Контрольная сумма</Label>
           <Input id="evidence-checksum" {...register("checksum")} />
         </div>
 
@@ -177,7 +177,7 @@ export function EvidenceForm({
                   onCheckedChange={(checked) =>
                     field.onChange(checked === true)
                   }
-                  label="Add evidence after implementation"
+                  label="Добавить доказательство после внедрения"
                 />
               )}
             />

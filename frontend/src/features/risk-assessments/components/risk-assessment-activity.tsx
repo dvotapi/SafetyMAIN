@@ -14,8 +14,8 @@ export function RiskAssessmentActivity({
   if (!canView) {
     return (
       <EmptyState
-        title="Activity unavailable"
-        description="Risk assessment activity requires the audit:read permission. No client-generated history is shown."
+        title="История недоступна"
+        description="Для просмотра истории оценки риска требуется право audit:read. Клиентская история не показывается."
       />
     );
   }
@@ -23,8 +23,8 @@ export function RiskAssessmentActivity({
   if (loading) {
     return (
       <EmptyState
-        title="Loading activity"
-        description="Fetching audit events…"
+        title="Загрузка истории"
+        description="Загрузка событий аудита…"
       />
     );
   }
@@ -32,8 +32,8 @@ export function RiskAssessmentActivity({
   if (items.length === 0) {
     return (
       <EmptyState
-        title="No activity yet"
-        description="No audit events are available for this risk assessment."
+        title="Истории пока нет"
+        description="Для этой оценки риска нет доступных событий аудита."
       />
     );
   }
@@ -45,7 +45,7 @@ export function RiskAssessmentActivity({
     description: [
       item.action,
       item.outcome,
-      item.actorUserId ? `Actor ${item.actorUserId}` : null,
+      item.actorUserId ? `Исполнитель ${item.actorUserId}` : null,
     ]
       .filter(Boolean)
       .join(" · "),

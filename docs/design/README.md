@@ -10,35 +10,36 @@ It does **not** ship React components or a running application. It defines the l
 
 ## Audience
 
-| Role | Use |
-|------|-----|
-| Product | Page templates, workflow language, navigation IA |
-| UX / Design | Tokens, status language, components, accessibility |
+| Role                 | Use                                                 |
+| -------------------- | --------------------------------------------------- |
+| Product              | Page templates, workflow language, navigation IA    |
+| UX / Design          | Tokens, status language, components, accessibility  |
 | Frontend Engineering | Architecture, dependency rules, token → CSS mapping |
 
 ## Document map
 
-| Document | Contents |
-|----------|----------|
-| [Principles.md](Principles.md) | Design philosophy and non-negotiables |
-| [Tokens.md](Tokens.md) | Typography, spacing, sizing, color, elevation |
-| [Iconography.md](Iconography.md) | Icon style, sizes, domain icon map |
-| [StatusLanguage.md](StatusLanguage.md) | Unified lifecycle / operational statuses |
-| [Layout.md](Layout.md) | Shell, panels, drawers, modals, sticky regions |
-| [Navigation.md](Navigation.md) | Primary and nested navigation |
-| [PageTemplates.md](PageTemplates.md) | Reusable page types and Object Page |
-| [WorkflowPattern.md](WorkflowPattern.md) | Lifecycle-oriented workflow UI |
-| [DashboardPattern.md](DashboardPattern.md) | Attention-first dashboards |
-| [RegistryPattern.md](RegistryPattern.md) | Large-data registries / grids |
-| [Forms.md](Forms.md) | Form layout, validation, progressive disclosure |
-| [TimelineAndActivity.md](TimelineAndActivity.md) | Timeline and activity feed |
-| [ComponentCatalog.md](ComponentCatalog.md) | Shared component inventory |
-| [ObjectRelationships.md](ObjectRelationships.md) | Linked-object navigation |
-| [Responsive.md](Responsive.md) | Desktop / tablet / mobile strategy |
-| [Accessibility.md](Accessibility.md) | WCAG AA guidance |
-| [Motion.md](Motion.md) | Motion principles |
-| [Themes.md](Themes.md) | Light, Dark, high-contrast readiness |
-| [FrontendArchitecture.md](FrontendArchitecture.md) | Folder structure and dependency rules |
+| Document                                           | Contents                                        |
+| -------------------------------------------------- | ----------------------------------------------- |
+| [Principles.md](Principles.md)                     | Design philosophy and non-negotiables           |
+| [Tokens.md](Tokens.md)                             | Typography, spacing, sizing, color, elevation   |
+| [Iconography.md](Iconography.md)                   | Icon style, sizes, domain icon map              |
+| [StatusLanguage.md](StatusLanguage.md)             | Unified lifecycle / operational statuses        |
+| [RussianUICopy.md](RussianUICopy.md)               | Locked Russian frontend terminology and copy    |
+| [Layout.md](Layout.md)                             | Shell, panels, drawers, modals, sticky regions  |
+| [Navigation.md](Navigation.md)                     | Primary and nested navigation                   |
+| [PageTemplates.md](PageTemplates.md)               | Reusable page types and Object Page             |
+| [WorkflowPattern.md](WorkflowPattern.md)           | Lifecycle-oriented workflow UI                  |
+| [DashboardPattern.md](DashboardPattern.md)         | Attention-first dashboards                      |
+| [RegistryPattern.md](RegistryPattern.md)           | Large-data registries / grids                   |
+| [Forms.md](Forms.md)                               | Form layout, validation, progressive disclosure |
+| [TimelineAndActivity.md](TimelineAndActivity.md)   | Timeline and activity feed                      |
+| [ComponentCatalog.md](ComponentCatalog.md)         | Shared component inventory                      |
+| [ObjectRelationships.md](ObjectRelationships.md)   | Linked-object navigation                        |
+| [Responsive.md](Responsive.md)                     | Desktop / tablet / mobile strategy              |
+| [Accessibility.md](Accessibility.md)               | WCAG AA guidance                                |
+| [Motion.md](Motion.md)                             | Motion principles                               |
+| [Themes.md](Themes.md)                             | Light, Dark, high-contrast readiness            |
+| [FrontendArchitecture.md](FrontendArchitecture.md) | Folder structure and dependency rules           |
 
 ## Related platform docs
 
@@ -48,12 +49,12 @@ It does **not** ship React components or a running application. It defines the l
 
 ## Implementation status
 
-| Layer | Status |
-|-------|--------|
-| Design documentation | **Implemented** (P9-001) |
-| Design tokens as code | **Implemented** — [TASK-P9-002](../tasks/TASK-P9-002.md) |
-| Shared React primitives (bootstrap set) | **Implemented** — [TASK-P9-002](../tasks/TASK-P9-002.md) |
-| Full component library / business screens | **Deferred** |
+| Layer                                     | Status                                                   |
+| ----------------------------------------- | -------------------------------------------------------- |
+| Design documentation                      | **Implemented** (P9-001)                                 |
+| Design tokens as code                     | **Implemented** — [TASK-P9-002](../tasks/TASK-P9-002.md) |
+| Shared React primitives (bootstrap set)   | **Implemented** — [TASK-P9-002](../tasks/TASK-P9-002.md) |
+| Full component library / business screens | **Deferred**                                             |
 
 ## Non-goals (P9-001)
 

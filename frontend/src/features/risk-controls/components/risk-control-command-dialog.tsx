@@ -34,8 +34,8 @@ export function RiskControlCommandDialog({
   version,
   children,
   errorMessage,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel = "Подтвердить",
+  cancelLabel = "Отмена",
   onConfirm,
   loading = false,
   confirmDisabled = false,
@@ -70,13 +70,13 @@ export function RiskControlCommandDialog({
       >
         <DialogHeader
           title={title}
-          description={`This action uses version ${version}.`}
+          description={`Действие выполняется для версии ${version}.`}
         />
         <DialogBody>
           <div style={{ display: "grid", gap: 12 }}>
             {children}
             {errorMessage ? (
-              <Alert tone="danger" title="Command failed">
+              <Alert tone="danger" title="Не удалось выполнить команду">
                 {errorMessage}
               </Alert>
             ) : null}

@@ -88,10 +88,10 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             variant="ghost"
             size="sm"
             className={styles.affixEnd}
-            aria-label="Clear search"
+            aria-label="Очистить поиск"
             onClick={onClear}
           >
-            Clear
+            Очистить
           </Button>
         ) : null}
       </div>
@@ -108,8 +108,8 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
   function PasswordInput(
     {
       className,
-      revealLabel = "Show password",
-      hideLabel = "Hide password",
+      revealLabel = "Показать пароль",
+      hideLabel = "Скрыть пароль",
       autoComplete,
       ...rest
     },
@@ -133,7 +133,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           aria-label={visible ? hideLabel : revealLabel}
           onClick={() => setVisible((v) => !v)}
         >
-          {visible ? "Hide" : "Show"}
+          {visible ? "Скрыть" : "Показать"}
         </Button>
       </div>
     );

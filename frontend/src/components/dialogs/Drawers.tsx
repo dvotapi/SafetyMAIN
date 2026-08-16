@@ -51,7 +51,7 @@ export function SideDrawer({
               <DialogPrimitive.Close asChild>
                 <IconButton
                   icon="x"
-                  label="Close drawer"
+                  label="Закрыть панель"
                   variant="ghost"
                   size="sm"
                   iconSize="sm"
@@ -109,7 +109,7 @@ export function BottomDrawer({
               <DialogPrimitive.Close asChild>
                 <IconButton
                   icon="x"
-                  label="Close drawer"
+                  label="Закрыть панель"
                   variant="ghost"
                   size="sm"
                   iconSize="sm"

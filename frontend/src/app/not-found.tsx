@@ -5,13 +5,13 @@ import { Text } from "@/components/primitives/Text";
 export default function NotFoundPage() {
   return (
     <PageContainer>
-      <PageHeader title="Not found" />
+      <PageHeader title="Страница не найдена" />
       <Text tone="secondary">
-        The page you requested is unavailable. It may not exist, or you may not
-        have access.
+        Запрошенная страница недоступна. Возможно, она не существует или у вас
+        нет к ней доступа.
       </Text>
       <p>
-        <Link href="/">Return to Overview</Link>
+        <Link href="/">Вернуться к обзору</Link>
       </p>
     </PageContainer>
   );

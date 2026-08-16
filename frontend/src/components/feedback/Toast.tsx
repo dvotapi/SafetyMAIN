@@ -109,7 +109,7 @@ function Toast({
       </div>
       <IconButton
         icon="x"
-        label="Dismiss notification"
+        label="Закрыть уведомление"
         variant="ghost"
         size="sm"
         iconSize="sm"

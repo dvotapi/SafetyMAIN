@@ -25,18 +25,18 @@ export function RiskAssessmentConflictDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader
-          title="Risk assessment changed elsewhere"
-          description="Another user updated this assessment. Your changes were not saved."
+          title="Оценка риска изменена в другом месте"
+          description="Другой пользователь обновил эту оценку. Ваши изменения не сохранены."
         />
         <DialogBody>
-          <Alert tone="warning" title="Version conflict">
-            Reload the latest version, then re-apply your edits. The mutation
-            will not retry automatically.
+          <Alert tone="warning" title="Конфликт версий">
+            Загрузите последнюю версию и повторите правки. Повтор не выполняется
+            автоматически.
           </Alert>
         </DialogBody>
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            Keep my draft
+            Оставить черновик
           </Button>
           <Button
             variant="primary"
@@ -46,7 +46,7 @@ export function RiskAssessmentConflictDialog({
               onOpenChange(false);
             }}
           >
-            Reload latest
+            Загрузить последнюю версию
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -10,8 +10,8 @@ export const ownerFormSchema = z.object({
     "organizational_unit",
     "external_party",
   ]),
-  ownerReference: z.string().trim().min(1, "Owner reference is required"),
-  displayName: z.string().trim().min(1, "Display name is required"),
+  ownerReference: z.string().trim().min(1, "Укажите ссылку на владельца"),
+  displayName: z.string().trim().min(1, "Укажите отображаемое имя"),
   reason: z.string().trim(),
 });
 

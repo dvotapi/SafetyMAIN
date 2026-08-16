@@ -128,7 +128,7 @@ export function ImplementationProgressSection({
   return (
     <>
       <Panel
-        heading={<Text variant="label">Implementation progress</Text>}
+        heading={<Text variant="label">Прогресс внедрения</Text>}
         actions={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {canStart ? (
@@ -137,7 +137,7 @@ export function ImplementationProgressSection({
                 size="sm"
                 onClick={() => onStartOpenChange(true)}
               >
-                Start implementation
+                Начать внедрение
               </Button>
             ) : null}
             {canProgress ? (
@@ -146,7 +146,7 @@ export function ImplementationProgressSection({
                 size="sm"
                 onClick={() => onProgressOpenChange(true)}
               >
-                Update progress
+                Обновить прогресс
               </Button>
             ) : null}
             {canComplete ? (
@@ -155,21 +155,21 @@ export function ImplementationProgressSection({
                 size="sm"
                 onClick={() => onCompleteOpenChange(true)}
               >
-                Complete implementation
+                Завершить внедрение
               </Button>
             ) : null}
           </div>
         }
       >
         {showNextAction ? (
-          <NextActionCard title="Record effectiveness verification" />
+          <NextActionCard title="Подтвердить эффективность" />
         ) : (
           <Text tone="muted">
             {canStart
-              ? "Start implementation to begin tracking progress."
+              ? "Начните внедрение, чтобы отслеживать прогресс."
               : canProgress
-                ? "Update progress or complete implementation from here."
-                : "No implementation action is available in the current status."}
+                ? "Обновляйте прогресс или завершайте внедрение отсюда."
+                : "В текущем статусе нет доступных действий по внедрению."}
           </Text>
         )}
       </Panel>
@@ -177,9 +177,9 @@ export function ImplementationProgressSection({
       <ConfirmationDialog
         open={startOpen}
         onOpenChange={onStartOpenChange}
-        title="Start implementation"
-        description={`Start implementation of ${control.code}? This uses version ${control.version}.`}
-        confirmLabel="Start implementation"
+        title="Начать внедрение"
+        description={`Начать внедрение ${control.code}? Используется версия ${control.version}.`}
+        confirmLabel="Начать внедрение"
         loading={startLoading}
         onConfirm={() => {
           void onStart();
@@ -189,17 +189,17 @@ export function ImplementationProgressSection({
       <RiskControlCommandDialog
         open={progressOpen}
         onOpenChange={onProgressOpenChange}
-        title="Update progress"
+        title="Обновить прогресс"
         version={control.version}
         errorMessage={errorMessage}
-        confirmLabel="Update progress"
+        confirmLabel="Обновить прогресс"
         loading={progressLoading}
         onConfirm={progressForm.handleSubmit((values) => onProgress(values))}
       >
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="progress-value" required>
-              Progress (%)
+              Прогресс (%)
             </Label>
             <Controller
               control={progressForm.control}
@@ -227,7 +227,7 @@ export function ImplementationProgressSection({
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <Label htmlFor="progress-note">Progress note</Label>
+            <Label htmlFor="progress-note">Заметка о прогрессе</Label>
             <TextArea
               id="progress-note"
               {...progressForm.register("summary")}
@@ -235,7 +235,7 @@ export function ImplementationProgressSection({
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <Text variant="label">Milestones</Text>
+            <Text variant="label">Вехи</Text>
             {control.implementation.milestones.length > 0 ? (
               <DescriptionList>
                 {control.implementation.milestones.map((milestone, index) => (
@@ -247,11 +247,10 @@ export function ImplementationProgressSection({
                 ))}
               </DescriptionList>
             ) : (
-              <Text tone="muted">No milestones recorded.</Text>
+              <Text tone="muted">Вехи не зафиксированы.</Text>
             )}
             <HelperText>
-              Milestones are read-only here — update them from the
-              implementation plan.
+              Вехи здесь только для чтения — изменяйте их в плане внедрения.
             </HelperText>
           </div>
         </div>
@@ -260,22 +259,22 @@ export function ImplementationProgressSection({
       <RiskControlCommandDialog
         open={completeOpen}
         onOpenChange={onCompleteOpenChange}
-        title="Complete implementation"
+        title="Завершить внедрение"
         version={control.version}
         errorMessage={errorMessage}
-        confirmLabel="Complete implementation"
+        confirmLabel="Завершить внедрение"
         loading={completeLoading}
         onConfirm={completeForm.handleSubmit((values) => onComplete(values))}
       >
         <div style={{ display: "grid", gap: 12 }}>
           <Text tone="secondary">
-            Marking the control implemented sets progress to 100% and makes
-            effectiveness verification the next expected action.
+            Завершение внедрения устанавливает прогресс 100% и делает
+            подтверждение эффективности следующим ожидаемым действием.
           </Text>
 
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="complete-summary" required>
-              Completion summary
+              Сводка по завершению
             </Label>
             <TextArea
               id="complete-summary"
@@ -292,7 +291,7 @@ export function ImplementationProgressSection({
           {evidenceIsEmpty ? (
             <div style={{ display: "grid", gap: 8 }}>
               <Label htmlFor="complete-evidence-waiver-reason" required>
-                Evidence waiver reason
+                Причина отказа от доказательств
               </Label>
               <TextArea
                 id="complete-evidence-waiver-reason"
@@ -302,8 +301,8 @@ export function ImplementationProgressSection({
                 )}
               />
               <HelperText>
-                Add at least one evidence reference, or record why evidence is
-                waived.
+                Добавьте хотя бы одну ссылку на доказательство или укажите
+                причину отказа.
               </HelperText>
               {completeForm.formState.errors.evidenceWaiverReason?.message ? (
                 <FieldError>
@@ -324,7 +323,7 @@ export function ImplementationProgressSection({
                   onCheckedChange={(checked) =>
                     field.onChange(checked === true)
                   }
-                  label="Allow incomplete milestones"
+                  label="Разрешить незавершённые вехи"
                 />
               )}
             />

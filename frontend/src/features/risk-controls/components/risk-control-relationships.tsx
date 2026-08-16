@@ -43,20 +43,20 @@ export function RiskControlRelationships({
       capabilities.canViewHazard && !hazard.isError && Boolean(hazard.data);
     items.push({
       id: "hazard",
-      label: "Hazard",
+      label: "Опасность",
       value: accessible ? (
         <Link href={`/safety/hazards/${control.hazardId}`}>
           {hazard.data!.code} — {hazard.data!.title}
         </Link>
       ) : hazard.isLoading ? (
         <Text as="span" tone="muted" variant="caption">
-          Loading…
+          Загрузка…
         </Text>
       ) : (
         <>
           <Text as="span">{control.hazardId}</Text>{" "}
           <Text as="span" tone="muted" variant="caption">
-            Not accessible in this organization
+            Недоступно в этой организации
           </Text>
         </>
       ),
@@ -70,20 +70,20 @@ export function RiskControlRelationships({
       Boolean(assessment.data);
     items.push({
       id: "risk-assessment",
-      label: "Risk Assessment",
+      label: "Оценка риска",
       value: accessible ? (
         <Link href={`/safety/risk-assessments/${control.riskAssessmentId}`}>
           {assessment.data!.code} — {assessment.data!.title}
         </Link>
       ) : assessment.isLoading ? (
         <Text as="span" tone="muted" variant="caption">
-          Loading…
+          Загрузка…
         </Text>
       ) : (
         <>
           <Text as="span">{control.riskAssessmentId}</Text>{" "}
           <Text as="span" tone="muted" variant="caption">
-            Not accessible in this organization
+            Недоступно в этой организации
           </Text>
         </>
       ),

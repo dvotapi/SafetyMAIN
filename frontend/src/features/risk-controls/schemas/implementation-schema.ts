@@ -15,7 +15,7 @@ const milestoneFormSchema = z.object({
   // A missing title makes the backend's implementation mapper raise
   // `KeyError` -> 500, so this is a hard client-side guarantee, not a
   // soft nicety.
-  title: z.string().trim().min(1, "Milestone title is required"),
+  title: z.string().trim().min(1, "Укажите название вехи"),
   description: z.string().trim(),
   dueDate: z.string().trim(),
   status: z.enum([
@@ -52,14 +52,14 @@ export function buildImplementationFormSchema(
     targetCompletionDate: z
       .string()
       .trim()
-      .min(1, "Target completion date is required"),
+      .min(1, "Укажите плановую дату завершения"),
     implementationMethod: z.string().trim(),
     resourceNotes: z.string().trim(),
     dependencies: z.array(z.string().trim().min(1)),
     evidenceRequirements: z.array(z.string().trim().min(1)),
     verificationMethodRequirement: hasExistingVerificationMethodRequirement
       ? z.string().trim()
-      : z.string().trim().min(1, "Verification method requirement is required"),
+      : z.string().trim().min(1, "Укажите требование к методу подтверждения"),
     milestones: z.array(milestoneFormSchema),
   });
 }

@@ -66,8 +66,7 @@ export function ControlOwnerSection({
   errorMessage?: string | null;
 }) {
   const canAssign =
-    capabilities.canAssignOwner &&
-    !TERMINAL_INACTIVE_STATUSES.has(status);
+    capabilities.canAssignOwner && !TERMINAL_INACTIVE_STATUSES.has(status);
 
   const form = useForm<OwnerFormValues>({
     resolver: zodResolver(ownerFormSchema),
@@ -91,7 +90,7 @@ export function ControlOwnerSection({
   return (
     <>
       <Panel
-        heading={<Text variant="label">Owner</Text>}
+        heading={<Text variant="label">Владелец</Text>}
         actions={
           canAssign ? (
             <Button
@@ -99,7 +98,7 @@ export function ControlOwnerSection({
               size="sm"
               onClick={() => onOpenChange(true)}
             >
-              {owner ? "Change owner" : "Assign owner"}
+              {owner ? "Изменить владельца" : "Назначить владельца"}
             </Button>
           ) : null
         }
@@ -108,14 +107,14 @@ export function ControlOwnerSection({
           <div style={{ display: "grid", gap: 4 }}>
             <Text>{owner.label}</Text>
             <Text variant="caption" tone="muted">
-              {formatRiskControlEnumLabel(owner.ownerType)} · Assigned{" "}
+              {formatRiskControlEnumLabel(owner.ownerType)} · Назначен{" "}
               {formatDateTime(owner.assignedAt)}
             </Text>
           </div>
         ) : (
           <EmptyState
-            title="No owner assigned"
-            description="Assign an owner to make this control accountable to a person, role, or unit."
+            title="Владелец не назначен"
+            description="Назначьте владельца — человека, роль или подразделение."
           />
         )}
       </Panel>
@@ -123,17 +122,17 @@ export function ControlOwnerSection({
       <RiskControlCommandDialog
         open={open}
         onOpenChange={onOpenChange}
-        title={owner ? "Change owner" : "Assign owner"}
+        title={owner ? "Изменить владельца" : "Назначить владельца"}
         version={version}
         errorMessage={errorMessage}
-        confirmLabel={owner ? "Change owner" : "Assign owner"}
+        confirmLabel={owner ? "Изменить владельца" : "Назначить владельца"}
         loading={loading}
         onConfirm={handleSubmit((values) => onAssign(values))}
       >
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="owner-type" required>
-              Owner type
+              Тип владельца
             </Label>
             <Controller
               control={control}
@@ -155,7 +154,7 @@ export function ControlOwnerSection({
 
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="owner-reference" required>
-              Owner reference
+              Ссылка на владельца
             </Label>
             <Input
               id="owner-reference"
@@ -163,8 +162,8 @@ export function ControlOwnerSection({
               invalid={Boolean(errors.ownerReference)}
             />
             <HelperText>
-              No employee directory exists yet — enter the owner reference used
-              by your organization.
+              Справочника сотрудников пока нет — введите ссылку на владельца,
+              принятую в вашей организации.
             </HelperText>
             {errors.ownerReference?.message ? (
               <FieldError>{errors.ownerReference.message}</FieldError>
@@ -173,7 +172,7 @@ export function ControlOwnerSection({
 
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="owner-display-name" required>
-              Display name
+              Отображаемое имя
             </Label>
             <Input
               id="owner-display-name"
@@ -186,7 +185,7 @@ export function ControlOwnerSection({
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <Label htmlFor="owner-reason">Reason</Label>
+            <Label htmlFor="owner-reason">Причина</Label>
             <TextArea id="owner-reason" {...register("reason")} />
           </div>
         </div>

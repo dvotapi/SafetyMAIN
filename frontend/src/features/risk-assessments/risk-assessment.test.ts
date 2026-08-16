@@ -297,8 +297,8 @@ describe("hierarchy of controls", () => {
 describe("risk assessment status", () => {
   it("maps status and risk level to labels without relying on color alone", () => {
     expect(riskAssessmentStatusToVisual("under_review")).toBe("under_review");
-    expect(riskAssessmentStatusLabel("under_review")).toBe("Under Review");
-    expect(riskLevelLabel("high")).toBe("High");
+    expect(riskAssessmentStatusLabel("under_review")).toBe("На рассмотрении");
+    expect(riskLevelLabel("high")).toBe("Высокий");
   });
 });
 

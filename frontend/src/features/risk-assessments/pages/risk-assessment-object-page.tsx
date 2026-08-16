@@ -88,7 +88,7 @@ function applyMutationFailure(
     applyMappedValidationErrors(
       setError,
       error.details,
-      error.message || "Validation failed.",
+      error.message || "Ошибка проверки данных.",
     );
     return;
   }
@@ -142,7 +142,7 @@ export function RiskAssessmentObjectPage({
     if (assessment) {
       document.title = `${assessment.code} · SafetyMAIN`;
     } else {
-      document.title = "Risk Assessment · SafetyMAIN";
+      document.title = "Оценка риска · SafetyMAIN";
     }
   }, [assessment]);
 
@@ -171,7 +171,7 @@ export function RiskAssessmentObjectPage({
       {
         id: assessment.hazardId,
         code: assessment.hazardId,
-        title: "Linked hazard",
+        title: "Связанная опасность",
         status: "unknown",
       },
     ];
@@ -181,8 +181,8 @@ export function RiskAssessmentObjectPage({
     return (
       <PageContainer variant="object">
         <EmptyState
-          title="Risk assessment unavailable"
-          description="You do not have permission to view risk assessments."
+          title="Оценка риска недоступна"
+          description="Недостаточно прав для просмотра оценок риска."
         />
       </PageContainer>
     );
@@ -191,7 +191,7 @@ export function RiskAssessmentObjectPage({
   if (detail.isLoading) {
     return (
       <PageContainer variant="object">
-        <LoadingState label="Loading risk assessment" />
+        <LoadingState label="Загрузка оценки риска" />
       </PageContainer>
     );
   }
@@ -201,11 +201,11 @@ export function RiskAssessmentObjectPage({
       return (
         <PageContainer variant="object">
           <EmptyState
-            title="Risk assessment not found"
-            description="This assessment does not exist or is not available in the active organization."
+            title="Оценка риска не найдена"
+            description="Эта оценка не существует или недоступна в активной организации."
             action={
               <Button asChild variant="secondary">
-                <Link href="/safety/risk-assessments">Back to registry</Link>
+                <Link href="/safety/risk-assessments">К реестру</Link>
               </Button>
             }
           />
@@ -216,7 +216,7 @@ export function RiskAssessmentObjectPage({
       return (
         <PageContainer variant="object">
           <EmptyState
-            title="Access denied"
+            title="Доступ запрещён"
             description={toUserSafeMessage(detail.error)}
           />
         </PageContainer>
@@ -225,7 +225,7 @@ export function RiskAssessmentObjectPage({
     return (
       <PageContainer variant="object">
         <div style={{ display: "grid", gap: 8 }}>
-          <Alert tone="danger" title="Unable to load risk assessment">
+          <Alert tone="danger" title="Не удалось загрузить оценку риска">
             {toUserSafeMessage(detail.error)}
           </Alert>
           <Button
@@ -233,7 +233,7 @@ export function RiskAssessmentObjectPage({
             size="sm"
             onClick={() => void detail.refetch()}
           >
-            Retry
+            Повторить
           </Button>
         </div>
       </PageContainer>
@@ -254,7 +254,7 @@ export function RiskAssessmentObjectPage({
           includeRiskInputs: true,
         }),
       );
-      toast({ tone: "success", title: "Risk assessment updated" });
+      toast({ tone: "success", title: "Оценка риска обновлена" });
       setEditOpen(false);
     } catch (error) {
       if (error instanceof ConflictError) {
@@ -290,7 +290,7 @@ export function RiskAssessmentObjectPage({
       } else if (error instanceof ValidationError) {
         const mapped = mapRiskAssessmentValidationDetails(
           error.details,
-          error.message || "Validation failed.",
+          error.message || "Ошибка проверки данных.",
         );
         setLifecycleError(
           [
@@ -323,18 +323,18 @@ export function RiskAssessmentObjectPage({
         }
         meta={
           <Text tone="muted" variant="caption">
-            Version {assessment.version}
+            Версия {assessment.version}
           </Text>
         }
         actions={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {editable ? (
               <Button variant="secondary" onClick={() => setEditOpen(true)}>
-                Edit draft
+                Изменить черновик
               </Button>
             ) : null}
             <Button asChild variant="ghost">
-              <Link href="/safety/risk-assessments">Back to registry</Link>
+              <Link href="/safety/risk-assessments">К реестру</Link>
             </Button>
           </div>
         }
@@ -354,7 +354,7 @@ export function RiskAssessmentObjectPage({
                 expected_version: assessment.version,
                 submit_for_review: true,
               }),
-            "Submitted for review",
+            "Отправлено на рассмотрение",
           )
         }
         onApprove={(acceptance: ApproveAcceptanceInput) =>
@@ -368,8 +368,8 @@ export function RiskAssessmentObjectPage({
                   justification: acceptance.justification,
                 },
               }),
-            "Risk assessment approved",
-            "If a previous approved assessment existed in the same scope, it may now be superseded. Lists and details were refreshed.",
+            "Оценка риска утверждена",
+            "Если в той же области уже была утверждённая оценка, она могла быть замещена. Списки и карточки обновлены.",
           )
         }
         onArchive={(reason) =>
@@ -380,16 +380,16 @@ export function RiskAssessmentObjectPage({
                 expected_version: assessment.version,
                 reason,
               }),
-            "Risk assessment archived",
+            "Оценка риска архивирована",
           )
         }
       />
 
       <ObjectTabs
         tabs={[
-          { id: "overview", label: "Overview" },
-          { id: "controls", label: "Related controls" },
-          { id: "activity", label: "Activity" },
+          { id: "overview", label: "Обзор" },
+          { id: "controls", label: "Связанные меры" },
+          { id: "activity", label: "История" },
         ]}
         activeTabId={tab}
         onTabChange={setTab}
@@ -434,11 +434,11 @@ export function RiskAssessmentObjectPage({
       <SideDrawer
         open={editOpen}
         onOpenChange={setEditOpen}
-        title="Edit draft"
-        description="Hazard, code, and profile cannot be changed after create."
+        title="Изменить черновик"
+        description="Опасность, код и профиль нельзя изменить после создания."
       >
         {form.formState.errors.root?.message ? (
-          <Alert tone="danger" title="Could not update risk assessment">
+          <Alert tone="danger" title="Не удалось обновить оценку риска">
             {form.formState.errors.root.message}
           </Alert>
         ) : null}
@@ -452,7 +452,7 @@ export function RiskAssessmentObjectPage({
         />
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
           <Button variant="secondary" onClick={() => setEditOpen(false)}>
-            Cancel
+            Отмена
           </Button>
           <Button
             type="submit"
@@ -460,7 +460,7 @@ export function RiskAssessmentObjectPage({
             loading={updateMutation.isPending}
             disabled={updateMutation.isPending}
           >
-            Save changes
+            Сохранить изменения
           </Button>
         </div>
       </SideDrawer>

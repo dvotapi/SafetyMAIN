@@ -38,20 +38,20 @@ import type {
 import { riskControlStatusLabel } from "@/features/risk-controls/utils/risk-control-status";
 
 const ACTION_LABELS: Record<RiskControlLifecycleAction, string> = {
-  assign_owner: "Assign owner",
-  plan: "Plan implementation",
-  start_implementation: "Start implementation",
-  update_progress: "Update progress",
-  add_evidence: "Add evidence",
-  complete_implementation: "Complete implementation",
-  verify: "Verify effectiveness",
-  schedule_review: "Schedule review",
-  complete_review: "Complete review",
-  suspend: "Suspend control",
-  resume: "Resume control",
-  supersede: "Supersede control",
-  cancel: "Cancel control",
-  archive: "Archive control",
+  assign_owner: "Назначить владельца",
+  plan: "Спланировать внедрение",
+  start_implementation: "Начать внедрение",
+  update_progress: "Обновить прогресс",
+  add_evidence: "Добавить доказательство",
+  complete_implementation: "Завершить внедрение",
+  verify: "Подтвердить эффективность",
+  schedule_review: "Назначить пересмотр",
+  complete_review: "Завершить пересмотр",
+  suspend: "Приостановить меру",
+  resume: "Возобновить меру",
+  supersede: "Заместить меру",
+  cancel: "Отменить меру",
+  archive: "Архивировать меру",
 };
 
 /**
@@ -149,8 +149,8 @@ export function RiskControlLifecycleActions({
     return (
       <Panel>
         <Text tone="muted">
-          No lifecycle actions are available for this control in its current
-          state.
+          Для этой меры в текущем состоянии нет доступных действий жизненного
+          цикла.
         </Text>
       </Panel>
     );
@@ -199,8 +199,8 @@ export function RiskControlLifecycleActions({
   return (
     <>
       <NextActionCard
-        title="Lifecycle"
-        description={`Current status: ${riskControlStatusLabel(control.status)}. Choose the next permitted action.`}
+        title="Жизненный цикл"
+        description={`Текущий статус: ${riskControlStatusLabel(control.status)}. Выберите следующее разрешённое действие.`}
         actions={
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {actions.map((action) => (
@@ -219,7 +219,10 @@ export function RiskControlLifecycleActions({
         }
       />
       {errorMessage ? (
-        <Alert tone="danger" title="Lifecycle action failed">
+        <Alert
+          tone="danger"
+          title="Не удалось выполнить действие жизненного цикла"
+        >
           {errorMessage}
         </Alert>
       ) : null}
@@ -227,10 +230,10 @@ export function RiskControlLifecycleActions({
       <RiskControlCommandDialog
         open={suspendOpen}
         onOpenChange={setSuspendOpen}
-        title="Suspend control"
+        title="Приостановить меру"
         version={control.version}
         errorMessage={errorMessage}
-        confirmLabel="Suspend control"
+        confirmLabel="Приостановить меру"
         loading={busyAction === "suspend"}
         onConfirm={suspendForm.handleSubmit(async (values) => {
           const succeeded = await onSuspend(values);
@@ -240,14 +243,14 @@ export function RiskControlLifecycleActions({
         })}
       >
         <div style={{ display: "grid", gap: 12 }}>
-          <Alert tone="warning" title="Suspending pauses this control">
-            The control stops counting toward active coverage until it is
-            resumed. Use this only when the control cannot currently operate as
-            intended.
+          <Alert tone="warning" title="Приостановка приостанавливает меру">
+            Мера не учитывается в активном покрытии до возобновления.
+            Используйте только когда мера временно не может работать как
+            задумано.
           </Alert>
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="suspend-reason" required>
-              Reason
+              Причина
             </Label>
             <TextArea
               id="suspend-reason"
@@ -262,7 +265,7 @@ export function RiskControlLifecycleActions({
           </div>
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="suspend-expected-resolution-date">
-              Expected resolution date
+              Ожидаемая дата устранения
             </Label>
             <DatePicker
               id="suspend-expected-resolution-date"
@@ -275,10 +278,10 @@ export function RiskControlLifecycleActions({
       <RiskControlCommandDialog
         open={resumeOpen}
         onOpenChange={setResumeOpen}
-        title="Resume control"
+        title="Возобновить меру"
         version={control.version}
         errorMessage={errorMessage}
-        confirmLabel="Resume control"
+        confirmLabel="Возобновить меру"
         loading={busyAction === "resume"}
         onConfirm={() => {
           void (async () => {
@@ -290,18 +293,18 @@ export function RiskControlLifecycleActions({
         }}
       >
         <Text tone="secondary">
-          Resume this control using version {control.version}? It returns to
-          active status.
+          Возобновить меру (версия {control.version})? Она вернётся в активный
+          статус.
         </Text>
       </RiskControlCommandDialog>
 
       <RiskControlCommandDialog
         open={supersedeOpen}
         onOpenChange={setSupersedeOpen}
-        title="Supersede control"
+        title="Заместить меру"
         version={control.version}
         errorMessage={errorMessage}
-        confirmLabel="Supersede control"
+        confirmLabel="Заместить меру"
         loading={busyAction === "supersede"}
         onConfirm={supersedeForm.handleSubmit(async (values) => {
           const succeeded = await onSupersede(values);
@@ -311,13 +314,12 @@ export function RiskControlLifecycleActions({
         })}
       >
         <div style={{ display: "grid", gap: 12 }}>
-          <Alert tone="warning" title="This is a consequential action">
-            Superseding is not deletion — the control stays readable in its
-            history.
+          <Alert tone="warning" title="Последствия действия">
+            Замещение — не удаление: мера остаётся доступной в истории.
           </Alert>
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="supersede-replacement-control-id" required>
-              Replacement control ID
+              ID замещающей меры
             </Label>
             <Input
               id="supersede-replacement-control-id"
@@ -327,8 +329,8 @@ export function RiskControlLifecycleActions({
               )}
             />
             <HelperText>
-              The backend does not verify that this ID belongs to an existing
-              control — double-check it before confirming.
+              Сервер не проверяет существование меры с этим ID — проверьте перед
+              подтверждением.
             </HelperText>
             {supersedeForm.formState.errors.replacementControlId?.message ? (
               <FieldError>
@@ -338,7 +340,7 @@ export function RiskControlLifecycleActions({
           </div>
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="supersede-reason" required>
-              Reason
+              Причина
             </Label>
             <TextArea
               id="supersede-reason"
@@ -357,10 +359,10 @@ export function RiskControlLifecycleActions({
       <RiskControlCommandDialog
         open={cancelOpen}
         onOpenChange={setCancelOpen}
-        title="Cancel control"
+        title="Отменить меру"
         version={control.version}
         errorMessage={errorMessage}
-        confirmLabel="Cancel control"
+        confirmLabel="Отменить меру"
         loading={busyAction === "cancel"}
         onConfirm={cancelForm.handleSubmit(async (values) => {
           const succeeded = await onCancel(values);
@@ -371,7 +373,7 @@ export function RiskControlLifecycleActions({
       >
         <div style={{ display: "grid", gap: 8 }}>
           <Label htmlFor="cancel-reason" required>
-            Reason
+            Причина
           </Label>
           <TextArea
             id="cancel-reason"
@@ -389,10 +391,10 @@ export function RiskControlLifecycleActions({
       <RiskControlCommandDialog
         open={archiveOpen}
         onOpenChange={setArchiveOpen}
-        title="Archive control"
+        title="Архивировать меру"
         version={control.version}
         errorMessage={errorMessage}
-        confirmLabel="Archive control"
+        confirmLabel="Архивировать меру"
         loading={busyAction === "archive"}
         onConfirm={archiveForm.handleSubmit(async (values) => {
           const succeeded = await onArchive(values);
@@ -402,13 +404,13 @@ export function RiskControlLifecycleActions({
         })}
       >
         <div style={{ display: "grid", gap: 12 }}>
-          <Alert tone="warning" title="This is a consequential action">
-            Archiving is not deletion. The control remains readable by direct
-            link.
+          <Alert tone="warning" title="Последствия действия">
+            Архивирование — не удаление. Мера остаётся доступной по прямой
+            ссылке.
           </Alert>
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="archive-reason" required>
-              Reason
+              Причина
             </Label>
             <TextArea
               id="archive-reason"

@@ -97,7 +97,7 @@ describe("approve acceptance helpers", () => {
         decision: "accepted",
         justification: "   ",
       }),
-    ).toBe("Justification is required for accepted risks");
+    ).toBe("Для принятого риска укажите обоснование");
   });
 
   it("blocks conditionally_accepted without justification client-side", () => {
@@ -106,7 +106,7 @@ describe("approve acceptance helpers", () => {
         decision: "conditionally_accepted",
         justification: "",
       }),
-    ).toBe("Justification is required for accepted risks");
+    ).toBe("Для принятого риска укажите обоснование");
   });
 
   it("builds corrected acceptance payload", () => {
@@ -144,17 +144,13 @@ describe("RiskAssessmentLifecycleActions approve dialog", () => {
       />,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: "Approve assessment" }),
-    );
-    expect(screen.getByLabelText(/Acceptance decision/i)).toBeInTheDocument();
-    const justification = screen.getByLabelText(/Justification/i);
+    await user.click(screen.getByRole("button", { name: "Утвердить оценку" }));
+    expect(screen.getByLabelText(/Решение о принятии/i)).toBeInTheDocument();
+    const justification = screen.getByLabelText(/Обоснование/i);
     expect(justification).toHaveValue("");
 
     await user.type(justification, "Now justified");
-    await user.click(
-      screen.getByRole("button", { name: "Approve assessment" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Утвердить оценку" }));
 
     await waitFor(() => {
       expect(onApprove).toHaveBeenCalledWith({
@@ -164,7 +160,7 @@ describe("RiskAssessmentLifecycleActions approve dialog", () => {
     });
     await waitFor(() => {
       expect(
-        screen.queryByRole("heading", { name: "Approve assessment" }),
+        screen.queryByRole("heading", { name: "Утвердить оценку" }),
       ).not.toBeInTheDocument();
     });
   });
@@ -189,14 +185,12 @@ describe("RiskAssessmentLifecycleActions approve dialog", () => {
       />,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: "Approve assessment" }),
-    );
-    expect(screen.getByLabelText(/Justification/i)).toHaveValue(
+    await user.click(screen.getByRole("button", { name: "Утвердить оценку" }));
+    expect(screen.getByLabelText(/Обоснование/i)).toHaveValue(
       "Escalate further",
     );
     // Decision select shows the formatted label for the current value.
-    expect(screen.getByText("Not Accepted")).toBeInTheDocument();
+    expect(screen.getByText("Не принят")).toBeInTheDocument();
   });
 
   it("blocks accepted without justification in the dialog", async () => {
@@ -220,20 +214,18 @@ describe("RiskAssessmentLifecycleActions approve dialog", () => {
       />,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: "Approve assessment" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Утвердить оценку" }));
     const approveButtons = screen.getAllByRole("button", {
-      name: "Approve assessment",
+      name: "Утвердить оценку",
     });
     await user.click(approveButtons[approveButtons.length - 1]!);
 
     expect(
-      screen.getByText("Justification is required for accepted risks"),
+      screen.getByText("Для принятого риска укажите обоснование"),
     ).toBeInTheDocument();
     expect(onApprove).not.toHaveBeenCalled();
     expect(
-      screen.getByRole("heading", { name: "Approve assessment" }),
+      screen.getByRole("heading", { name: "Утвердить оценку" }),
     ).toBeInTheDocument();
   });
 
@@ -258,16 +250,14 @@ describe("RiskAssessmentLifecycleActions approve dialog", () => {
       />,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: "Approve assessment" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Утвердить оценку" }));
     const approveButtons = screen.getAllByRole("button", {
-      name: "Approve assessment",
+      name: "Утвердить оценку",
     });
     await user.click(approveButtons[approveButtons.length - 1]!);
 
     expect(
-      screen.getByText("Justification is required for accepted risks"),
+      screen.getByText("Для принятого риска укажите обоснование"),
     ).toBeInTheDocument();
     expect(onApprove).not.toHaveBeenCalled();
   });
@@ -293,15 +283,13 @@ describe("RiskAssessmentLifecycleActions approve dialog", () => {
       />,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: "Approve assessment" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Утвердить оценку" }));
     await user.type(
-      screen.getByLabelText(/Justification/i),
+      screen.getByLabelText(/Обоснование/i),
       "Will fail server-side",
     );
     const approveButtons = screen.getAllByRole("button", {
-      name: "Approve assessment",
+      name: "Утвердить оценку",
     });
     await user.click(approveButtons[approveButtons.length - 1]!);
 
@@ -309,9 +297,9 @@ describe("RiskAssessmentLifecycleActions approve dialog", () => {
       expect(onApprove).toHaveBeenCalledOnce();
     });
     expect(
-      screen.getByRole("heading", { name: "Approve assessment" }),
+      screen.getByRole("heading", { name: "Утвердить оценку" }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/Justification/i)).toHaveValue(
+    expect(screen.getByLabelText(/Обоснование/i)).toHaveValue(
       "Will fail server-side",
     );
   });
@@ -337,11 +325,9 @@ describe("RiskAssessmentLifecycleActions approve dialog", () => {
       />,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: "Approve assessment" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Утвердить оценку" }));
     const approveButtons = screen.getAllByRole("button", {
-      name: "Approve assessment",
+      name: "Утвердить оценку",
     });
     await user.click(approveButtons[approveButtons.length - 1]!);
 
@@ -353,7 +339,7 @@ describe("RiskAssessmentLifecycleActions approve dialog", () => {
     });
     await waitFor(() => {
       expect(
-        screen.queryByRole("heading", { name: "Approve assessment" }),
+        screen.queryByRole("heading", { name: "Утвердить оценку" }),
       ).not.toBeInTheDocument();
     });
   });
@@ -373,19 +359,19 @@ describe("RiskAssessmentLifecycleActions approve dialog", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: "Archive assessment" }),
+      screen.getByRole("button", { name: "Архивировать оценку" }),
     );
-    await user.type(screen.getByLabelText(/Reason/i), "Duplicate scope");
+    await user.type(screen.getByLabelText(/Причина/i), "Duplicate scope");
     await user.click(
-      screen.getByRole("button", { name: "Archive assessment" }),
+      screen.getByRole("button", { name: "Архивировать оценку" }),
     );
 
     await waitFor(() => {
       expect(onArchive).toHaveBeenCalledWith("Duplicate scope");
     });
     expect(
-      screen.getByRole("heading", { name: "Archive assessment" }),
+      screen.getByRole("heading", { name: "Архивировать оценку" }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/Reason/i)).toHaveValue("Duplicate scope");
+    expect(screen.getByLabelText(/Причина/i)).toHaveValue("Duplicate scope");
   });
 });

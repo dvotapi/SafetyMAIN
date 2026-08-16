@@ -40,7 +40,7 @@ export function Select({
   value,
   defaultValue,
   onValueChange,
-  placeholder = "Select…",
+  placeholder = "Выберите…",
   options,
   disabled,
   invalid,
@@ -129,7 +129,7 @@ export function MultiSelect({
   defaultValues,
   onValuesChange,
   options,
-  placeholder = "Select…",
+  placeholder = "Выберите…",
   disabled,
   invalid,
   id,
@@ -218,7 +218,7 @@ export function MultiSelect({
               size="sm"
               onClick={() => updateValues([])}
             >
-              Clear
+              Очистить
             </Button>
             <Button
               type="button"
@@ -226,7 +226,7 @@ export function MultiSelect({
               size="sm"
               onClick={() => setOpen(false)}
             >
-              Done
+              Готово
             </Button>
           </div>
         </Popover.Content>

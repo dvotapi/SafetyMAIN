@@ -21,8 +21,8 @@ const baseEvidenceFormSchema = z.object({
     "approval",
     "other",
   ]),
-  externalReference: z.string().trim().min(1, "External reference is required"),
-  title: z.string().trim().min(1, "Title is required"),
+  externalReference: z.string().trim().min(1, "Укажите внешнюю ссылку"),
+  title: z.string().trim().min(1, "Укажите название"),
   description: z.string().trim(),
   checksum: z.string().trim(),
   allowAfterImplemented: z.boolean(),
@@ -42,7 +42,7 @@ export function buildEvidenceFormSchema(requireAllowAfterImplemented: boolean) {
   return baseEvidenceFormSchema.refine(
     (values) => values.allowAfterImplemented === true,
     {
-      message: "Confirm adding evidence after implementation",
+      message: "Подтвердите добавление доказательства после внедрения",
       path: ["allowAfterImplemented"],
     },
   );

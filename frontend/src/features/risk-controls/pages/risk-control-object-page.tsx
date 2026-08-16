@@ -157,7 +157,7 @@ export function RiskControlObjectPage({
     if (control) {
       document.title = `${control.code} · SafetyMAIN`;
     } else {
-      document.title = "Risk Control · SafetyMAIN";
+      document.title = "Мера управления риском · SafetyMAIN";
     }
   }, [control]);
 
@@ -165,8 +165,8 @@ export function RiskControlObjectPage({
     return (
       <PageContainer variant="object">
         <EmptyState
-          title="Risk control unavailable"
-          description="You do not have permission to view risk controls."
+          title="Мера управления риском недоступна"
+          description="Недостаточно прав для просмотра мер управления риском."
         />
       </PageContainer>
     );
@@ -175,7 +175,7 @@ export function RiskControlObjectPage({
   if (detail.isLoading) {
     return (
       <PageContainer variant="object">
-        <LoadingState label="Loading risk control" />
+        <LoadingState label="Загрузка меры управления риском" />
       </PageContainer>
     );
   }
@@ -185,11 +185,11 @@ export function RiskControlObjectPage({
       return (
         <PageContainer variant="object">
           <EmptyState
-            title="Risk control not found"
-            description="This control does not exist or is not available in the active organization."
+            title="Мера управления риском не найдена"
+            description="Эта мера не существует или недоступна в активной организации."
             action={
               <Button asChild variant="secondary">
-                <Link href="/safety/risk-controls">Back to registry</Link>
+                <Link href="/safety/risk-controls">К реестру</Link>
               </Button>
             }
           />
@@ -200,7 +200,7 @@ export function RiskControlObjectPage({
       return (
         <PageContainer variant="object">
           <EmptyState
-            title="Access denied"
+            title="Доступ запрещён"
             description={toUserSafeMessage(detail.error)}
           />
         </PageContainer>
@@ -209,7 +209,10 @@ export function RiskControlObjectPage({
     return (
       <PageContainer variant="object">
         <div style={{ display: "grid", gap: 8 }}>
-          <Alert tone="danger" title="Unable to load risk control">
+          <Alert
+            tone="danger"
+            title="Не удалось загрузить меру управления риском"
+          >
             {toUserSafeMessage(detail.error)}
           </Alert>
           <Button
@@ -217,7 +220,7 @@ export function RiskControlObjectPage({
             size="sm"
             onClick={() => void detail.refetch()}
           >
-            Retry
+            Повторить
           </Button>
         </div>
       </PageContainer>
@@ -242,14 +245,12 @@ export function RiskControlObjectPage({
   const showActivityTab = capabilities.canViewActivity;
 
   const tabs = [
-    { id: "overview", label: "Overview" },
-    { id: "implementation", label: "Implementation" },
-    { id: "evidence", label: "Evidence" },
-    { id: "verification", label: "Verification" },
-    ...(showRelationshipsTab
-      ? [{ id: "relationships", label: "Relationships" }]
-      : []),
-    ...(showActivityTab ? [{ id: "activity", label: "Activity" }] : []),
+    { id: "overview", label: "Обзор" },
+    { id: "implementation", label: "Внедрение" },
+    { id: "evidence", label: "Доказательства" },
+    { id: "verification", label: "Подтверждение" },
+    ...(showRelationshipsTab ? [{ id: "relationships", label: "Связи" }] : []),
+    ...(showActivityTab ? [{ id: "activity", label: "История" }] : []),
   ];
 
   return (
@@ -289,18 +290,18 @@ export function RiskControlObjectPage({
               </Text>
             )}
             {control.isOverdue ? (
-              <StatusBadge status="overdue" label="Overdue" />
+              <StatusBadge status="overdue" label="Просрочено" />
             ) : null}
           </div>
         }
         meta={
           <Text tone="muted" variant="caption">
-            Version {control.version}
+            Версия {control.version}
           </Text>
         }
         actions={
           <Button asChild variant="ghost">
-            <Link href="/safety/risk-controls">Back to registry</Link>
+            <Link href="/safety/risk-controls">К реестру</Link>
           </Button>
         }
       />
@@ -322,7 +323,7 @@ export function RiskControlObjectPage({
               suspendMutation.mutateAsync(
                 suspendFormValuesToRequest(values, control.version),
               ),
-            "Control suspended",
+            "Мера приостановлена",
           )
         }
         onResume={() =>
@@ -332,7 +333,7 @@ export function RiskControlObjectPage({
               resumeMutation.mutateAsync({
                 expected_version: control.version,
               }),
-            "Control resumed",
+            "Мера возобновлена",
           )
         }
         onSupersede={(values) =>
@@ -342,7 +343,7 @@ export function RiskControlObjectPage({
               supersedeMutation.mutateAsync(
                 supersedeFormValuesToRequest(values, control.version),
               ),
-            "Control superseded",
+            "Мера замещена",
           )
         }
         onCancel={(values) =>
@@ -352,7 +353,7 @@ export function RiskControlObjectPage({
               cancelMutation.mutateAsync(
                 reasonOnlyFormValuesToRequest(values, control.version),
               ),
-            "Control cancelled",
+            "Мера отменена",
           )
         }
         onArchive={(values) =>
@@ -362,7 +363,7 @@ export function RiskControlObjectPage({
               archiveMutation.mutateAsync(
                 reasonOnlyFormValuesToRequest(values, control.version),
               ),
-            "Control archived",
+            "Мера архивирована",
           )
         }
       />
@@ -389,7 +390,7 @@ export function RiskControlObjectPage({
                   assignOwnerMutation.mutateAsync(
                     ownerFormValuesToRequest(values, control.version),
                   ),
-                "Owner assigned",
+                "Владелец назначен",
               );
               if (succeeded) {
                 setOwnerDialogOpen(false);
@@ -428,7 +429,7 @@ export function RiskControlObjectPage({
                   scheduleReviewMutation.mutateAsync(
                     reviewScheduleFormValuesToRequest(values, control.version),
                   ),
-                "Review scheduled",
+                "Пересмотр назначен",
               );
               if (succeeded) {
                 setScheduleReviewDialogOpen(false);
@@ -441,7 +442,7 @@ export function RiskControlObjectPage({
                   completeReviewMutation.mutateAsync(
                     completeReviewFormValuesToRequest(values, control.version),
                   ),
-                "Review completed",
+                "Пересмотр завершён",
               );
               if (succeeded) {
                 setCompleteReviewDialogOpen(false);
@@ -472,7 +473,7 @@ export function RiskControlObjectPage({
                   planMutation.mutateAsync(
                     planFormValuesToRequest(values, control.version),
                   ),
-                "Implementation planned",
+                "Внедрение запланировано",
               );
               if (succeeded) {
                 setPlanDialogOpen(false);
@@ -499,7 +500,7 @@ export function RiskControlObjectPage({
                   startImplementationMutation.mutateAsync({
                     expected_version: control.version,
                   }),
-                "Implementation started",
+                "Внедрение начато",
               );
             }}
             onProgress={async (values) => {
@@ -509,7 +510,7 @@ export function RiskControlObjectPage({
                   updateProgressMutation.mutateAsync(
                     progressFormValuesToRequest(values, control.version),
                   ),
-                "Progress updated",
+                "Прогресс обновлён",
               );
               if (succeeded) {
                 setProgressDialogOpen(false);
@@ -526,7 +527,7 @@ export function RiskControlObjectPage({
                       control.evidence.length === 0,
                     ),
                   ),
-                "Implementation completed",
+                "Внедрение завершено",
               );
               if (succeeded) {
                 setCompleteDialogOpen(false);
@@ -557,7 +558,7 @@ export function RiskControlObjectPage({
                 addEvidenceMutation.mutateAsync(
                   evidenceFormValuesToRequest(values, control.version),
                 ),
-              "Evidence added",
+              "Доказательство добавлено",
             );
             if (succeeded) {
               setEvidenceDialogOpen(false);
@@ -587,7 +588,7 @@ export function RiskControlObjectPage({
             onSubmit={async (values) => {
               const successDescription =
                 values.result === "partially_effective"
-                  ? "Effectiveness is now Verified Partially Effective. The control's lifecycle status is unchanged."
+                  ? "Эффективность: подтверждена частично эффективной. Статус жизненного цикла меры не изменился."
                   : undefined;
               const succeeded = await runCommand(
                 "verify",
@@ -595,7 +596,7 @@ export function RiskControlObjectPage({
                   recordVerificationMutation.mutateAsync(
                     verificationFormValuesToRequest(values, control.version),
                   ),
-                "Verification recorded",
+                "Подтверждение записано",
                 successDescription,
               );
               if (succeeded) {

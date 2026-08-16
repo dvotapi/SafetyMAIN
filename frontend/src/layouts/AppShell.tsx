@@ -15,6 +15,12 @@ import { cx } from "@/utils/cx";
 
 import styles from "./AppShell.module.css";
 
+const THEME_LABELS = {
+  system: "Системная",
+  light: "Светлая",
+  dark: "Тёмная",
+} as const;
+
 function NavTree({
   onNavigate,
   sections,
@@ -88,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className={styles.shell}>
       <a href="#main-content" className="skip-link">
-        Skip to content
+        Перейти к содержимому
       </a>
       <header className={styles.topBar} role="banner">
         <div className={styles.topMeta}>
@@ -100,37 +106,37 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-controls={navId}
             onClick={() => setNavOpen((v) => !v)}
           >
-            Menu
+            Меню
           </Button>
           <Link href="/" className={styles.brand}>
             SafetyMAIN
           </Link>
         </div>
-        <div className={styles.topMeta} aria-label="Organization and user">
+        <div className={styles.topMeta} aria-label="Организация и пользователь">
           <OrganizationSwitcher
             organizationName={
-              currentMembership?.organizationName ?? "No organization"
+              currentMembership?.organizationName ?? "Нет организации"
             }
           />
           <label>
-            <span className="visually-hidden">Theme</span>
+            <span className="visually-hidden">Тема</span>
             <select
-              aria-label="Theme mode"
+              aria-label="Режим темы"
               value={mode}
               onChange={(e) =>
                 setMode(e.target.value as "system" | "light" | "dark")
               }
             >
-              <option value="system">System</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
+              <option value="system">Системная</option>
+              <option value="light">Светлая</option>
+              <option value="dark">Тёмная</option>
             </select>
           </label>
           <Text as="span" tone="muted" variant="caption">
-            {resolved}
+            {THEME_LABELS[resolved]}
           </Text>
           <UserMenu
-            name={session?.user.displayName ?? "User"}
+            name={session?.user.displayName ?? "Пользователь"}
             items={[
               {
                 id: "email",
@@ -141,17 +147,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                 id: "org",
                 label: currentMembership
                   ? `${currentMembership.organizationName} (${currentMembership.role})`
-                  : "No organization",
+                  : "Нет организации",
                 disabled: true,
               },
               {
                 id: "profile",
-                label: "Profile (coming soon)",
+                label: "Профиль (скоро)",
                 disabled: true,
               },
               {
                 id: "logout",
-                label: "Sign out",
+                label: "Выйти",
                 destructive: true,
                 onSelect: () => {
                   void logout().then(() => router.replace("/login"));
@@ -162,7 +168,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <div className={styles.body}>
-        <nav className={cx(styles.nav, styles.navDesktop)} aria-label="Primary">
+        <nav
+          className={cx(styles.nav, styles.navDesktop)}
+          aria-label="Основная"
+        >
           <NavTree sections={sections} />
         </nav>
         {navOpen ? (
@@ -170,10 +179,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button
               type="button"
               className={styles.drawerBackdrop}
-              aria-label="Close navigation"
+              aria-label="Закрыть навигацию"
               onClick={() => setNavOpen(false)}
             />
-            <nav id={navId} className={styles.drawer} aria-label="Primary">
+            <nav id={navId} className={styles.drawer} aria-label="Основная">
               <NavTree
                 sections={sections}
                 onNavigate={() => setNavOpen(false)}

@@ -8,7 +8,7 @@ import { Button } from "@/components/primitives/Button";
 import { Text } from "@/components/primitives/Text";
 
 const demoSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters"),
+  title: z.string().min(3, "Наименование должно содержать не менее 3 символов"),
 });
 
 type DemoValues = z.infer<typeof demoSchema>;
@@ -32,7 +32,7 @@ export function DemoValidatedForm() {
     >
       <label>
         <Text as="span" variant="label">
-          Title
+          Наименование
         </Text>
         <input
           aria-invalid={Boolean(errors.title)}
@@ -45,7 +45,7 @@ export function DemoValidatedForm() {
           {errors.title.message}
         </Text>
       ) : null}
-      <Button type="submit">Validate</Button>
+      <Button type="submit">Проверить</Button>
     </form>
   );
 }

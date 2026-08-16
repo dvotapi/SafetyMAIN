@@ -8,7 +8,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div style={{ padding: "var(--sm-space-8)" }}>
-          <LoadingState label="Loading sign-in" />
+          <LoadingState label="Загрузка формы входа" />
         </div>
       }
     >

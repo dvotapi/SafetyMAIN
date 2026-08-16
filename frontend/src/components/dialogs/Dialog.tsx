@@ -53,7 +53,7 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
             <DialogPrimitive.Close asChild>
               <IconButton
                 icon="x"
-                label="Close dialog"
+                label="Закрыть диалог"
                 variant="ghost"
                 size="sm"
                 iconSize="sm"

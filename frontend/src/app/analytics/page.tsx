@@ -1,5 +1,5 @@
 import PlaceholderSectionPage from "@/components/patterns/PlaceholderSectionPage";
 
-export default function AnalyticsPage() {
-  return <PlaceholderSectionPage title="Analytics" />;
+export default function Page() {
+  return <PlaceholderSectionPage title="Аналитика" />;
 }

@@ -13,20 +13,20 @@ export default function ErrorPage({
 }) {
   return (
     <PageContainer>
-      <PageHeader title="Unexpected error" />
-      <Alert tone="danger" title="Unable to render this page">
+      <PageHeader title="Непредвиденная ошибка" />
+      <Alert tone="danger" title="Не удалось отобразить страницу">
         {process.env.NODE_ENV === "development"
           ? error.message
-          : "Please try again. If the problem continues, contact support."}
+          : "Повторите попытку. Если проблема сохраняется, обратитесь в поддержку."}
         {error.digest ? (
           <div>
-            <small>Reference: {error.digest}</small>
+            <small>Код ошибки: {error.digest}</small>
           </div>
         ) : null}
       </Alert>
       <div style={{ marginTop: "var(--sm-space-4)" }}>
         <Button type="button" onClick={reset}>
-          Retry
+          Повторить
         </Button>
       </div>
     </PageContainer>

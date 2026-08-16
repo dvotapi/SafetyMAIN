@@ -13,7 +13,7 @@ export interface ObjectSummaryProps {
 
 export function ObjectSummary({
   children,
-  heading = "Summary",
+  heading = "Сводка",
   className,
 }: ObjectSummaryProps) {
   return (

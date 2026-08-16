@@ -15,18 +15,22 @@ import type {
   RiskAssessmentSummary,
   UpdateHazardDto,
 } from "@/features/hazards/types/hazard-types";
+import { riskLevelLabel } from "@/features/hazards/utils/hazard-status";
 
 function riskLabel(value: unknown): string | null {
   if (value === null || value === undefined) {
     return null;
   }
   if (typeof value === "string") {
-    return value;
+    return riskLevelLabel(value);
   }
   if (typeof value === "object") {
     const record = value as Record<string, unknown>;
     const level = record["level"] ?? record["score"] ?? record["rating"];
-    if (typeof level === "string" || typeof level === "number") {
+    if (typeof level === "string") {
+      return riskLevelLabel(level);
+    }
+    if (typeof level === "number") {
       return String(level);
     }
   }
@@ -213,11 +217,11 @@ interface AuditEventListDto {
 }
 
 const ACTIVITY_TITLES: Record<string, string> = {
-  "safety.hazard.created": "Hazard created",
-  "safety.hazard.updated": "Hazard updated",
-  "safety.hazard.activated": "Hazard activated",
-  "safety.hazard.archived": "Hazard archived",
-  "safety.hazard.restored": "Hazard restored",
+  "safety.hazard.created": "Опасность создана",
+  "safety.hazard.updated": "Опасность изменена",
+  "safety.hazard.activated": "Опасность активирована",
+  "safety.hazard.archived": "Опасность архивирована",
+  "safety.hazard.restored": "Опасность восстановлена",
 };
 
 export async function listHazardActivity(

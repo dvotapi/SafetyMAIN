@@ -44,7 +44,7 @@ export function AuthShellGate({ children }: { children: ReactNode }) {
   if (status === "restoring") {
     return (
       <div style={{ padding: "var(--sm-space-8)" }}>
-        <LoadingState label="Restoring session" />
+        <LoadingState label="Восстановление сеанса" />
       </div>
     );
   }
@@ -56,7 +56,7 @@ export function AuthShellGate({ children }: { children: ReactNode }) {
   if (status !== "authenticated" && status !== "refreshing") {
     return (
       <div style={{ padding: "var(--sm-space-8)" }}>
-        <LoadingState label="Checking authentication" />
+        <LoadingState label="Проверка входа" />
       </div>
     );
   }

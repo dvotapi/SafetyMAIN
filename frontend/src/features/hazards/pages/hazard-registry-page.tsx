@@ -30,7 +30,9 @@ import {
 } from "@/features/hazards/schemas/hazard-form-schema";
 import type { Hazard } from "@/features/hazards/types/hazard-types";
 import {
-  formatHazardEnumLabel,
+  hazardCategoryLabel,
+  hazardSourceLabel,
+  hazardStatusLabel,
   hazardStatusToVisual,
 } from "@/features/hazards/utils/hazard-status";
 import {
@@ -43,10 +45,11 @@ import {
 } from "@/features/hazards/utils/hazard-url-state";
 import { useAuth } from "@/hooks/auth";
 import { toUserSafeMessage } from "@/services/api/errors";
+import { APP_LOCALE } from "@/utils/locale";
 
 function formatDate(value: string): string {
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(APP_LOCALE, {
       dateStyle: "medium",
     }).format(new Date(value));
   } catch {
@@ -70,7 +73,7 @@ export function HazardRegistryPage() {
   const [searchDraft, setSearchDraft] = useState(state.search);
 
   useEffect(() => {
-    document.title = "Hazards · SafetyMAIN";
+    document.title = "Опасности · SafetyMAIN";
   }, []);
 
   useEffect(() => {
@@ -99,7 +102,7 @@ export function HazardRegistryPage() {
     () => [
       {
         id: "code",
-        header: "Reference",
+        header: "Код",
         enableSorting: false,
         cell: ({ row }) => (
           <Link href={`/safety/hazards/${row.original.id}`}>
@@ -109,13 +112,13 @@ export function HazardRegistryPage() {
       },
       {
         id: "title",
-        header: "Title",
+        header: "Название",
         enableSorting: false,
         cell: ({ row }) => row.original.title,
       },
       {
         id: "status",
-        header: "Status",
+        header: "Статус",
         enableSorting: false,
         cell: ({ row }) => (
           <StatusBadge status={hazardStatusToVisual(row.original.status)} />
@@ -123,19 +126,19 @@ export function HazardRegistryPage() {
       },
       {
         id: "category",
-        header: "Category",
+        header: "Категория",
         enableSorting: false,
-        cell: ({ row }) => formatHazardEnumLabel(row.original.category),
+        cell: ({ row }) => hazardCategoryLabel(row.original.category),
       },
       {
         id: "location",
-        header: "Location",
+        header: "Место",
         enableSorting: false,
         cell: ({ row }) => row.original.locationReference ?? "—",
       },
       {
         id: "updated",
-        header: "Last updated",
+        header: "Обновлено",
         enableSorting: false,
         cell: ({ row }) => formatDate(row.original.updatedAt),
       },
@@ -147,11 +150,11 @@ export function HazardRegistryPage() {
     return (
       <PageContainer>
         <EmptyState
-          title="Hazards unavailable"
-          description="You do not have permission to view hazards."
+          title="Опасности недоступны"
+          description="Недостаточно прав для просмотра опасностей."
           action={
             <Button asChild variant="secondary">
-              <Link href="/">Back to overview</Link>
+              <Link href="/">К обзору</Link>
             </Button>
           }
         />
@@ -170,16 +173,16 @@ export function HazardRegistryPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Hazards"
+        title="Опасности"
         description={
           <Text tone="secondary">
-            Identify, classify, and manage hazards for the active organization.
+            Выявляйте, классифицируйте и ведите опасности активной организации.
           </Text>
         }
         actions={
           capabilities.canCreate ? (
             <Button asChild>
-              <Link href="/safety/hazards/new">Create hazard</Link>
+              <Link href="/safety/hazards/new">Создать опасность</Link>
             </Button>
           ) : null
         }
@@ -190,14 +193,14 @@ export function HazardRegistryPage() {
           <Search
             value={searchDraft}
             onChange={setSearchDraft}
-            placeholder="Search code, title, description"
-            aria-label="Search hazards"
+            placeholder="Поиск по коду, названию, описанию"
+            aria-label="Поиск опасностей"
           />
         }
         filters={
           <FilterBar>
             <Select
-              aria-label="Status filter"
+              aria-label="Фильтр по статусу"
               value={state.status || "__all"}
               onValueChange={(value) =>
                 updateState({
@@ -209,14 +212,14 @@ export function HazardRegistryPage() {
                 })
               }
               options={[
-                { value: "__all", label: "All statuses" },
-                { value: "draft", label: "Draft" },
-                { value: "active", label: "Active" },
-                { value: "archived", label: "Archived" },
+                { value: "__all", label: "Все статусы" },
+                { value: "draft", label: hazardStatusLabel("draft") },
+                { value: "active", label: hazardStatusLabel("active") },
+                { value: "archived", label: hazardStatusLabel("archived") },
               ]}
             />
             <Select
-              aria-label="Category filter"
+              aria-label="Фильтр по категории"
               value={state.category || "__all"}
               onValueChange={(value) =>
                 updateState({
@@ -228,15 +231,15 @@ export function HazardRegistryPage() {
                 })
               }
               options={[
-                { value: "__all", label: "All categories" },
+                { value: "__all", label: "Все категории" },
                 ...HAZARD_CATEGORIES.map((value) => ({
                   value,
-                  label: formatHazardEnumLabel(value),
+                  label: hazardCategoryLabel(value),
                 })),
               ]}
             />
             <Select
-              aria-label="Source filter"
+              aria-label="Фильтр по источнику"
               value={state.source || "__all"}
               onValueChange={(value) =>
                 updateState({
@@ -248,10 +251,10 @@ export function HazardRegistryPage() {
                 })
               }
               options={[
-                { value: "__all", label: "All sources" },
+                { value: "__all", label: "Все источники" },
                 ...HAZARD_SOURCES.map((value) => ({
                   value,
-                  label: formatHazardEnumLabel(value),
+                  label: hazardSourceLabel(value),
                 })),
               ]}
             />
@@ -266,28 +269,26 @@ export function HazardRegistryPage() {
                 })
               }
             >
-              {state.includeArchived
-                ? "Including archived"
-                : "Include archived"}
+              {state.includeArchived ? "Архив включён" : "Включить архив"}
             </Button>
             {state.status ? (
               <FilterChip
-                label="Status"
-                value={state.status}
+                label="Статус"
+                value={hazardStatusLabel(state.status)}
                 onRemove={() => updateState({ status: "", page: 1 })}
               />
             ) : null}
             {state.category ? (
               <FilterChip
-                label="Category"
-                value={formatHazardEnumLabel(state.category)}
+                label="Категория"
+                value={hazardCategoryLabel(state.category)}
                 onRemove={() => updateState({ category: "", page: 1 })}
               />
             ) : null}
             {state.source ? (
               <FilterChip
-                label="Source"
-                value={formatHazardEnumLabel(state.source)}
+                label="Источник"
+                value={hazardSourceLabel(state.source)}
                 onRemove={() => updateState({ source: "", page: 1 })}
               />
             ) : null}
@@ -298,7 +299,7 @@ export function HazardRegistryPage() {
                 size="sm"
                 onClick={() => updateState({ ...DEFAULT_REGISTRY_STATE })}
               >
-                Clear filters
+                Сбросить фильтры
               </Button>
             ) : null}
           </FilterBar>
@@ -307,7 +308,7 @@ export function HazardRegistryPage() {
 
       {query.isError ? (
         <div style={{ display: "grid", gap: 8 }}>
-          <Alert tone="danger" title="Unable to load hazards">
+          <Alert tone="danger" title="Не удалось загрузить опасности">
             {toUserSafeMessage(query.error)}
           </Alert>
           <Button
@@ -315,35 +316,35 @@ export function HazardRegistryPage() {
             size="sm"
             onClick={() => void query.refetch()}
           >
-            Retry
+            Повторить
           </Button>
         </div>
       ) : null}
 
       {query.isLoading && !query.data ? (
-        <LoadingState label="Loading hazards" />
+        <LoadingState label="Загрузка опасностей" />
       ) : empty ? (
         <EmptyState
-          title="No hazards yet"
-          description="Create the first hazard for this organization."
+          title="Опасностей пока нет"
+          description="Создайте первую опасность для этой организации."
           action={
             capabilities.canCreate ? (
               <Button asChild>
-                <Link href="/safety/hazards/new">Create hazard</Link>
+                <Link href="/safety/hazards/new">Создать опасность</Link>
               </Button>
             ) : undefined
           }
         />
       ) : filteredEmpty ? (
         <EmptyState
-          title="No matching hazards"
-          description="Try adjusting or clearing filters."
+          title="Нет подходящих опасностей"
+          description="Измените или сбросьте фильтры."
           action={
             <Button
               variant="secondary"
               onClick={() => updateState({ ...DEFAULT_REGISTRY_STATE })}
             >
-              Clear filters
+              Сбросить фильтры
             </Button>
           }
         />
@@ -355,14 +356,14 @@ export function HazardRegistryPage() {
             pageSize={state.pageSize}
             loading={query.isFetching && !query.isLoading}
             getRowId={(row) => row.id}
-            emptyMessage="No hazards found"
+            emptyMessage="Опасности не найдены"
           />
           <RegistryFooter
             pagination={
               <RegistryPagination
                 summary={
                   <Text tone="muted" variant="caption">
-                    {total} total · page {state.page} of {totalPages}
+                    Всего {total} · страница {state.page} из {totalPages}
                   </Text>
                 }
               >
@@ -372,7 +373,7 @@ export function HazardRegistryPage() {
                   disabled={state.page <= 1}
                   onClick={() => updateState({ page: state.page - 1 })}
                 >
-                  Previous
+                  Назад
                 </Button>
                 <Button
                   variant="secondary"
@@ -380,7 +381,7 @@ export function HazardRegistryPage() {
                   disabled={state.page >= totalPages}
                   onClick={() => updateState({ page: state.page + 1 })}
                 >
-                  Next
+                  Далее
                 </Button>
               </RegistryPagination>
             }

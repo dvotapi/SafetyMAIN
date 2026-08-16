@@ -102,7 +102,7 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
     if (hazard) {
       document.title = `${hazard.code} · SafetyMAIN`;
     } else {
-      document.title = "Hazard · SafetyMAIN";
+      document.title = "Опасность · SafetyMAIN";
     }
   }, [hazard]);
 
@@ -130,8 +130,8 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
     return (
       <PageContainer variant="object">
         <EmptyState
-          title="Hazard unavailable"
-          description="You do not have permission to view hazards."
+          title="Опасность недоступна"
+          description="Недостаточно прав для просмотра опасностей."
         />
       </PageContainer>
     );
@@ -140,7 +140,7 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
   if (detail.isLoading) {
     return (
       <PageContainer variant="object">
-        <LoadingState label="Loading hazard" />
+        <LoadingState label="Загрузка опасности" />
       </PageContainer>
     );
   }
@@ -150,11 +150,11 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
       return (
         <PageContainer variant="object">
           <EmptyState
-            title="Hazard not found"
-            description="The hazard does not exist or is not available in this organization."
+            title="Опасность не найдена"
+            description="Опасность не существует или недоступна в этой организации."
             action={
               <Button asChild variant="secondary">
-                <Link href="/safety/hazards">Back to registry</Link>
+                <Link href="/safety/hazards">К реестру</Link>
               </Button>
             }
           />
@@ -165,7 +165,7 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
       return (
         <PageContainer variant="object">
           <EmptyState
-            title="Access denied"
+            title="Доступ запрещён"
             description={toUserSafeMessage(detail.error)}
           />
         </PageContainer>
@@ -174,7 +174,7 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
     return (
       <PageContainer variant="object">
         <div style={{ display: "grid", gap: 8 }}>
-          <Alert tone="danger" title="Unable to load hazard">
+          <Alert tone="danger" title="Не удалось загрузить опасность">
             {toUserSafeMessage(detail.error)}
           </Alert>
           <Button
@@ -182,7 +182,7 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
             size="sm"
             onClick={() => void detail.refetch()}
           >
-            Retry
+            Повторить
           </Button>
         </div>
       </PageContainer>
@@ -203,7 +203,7 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
           includeSource: sourceEditable,
         }),
       );
-      toast({ tone: "success", title: "Hazard updated" });
+      toast({ tone: "success", title: "Опасность изменена" });
       setEditOpen(false);
     } catch (error) {
       if (error instanceof ConflictError) {
@@ -243,14 +243,14 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
         status={<StatusBadge status={hazardStatusToVisual(hazard.status)} />}
         meta={
           <Text tone="muted" variant="caption">
-            Version {hazard.version}
+            Версия {hazard.version}
           </Text>
         }
         actions={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {editable ? (
               <Button variant="secondary" onClick={() => setEditOpen(true)}>
-                Edit hazard
+                Изменить опасность
               </Button>
             ) : null}
             {canCreateRiskAssessment ? (
@@ -258,12 +258,12 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
                 <Link
                   href={`/safety/risk-assessments/new?hazardId=${encodeURIComponent(hazard.id)}`}
                 >
-                  Create Risk Assessment
+                  Создать оценку риска
                 </Link>
               </Button>
             ) : null}
             <Button asChild variant="ghost">
-              <Link href="/safety/hazards">Back to registry</Link>
+              <Link href="/safety/hazards">К реестру</Link>
             </Button>
           </div>
         }
@@ -279,7 +279,7 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
           runLifecycle(
             "activate",
             () => activateMutation.mutateAsync(hazard.version),
-            "Hazard activated",
+            "Опасность активирована",
           )
         }
         onArchive={(reason) =>
@@ -290,7 +290,7 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
                 expectedVersion: hazard.version,
                 reason,
               }),
-            "Hazard archived",
+            "Опасность архивирована",
           )
         }
         onRestore={(reason) =>
@@ -301,16 +301,16 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
                 expectedVersion: hazard.version,
                 reason,
               }),
-            "Hazard restored",
+            "Опасность восстановлена",
           )
         }
       />
 
       <ObjectTabs
         tabs={[
-          { id: "overview", label: "Overview" },
-          { id: "risk", label: "Risk assessments" },
-          { id: "activity", label: "Activity" },
+          { id: "overview", label: "Обзор" },
+          { id: "risk", label: "Оценки риска" },
+          { id: "activity", label: "История" },
         ]}
         activeTabId={tab}
         onTabChange={setTab}
@@ -347,11 +347,11 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
       <SideDrawer
         open={editOpen}
         onOpenChange={setEditOpen}
-        title="Edit hazard"
-        description="Lifecycle-managed fields are not editable here."
+        title="Изменить опасность"
+        description="Поля жизненного цикла здесь не редактируются."
       >
         {form.formState.errors.root?.message ? (
-          <Alert tone="danger" title="Could not update hazard">
+          <Alert tone="danger" title="Не удалось изменить опасность">
             {form.formState.errors.root.message}
           </Alert>
         ) : null}
@@ -364,7 +364,7 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
         />
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
           <Button variant="secondary" onClick={() => setEditOpen(false)}>
-            Cancel
+            Отмена
           </Button>
           <Button
             type="submit"
@@ -372,7 +372,7 @@ export function HazardObjectPage({ hazardId }: { hazardId: string }) {
             loading={updateMutation.isPending}
             disabled={updateMutation.isPending}
           >
-            Save changes
+            Сохранить изменения
           </Button>
         </div>
       </SideDrawer>

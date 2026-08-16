@@ -21,22 +21,22 @@ export type StatusTone =
   "neutral" | "info" | "success" | "warning" | "critical";
 
 export const visualStatusLabels: Record<VisualStatus, string> = {
-  draft: "Draft",
-  under_review: "Under Review",
-  approved: "Approved",
-  rejected: "Rejected",
-  planned: "Planned",
-  active: "Active",
-  implemented: "Implemented",
-  verified_effective: "Verified Effective",
-  verified_partially_effective: "Verified Partially Effective",
-  verified_ineffective: "Verified Ineffective",
-  overdue: "Overdue",
-  superseded: "Superseded",
-  archived: "Archived",
-  cancelled: "Cancelled",
-  suspended: "Suspended",
-  in_implementation: "In Implementation",
+  draft: "Черновик",
+  under_review: "На рассмотрении",
+  approved: "Утверждено",
+  rejected: "Отклонено",
+  planned: "Запланировано",
+  active: "Действует",
+  implemented: "Внедрено",
+  verified_effective: "Подтверждена эффективной",
+  verified_partially_effective: "Подтверждена частично эффективной",
+  verified_ineffective: "Подтверждена неэффективной",
+  overdue: "Просрочено",
+  superseded: "Замещено",
+  archived: "Архив",
+  cancelled: "Отменено",
+  suspended: "Приостановлено",
+  in_implementation: "Внедряется",
 };
 
 export const visualStatusTone: Record<VisualStatus, StatusTone> = {

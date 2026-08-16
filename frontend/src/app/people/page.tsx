@@ -1,5 +1,5 @@
 import PlaceholderSectionPage from "@/components/patterns/PlaceholderSectionPage";
 
-export default function PeoplePage() {
-  return <PlaceholderSectionPage title="People" />;
+export default function Page() {
+  return <PlaceholderSectionPage title="Персонал" />;
 }

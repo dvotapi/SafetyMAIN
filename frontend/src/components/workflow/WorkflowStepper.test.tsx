@@ -25,6 +25,6 @@ describe("WorkflowStepper", () => {
       "aria-current",
       "step",
     );
-    expect(screen.getByLabelText("Workflow progress")).toBeInTheDocument();
+    expect(screen.getByLabelText("Ход процесса")).toBeInTheDocument();
   });
 });

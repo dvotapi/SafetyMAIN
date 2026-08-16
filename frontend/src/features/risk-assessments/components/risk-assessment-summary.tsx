@@ -18,18 +18,22 @@ import type {
 import { getAssessmentProfileCatalogEntry } from "@/features/risk-assessments/utils/assessment-profiles";
 import { controlTypeLabel } from "@/features/risk-assessments/utils/hierarchy-of-controls";
 import {
-  formatRiskAssessmentEnumLabel,
+  acceptanceDecisionLabel,
+  assessedObjectTypeLabel,
+  relatedHazardStatusLabel,
   riskAssessmentStatusLabel,
   riskAssessmentStatusToVisual,
+  riskFactorLabel,
   riskLevelLabel,
 } from "@/features/risk-assessments/utils/risk-assessment-status";
+import { APP_LOCALE } from "@/utils/locale";
 
 function formatDate(value: string | null | undefined): string {
   if (!value) {
     return "—";
   }
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(APP_LOCALE, {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(new Date(value));
@@ -43,7 +47,7 @@ function formatDateOnly(value: string | null | undefined): string {
     return "—";
   }
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(APP_LOCALE, {
       dateStyle: "medium",
     }).format(new Date(value));
   } catch {
@@ -62,7 +66,7 @@ function EvaluationPanel({
     return (
       <Panel>
         <Heading level={2}>{title}</Heading>
-        <Text tone="muted">Not recorded.</Text>
+        <Text tone="muted">Не зафиксировано.</Text>
       </Panel>
     );
   }
@@ -72,21 +76,24 @@ function EvaluationPanel({
       <Heading level={2}>{title}</Heading>
       <DescriptionList>
         <DescriptionItem
-          term="Level"
+          term="Уровень"
           details={riskLevelLabel(evaluation.level) ?? "—"}
         />
         <DescriptionItem
-          term="Factors"
+          term="Факторы"
           details={
             evaluation.factors.length > 0
               ? evaluation.factors
-                  .map((factor) => `${factor.factor}: ${factor.score}`)
+                  .map(
+                    (factor) =>
+                      `${riskFactorLabel(factor.factor)}: ${factor.score}`,
+                  )
                   .join(", ")
               : "—"
           }
         />
         <DescriptionItem
-          term="Explanation"
+          term="Пояснение"
           details={evaluation.explanation || "—"}
         />
       </DescriptionList>
@@ -97,9 +104,9 @@ function EvaluationPanel({
 function ControlsPanel({ controls }: { controls: ControlMeasure[] }) {
   return (
     <Panel>
-      <Heading level={2}>Proposed controls</Heading>
+      <Heading level={2}>Предлагаемые меры</Heading>
       {controls.length === 0 ? (
-        <Text tone="muted">No proposed controls.</Text>
+        <Text tone="muted">Нет предлагаемых мер.</Text>
       ) : (
         <DescriptionList>
           {controls.map((control, index) => (
@@ -109,14 +116,14 @@ function ControlsPanel({ controls }: { controls: ControlMeasure[] }) {
               details={[
                 control.description,
                 control.responsible
-                  ? `Responsible: ${control.responsible}`
+                  ? `Ответственный: ${control.responsible}`
                   : null,
-                control.implemented ? "Implemented" : "Not implemented",
+                control.implemented ? "Внедрено" : "Не внедрено",
                 control.effective === null
                   ? null
                   : control.effective
-                    ? "Effective"
-                    : "Not effective",
+                    ? "Эффективна"
+                    : "Неэффективна",
               ]
                 .filter(Boolean)
                 .join(" · ")}
@@ -142,13 +149,13 @@ export function RiskAssessmentSummary({
       <PropertyGrid columns={2}>
         <div>
           <Text variant="caption" tone="muted">
-            Reference
+            Код
           </Text>
           <Text>{assessment.code}</Text>
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Status
+            Статус
           </Text>
           <StatusBadge
             status={riskAssessmentStatusToVisual(assessment.status)}
@@ -156,13 +163,13 @@ export function RiskAssessmentSummary({
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Profile
+            Профиль
           </Text>
           <Text>{profile?.title ?? assessment.assessmentProfile}</Text>
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Inherent / Residual
+            Исходный / остаточный
           </Text>
           <Text>
             {riskLevelLabel(assessment.inherentRisk?.level) ?? "—"} /{" "}
@@ -171,13 +178,13 @@ export function RiskAssessmentSummary({
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Updated
+            Обновлено
           </Text>
           <Text>{formatDate(assessment.updatedAt)}</Text>
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Version
+            Версия
           </Text>
           <Text>{assessment.version}</Text>
         </div>
@@ -205,128 +212,132 @@ export function RiskAssessmentProperties({
   return (
     <div style={{ display: "grid", gap: "var(--sm-space-6)" }}>
       <Panel>
-        <Heading level={2}>Properties</Heading>
+        <Heading level={2}>Свойства</Heading>
         <DescriptionList>
-          <DescriptionItem term="Title" details={assessment.title} />
-          <DescriptionItem term="Code" details={assessment.code} />
+          <DescriptionItem term="Название" details={assessment.title} />
+          <DescriptionItem term="Код" details={assessment.code} />
           <DescriptionItem
-            term="Status"
+            term="Статус"
             details={riskAssessmentStatusLabel(assessment.status)}
           />
           <DescriptionItem
-            term="Assessor"
+            term="Оценщик"
             details={assessment.assessorId || "—"}
           />
           <DescriptionItem
-            term="Assessment date"
+            term="Дата оценки"
             details={formatDateOnly(assessment.assessmentDate)}
           />
           <DescriptionItem
-            term="Created"
+            term="Создано"
             details={formatDate(assessment.createdAt)}
           />
           <DescriptionItem
-            term="Updated"
+            term="Обновлено"
             details={formatDate(assessment.updatedAt)}
           />
           <DescriptionItem
-            term="Approved"
+            term="Утверждено"
             details={formatDate(assessment.approvedAt)}
           />
           <DescriptionItem
-            term="Archived"
+            term="Архив"
             details={formatDate(assessment.archivedAt)}
           />
           <DescriptionItem
-            term="Superseded by"
+            term="Замещено оценкой"
             details={assessment.supersededById ?? "—"}
           />
         </DescriptionList>
       </Panel>
 
       <Panel>
-        <Heading level={2}>Assessment profile</Heading>
+        <Heading level={2}>Профиль оценки</Heading>
         <DescriptionList>
           <DescriptionItem
-            term="Profile"
+            term="Профиль"
             details={profile?.title ?? assessment.assessmentProfile}
           />
           <DescriptionItem
-            term="Matrix size"
+            term="Размер матрицы"
             details={
               profile ? `${profile.matrixSize}×${profile.matrixSize}` : "—"
             }
           />
           <DescriptionItem
-            term="Required factors"
-            details={profile ? profile.requiredFactorIds.join(", ") : "—"}
+            term="Обязательные факторы"
+            details={
+              profile
+                ? profile.requiredFactorIds
+                    .map((factor) => riskFactorLabel(factor))
+                    .join(", ")
+                : "—"
+            }
           />
         </DescriptionList>
       </Panel>
 
       <Panel>
-        <Heading level={2}>Assessed object</Heading>
+        <Heading level={2}>Объект оценки</Heading>
         <DescriptionList>
           <DescriptionItem
-            term="Type"
-            details={formatRiskAssessmentEnumLabel(
+            term="Тип"
+            details={assessedObjectTypeLabel(
               assessment.assessedObject.objectType,
             )}
           />
           <DescriptionItem
-            term="Reference"
+            term="Ссылка"
             details={assessment.assessedObject.reference}
           />
         </DescriptionList>
       </Panel>
 
       <EvaluationPanel
-        title="Inherent risk"
+        title="Исходный риск"
         evaluation={assessment.inherentRisk}
       />
       <EvaluationPanel
-        title="Residual risk"
+        title="Остаточный риск"
         evaluation={assessment.residualRisk}
       />
       <ControlsPanel controls={assessment.controls} />
 
       <Panel>
-        <Heading level={2}>Acceptance</Heading>
+        <Heading level={2}>Принятие</Heading>
         {assessment.acceptance ? (
           <DescriptionList>
             <DescriptionItem
-              term="Decision"
-              details={formatRiskAssessmentEnumLabel(
-                assessment.acceptance.decision,
-              )}
+              term="Решение"
+              details={acceptanceDecisionLabel(assessment.acceptance.decision)}
             />
             <DescriptionItem
-              term="Justification"
+              term="Обоснование"
               details={assessment.acceptance.justification || "—"}
             />
             <DescriptionItem
-              term="Reviewer"
+              term="Рецензент"
               details={assessment.acceptance.reviewerId ?? "—"}
             />
             <DescriptionItem
-              term="Accepted at"
+              term="Принято"
               details={formatDate(assessment.acceptance.approvedAt)}
             />
           </DescriptionList>
         ) : (
-          <Text tone="muted">No acceptance recorded.</Text>
+          <Text tone="muted">Принятие не зафиксировано.</Text>
         )}
       </Panel>
 
       <Panel>
-        <Heading level={2}>Review schedule</Heading>
+        <Heading level={2}>График пересмотра</Heading>
         <DescriptionList>
           <DescriptionItem
-            term="Due date"
+            term="Срок"
             details={formatDateOnly(assessment.reviewSchedule.reviewDueDate)}
           />
           <DescriptionItem
-            term="Frequency (days)"
+            term="Периодичность (дней)"
             details={
               assessment.reviewSchedule.reviewFrequencyDays !== null
                 ? String(assessment.reviewSchedule.reviewFrequencyDays)
@@ -334,30 +345,30 @@ export function RiskAssessmentProperties({
             }
           />
           <DescriptionItem
-            term="Reason"
+            term="Причина"
             details={assessment.reviewSchedule.reviewReason ?? "—"}
           />
           <DescriptionItem
-            term="Triggered by"
+            term="Инициатор"
             details={assessment.reviewSchedule.triggeredBy ?? "—"}
           />
         </DescriptionList>
       </Panel>
 
       <Panel>
-        <Heading level={2}>Competency requirements</Heading>
+        <Heading level={2}>Требования к компетенции</Heading>
         {assessment.competencyRequirements.length > 0 ? (
           <Text>{assessment.competencyRequirements.join(", ")}</Text>
         ) : (
-          <Text tone="muted">None recorded.</Text>
+          <Text tone="muted">Не зафиксировано.</Text>
         )}
       </Panel>
 
       <Panel>
-        <Heading level={2}>Related Hazard</Heading>
+        <Heading level={2}>Связанная опасность</Heading>
         <DescriptionList>
           <DescriptionItem
-            term="Hazard"
+            term="Опасность"
             details={
               <Link href={`/safety/hazards/${assessment.hazardId}`}>
                 {relatedHazard
@@ -368,8 +379,8 @@ export function RiskAssessmentProperties({
           />
           {relatedHazard ? (
             <DescriptionItem
-              term="Status"
-              details={formatRiskAssessmentEnumLabel(relatedHazard.status)}
+              term="Статус"
+              details={relatedHazardStatusLabel(relatedHazard.status)}
             />
           ) : null}
         </DescriptionList>

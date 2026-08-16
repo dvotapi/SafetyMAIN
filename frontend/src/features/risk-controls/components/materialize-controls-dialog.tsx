@@ -33,7 +33,7 @@ import {
 
 /**
  * Statuses this dialog understands. Kept local (rather than importing the
- * Risk Assessment feature's `RiskAssessmentStatusDto`) so this file never
+ * Оценка риска feature's `RiskAssessmentStatusDto`) so this file never
  * crosses the feature boundary — the caller's `assessment.status` is
  * structurally compatible without an import.
  */
@@ -43,7 +43,7 @@ export type MaterializableAssessmentStatus =
 /**
  * Structural shape of a proposed control the assessment supplies. Kept
  * local for the same reason as `MaterializableAssessmentStatus` — the
- * caller passes `assessment.controls` (Risk Assessment's `ControlMeasure[]`),
+ * caller passes `assessment.controls` (Оценка риска's `ControlMeasure[]`),
  * which satisfies this shape without an import.
  */
 export interface MaterializeProposedControl {
@@ -98,7 +98,7 @@ function flattenValidationError(error: ValidationError): string {
 }
 
 /**
- * Owned entirely by the Risk Controls feature so the Risk Assessment
+ * Owned entirely by the Меры управления риском feature so the Оценка риска
  * feature never touches Risk Control internals (types, mutations,
  * mappers). Renders both its own trigger button and the dialog — callers
  * only need to drop `<MaterializeControlsDialog .../>` into an actions
@@ -138,7 +138,7 @@ export function MaterializeControlsDialog({
     useState<RiskControlConflictVariant>("duplicate_materialization");
   const lastFocusedRef = useRef<HTMLElement | null>(null);
 
-  // Full RiskControl records (not the Risk Assessment feature's lite
+  // Full RiskControl records (not the Оценка риска feature's lite
   // summary) so `source.sourceControlReference` is available to derive
   // which proposed controls already have a materialized Risk Control.
   const materializedQuery = useRiskControlListQuery(
@@ -210,7 +210,7 @@ export function MaterializeControlsDialog({
       const codes = controls.map((control) => control.code).join(", ");
       toast({
         tone: "success",
-        title: `Materialized ${controls.length} risk control(s): ${codes}`,
+        title: `Создано мер: ${controls.length}: ${codes}`,
       });
       handleOpenChange(false);
       onSuccess?.(controls);
@@ -229,7 +229,7 @@ export function MaterializeControlsDialog({
   return (
     <>
       <Button variant="secondary" size="sm" onClick={() => onOpenChange(true)}>
-        Materialize controls
+        Создать меры
       </Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -240,15 +240,14 @@ export function MaterializeControlsDialog({
           }}
         >
           <DialogHeader
-            title="Materialize controls"
-            description="Create operational Risk Control records from this assessment's proposed controls."
+            title="Создать меры"
+            description="Создать операционные меры управления риском из предложенных мер этой оценки."
           />
           <DialogBody>
             <div style={{ display: "grid", gap: 12 }}>
               {isBlocked ? (
                 <BlockingReason>
-                  Controls can only be materialized from an approved risk
-                  assessment.
+                  Меры можно создать только из утверждённой оценки риска.
                 </BlockingReason>
               ) : (
                 <>
@@ -259,7 +258,7 @@ export function MaterializeControlsDialog({
                       onCheckedChange={(checked) =>
                         setAllowUnderReview(checked === true)
                       }
-                      label="Materialize from an assessment still under review"
+                      label="Создать из оценки, ещё находящейся на рассмотрении"
                     />
                   ) : null}
 
@@ -297,7 +296,7 @@ export function MaterializeControlsDialog({
                           />
                           {alreadyMaterialized ? (
                             <Text variant="caption" tone="muted">
-                              Already materialized
+                              Уже создано
                             </Text>
                           ) : null}
                         </div>
@@ -307,14 +306,14 @@ export function MaterializeControlsDialog({
                 </>
               )}
 
-              <Alert tone="warning" title="Before you continue">
-                This creates operational Risk Control records in Draft with no
-                owner. Materialization is all-or-nothing — if any selected
-                control already exists, nothing is created.
+              <Alert tone="warning" title="Перед продолжением">
+                Будут созданы операционные меры в статусе «Черновик» без
+                владельца. Создание выполняется целиком — если хотя бы одна
+                выбранная мера уже существует, ничего не создаётся.
               </Alert>
 
               {submitError ? (
-                <Alert tone="danger" title="Materialization failed">
+                <Alert tone="danger" title="Не удалось создать меры">
                   {submitError}
                 </Alert>
               ) : null}
@@ -322,7 +321,7 @@ export function MaterializeControlsDialog({
           </DialogBody>
           <DialogFooter>
             <Button variant="secondary" onClick={() => handleOpenChange(false)}>
-              Cancel
+              Отмена
             </Button>
             <Button
               variant="primary"
@@ -330,7 +329,7 @@ export function MaterializeControlsDialog({
               disabled={!enabled || mutation.isPending}
               onClick={() => void handleConfirm()}
             >
-              Materialize
+              Создать
             </Button>
           </DialogFooter>
         </DialogContent>

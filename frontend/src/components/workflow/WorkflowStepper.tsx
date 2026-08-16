@@ -25,10 +25,7 @@ export function WorkflowStepper({
 }: WorkflowStepperProps) {
   const completed = new Set(completedStepIds);
   return (
-    <ol
-      className={cx(styles.stepper, className)}
-      aria-label="Workflow progress"
-    >
+    <ol className={cx(styles.stepper, className)} aria-label="Ход процесса">
       {steps.map((step, index) => {
         const isComplete = completed.has(step.id);
         const isCurrent = step.id === currentStepId;

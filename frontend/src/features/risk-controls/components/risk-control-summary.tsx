@@ -24,11 +24,11 @@ export function RiskControlSummary({ control }: { control: RiskControl }) {
           <Text variant="caption" tone="muted">
             Owner
           </Text>
-          <Text>{control.owner?.label || "Unassigned"}</Text>
+          <Text>{control.owner?.label || "Не назначен"}</Text>
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Hierarchy of Controls
+            Иерархия мер управления
           </Text>
           <Text>{formatRiskControlEnumLabel(control.hierarchyLevel)}</Text>
         </div>
@@ -48,7 +48,7 @@ export function RiskControlSummary({ control }: { control: RiskControl }) {
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Risk Assessment
+            Оценка риска
           </Text>
           <Text>
             {control.riskAssessmentId ? (
@@ -64,7 +64,7 @@ export function RiskControlSummary({ control }: { control: RiskControl }) {
         </div>
         <div>
           <Text variant="caption" tone="muted">
-            Next review
+            Следующий пересмотр
           </Text>
           <Text>{formatDateOnly(control.nextReviewDate)}</Text>
         </div>
@@ -91,24 +91,24 @@ export function RiskControlProperties({
   return (
     <div style={{ display: "grid", gap: "var(--sm-space-6)" }}>
       <Panel>
-        <Heading level={2}>Control details</Heading>
+        <Heading level={2}>Сведения о мере</Heading>
         <DescriptionList>
-          <DescriptionItem term="Code" details={control.code} />
-          <DescriptionItem term="Title" details={control.title} />
+          <DescriptionItem term="Код" details={control.code} />
+          <DescriptionItem term="Название" details={control.title} />
           <DescriptionItem
-            term="Description"
+            term="Описание"
             details={control.description || "—"}
           />
           <DescriptionItem
-            term="Control nature"
+            term="Характер меры"
             details={formatRiskControlEnumLabel(control.controlNature)}
           />
           <DescriptionItem
-            term="Verification method requirement"
+            term="Требование к методу подтверждения"
             details={control.verificationMethodRequirement || "—"}
           />
           <DescriptionItem
-            term="Scope"
+            term="Область"
             details={
               control.scope.length > 0
                 ? control.scope
@@ -124,43 +124,43 @@ export function RiskControlProperties({
       </Panel>
 
       <Panel>
-        <Heading level={2}>Hierarchy of Controls</Heading>
+        <Heading level={2}>Иерархия мер управления</Heading>
         <DescriptionList>
           <DescriptionItem
-            term="Level"
+            term="Уровень"
             details={formatRiskControlEnumLabel(control.hierarchyLevel)}
           />
         </DescriptionList>
       </Panel>
 
       <Panel>
-        <Heading level={2}>Owner</Heading>
+        <Heading level={2}>Владелец</Heading>
         {control.owner ? (
           <DescriptionList>
-            <DescriptionItem term="Owner" details={control.owner.label} />
+            <DescriptionItem term="Владелец" details={control.owner.label} />
             <DescriptionItem
-              term="Owner type"
+              term="Тип владельца"
               details={formatRiskControlEnumLabel(control.owner.ownerType)}
             />
             <DescriptionItem
-              term="Assigned at"
+              term="Назначен"
               details={formatDateTime(control.owner.assignedAt)}
             />
             <DescriptionItem
-              term="Assigned by"
+              term="Назначил"
               details={control.owner.assignedBy ?? "—"}
             />
           </DescriptionList>
         ) : (
-          <Text tone="muted">Unassigned.</Text>
+          <Text tone="muted">Не назначен.</Text>
         )}
       </Panel>
 
       <Panel>
-        <Heading level={2}>Source Risk Assessment</Heading>
+        <Heading level={2}>Исходная оценка риска</Heading>
         <DescriptionList>
           <DescriptionItem
-            term="Hazard"
+            term="Опасность"
             details={
               control.hazardId ? (
                 <Link href={`/safety/hazards/${control.hazardId}`}>
@@ -174,7 +174,7 @@ export function RiskControlProperties({
             }
           />
           <DescriptionItem
-            term="Risk assessment"
+            term="Оценка риска"
             details={
               control.riskAssessmentId ? (
                 <Link
@@ -190,25 +190,25 @@ export function RiskControlProperties({
             }
           />
           <DescriptionItem
-            term="Source type"
+            term="Тип источника"
             details={formatRiskControlEnumLabel(control.source.sourceType)}
           />
           <DescriptionItem
-            term="Source control reference"
+            term="Ссылка на исходную меру"
             details={control.source.sourceControlReference ?? "—"}
           />
         </DescriptionList>
       </Panel>
 
       <Panel>
-        <Heading level={2}>Review schedule</Heading>
+        <Heading level={2}>График пересмотра</Heading>
         <DescriptionList>
           <DescriptionItem
-            term="Review required"
-            details={control.reviewSchedule.reviewRequired ? "Yes" : "No"}
+            term="Пересмотр требуется"
+            details={control.reviewSchedule.reviewRequired ? "Да" : "Нет"}
           />
           <DescriptionItem
-            term="Frequency (days)"
+            term="Частота (дней)"
             details={
               control.reviewSchedule.reviewFrequencyDays !== null
                 ? String(control.reviewSchedule.reviewFrequencyDays)
@@ -216,32 +216,32 @@ export function RiskControlProperties({
             }
           />
           <DescriptionItem
-            term="Next review date"
+            term="Дата следующего пересмотра"
             details={formatDateOnly(control.reviewSchedule.nextReviewDate)}
           />
           <DescriptionItem
-            term="Last review date"
+            term="Дата последнего пересмотра"
             details={formatDateOnly(control.reviewSchedule.lastReviewDate)}
           />
           <DescriptionItem
-            term="Review basis"
+            term="Основание пересмотра"
             details={formatRiskControlEnumLabel(
               control.reviewSchedule.reviewBasis,
             )}
           />
           <DescriptionItem
-            term="Escalation policy"
+            term="Политика эскалации"
             details={control.reviewSchedule.escalationPolicyRef ?? "—"}
           />
           <DescriptionItem
-            term="No-review reason"
+            term="Причина отказа от пересмотра"
             details={control.reviewSchedule.noReviewReason ?? "—"}
           />
         </DescriptionList>
       </Panel>
 
       <Panel>
-        <Heading level={2}>Competency references</Heading>
+        <Heading level={2}>Ссылки на компетенции</Heading>
         {control.competencyRequirements.length > 0 ? (
           <DescriptionList>
             {control.competencyRequirements.map((item, index) => (
@@ -262,12 +262,12 @@ export function RiskControlProperties({
             ))}
           </DescriptionList>
         ) : (
-          <EmptyState title="No competency references" />
+          <EmptyState title="Нет ссылок на компетенции" />
         )}
       </Panel>
 
       <Panel>
-        <Heading level={2}>Related entities</Heading>
+        <Heading level={2}>Связанные объекты</Heading>
         {control.relatedEntities.length > 0 ? (
           <DescriptionList>
             {control.relatedEntities.map((item, index) => (
@@ -279,22 +279,22 @@ export function RiskControlProperties({
             ))}
           </DescriptionList>
         ) : (
-          <EmptyState title="No related entities" />
+          <EmptyState title="Нет связанных объектов" />
         )}
       </Panel>
 
       <Panel>
-        <Heading level={2}>Lifecycle metadata</Heading>
+        <Heading level={2}>Метаданные жизненного цикла</Heading>
         <DescriptionList>
           <DescriptionItem
-            term="Created"
+            term="Создано"
             details={formatDateTime(control.createdAt)}
           />
           <DescriptionItem
-            term="Updated"
+            term="Обновлено"
             details={formatDateTime(control.updatedAt)}
           />
-          <DescriptionItem term="Version" details={String(control.version)} />
+          <DescriptionItem term="Версия" details={String(control.version)} />
         </DescriptionList>
       </Panel>
     </div>

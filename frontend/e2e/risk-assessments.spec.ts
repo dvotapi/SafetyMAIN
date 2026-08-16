@@ -58,10 +58,10 @@ async function mockAuth(page: Page, permissions: string[]) {
 
 async function login(page: Page) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill("user@example.com");
-  await page.getByLabel("Password").fill("secret-password");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await page.getByLabel("Электронная почта").fill("user@example.com");
+  await page.getByLabel("Пароль").fill("secret-password");
+  await page.getByRole("button", { name: "Войти" }).click();
+  await expect(page.getByRole("heading", { name: "Обзор" })).toBeVisible();
 }
 
 function sampleHazard(overrides: Record<string, unknown> = {}) {
@@ -238,16 +238,16 @@ async function mockHazardRoutes(page: Page) {
 }
 
 async function fillCreateForm(page: Page) {
-  await page.getByLabel("Hazard").click();
+  await page.getByLabel("Опасность").click();
   await page
     .getByRole("option", { name: "HZ-RA-E2E — E2E Hazard for RA" })
     .click();
-  await page.getByLabel("Code").fill("RA-E2E");
-  await page.getByLabel("Title").fill("E2E Risk Assessment");
-  await page.getByLabel("Assessed object reference").fill("Line A");
-  await page.getByLabel("Probability (1–5)").first().click();
+  await page.getByLabel("Код").fill("RA-E2E");
+  await page.getByLabel("Название").fill("E2E Risk Assessment");
+  await page.getByLabel("Ссылка на объект оценки").fill("Line A");
+  await page.getByLabel("Вероятность (1–5)").first().click();
   await page.getByRole("option", { name: "3", exact: true }).click();
-  await page.getByLabel("Severity (1–5)").first().click();
+  await page.getByLabel("Тяжесть (1–5)").first().click();
   await page.getByRole("option", { name: "4", exact: true }).click();
 }
 
@@ -407,45 +407,48 @@ test("risk assessment create edit submit approve and archive flow", async ({
   await login(page);
   await page.goto("/safety/risk-assessments/new");
   await expect(
-    page.getByRole("heading", { name: "Create risk assessment" }),
+    page.getByRole("heading", { name: "Создать оценку риска" }),
   ).toBeVisible();
   await fillCreateForm(page);
-  await page.getByRole("button", { name: "Create draft" }).click();
+  await page.getByRole("button", { name: "Создать черновик" }).click();
   await expect(page).toHaveURL(`/safety/risk-assessments/${riskAssessmentId}`);
   await expect(
     page.getByRole("heading", { name: "E2E Risk Assessment" }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "Edit draft" }).click();
-  await page.getByLabel("Title").fill("E2E Risk Assessment Updated");
-  await page.getByRole("button", { name: "Save changes" }).click();
+  await page.getByRole("button", { name: "Изменить черновик" }).click();
+  await page.getByLabel("Название").fill("E2E Risk Assessment Updated");
+  await page.getByRole("button", { name: "Сохранить изменения" }).click();
   await expect(
     page.getByRole("heading", { name: "E2E Risk Assessment Updated" }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "Submit for review" }).click();
-  await page.getByRole("button", { name: "Submit for review" }).last().click();
-  await expect(page.getByLabel("Status: Under Review").first()).toBeVisible();
-
-  await page.getByRole("button", { name: "Approve assessment" }).click();
-  const approveDialog = page.getByRole("dialog", {
-    name: "Approve assessment",
-  });
-  await expect(approveDialog.getByText("Not Accepted")).toBeVisible();
-  await approveDialog
-    .getByRole("button", { name: "Approve assessment" })
+  await page.getByRole("button", { name: "Отправить на рассмотрение" }).click();
+  await page
+    .getByRole("button", { name: "Отправить на рассмотрение" })
+    .last()
     .click();
-  await expect(page.getByLabel("Status: Approved").first()).toBeVisible();
+  await expect(
+    page.getByLabel("Статус: На рассмотрении").first(),
+  ).toBeVisible();
 
-  await page.getByRole("button", { name: "Archive assessment" }).click();
+  await page.getByRole("button", { name: "Утвердить оценку" }).click();
+  const approveDialog = page.getByRole("dialog", {
+    name: "Утвердить оценку",
+  });
+  await expect(approveDialog.getByText("Не принят")).toBeVisible();
+  await approveDialog.getByRole("button", { name: "Утвердить оценку" }).click();
+  await expect(page.getByLabel("Статус: Утверждено").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Архивировать оценку" }).click();
   const archiveDialog = page.getByRole("dialog", {
-    name: "Archive assessment",
+    name: "Архивировать оценку",
   });
   await archiveDialog.getByRole("textbox").fill("No longer applicable.");
   await archiveDialog
-    .getByRole("button", { name: "Archive assessment" })
+    .getByRole("button", { name: "Архивировать оценку" })
     .click();
-  await expect(page.getByLabel("Status: Archived").first()).toBeVisible();
+  await expect(page.getByLabel("Статус: Архив").first()).toBeVisible();
 });
 
 test("read-only user cannot create risk assessments", async ({ page }) => {
@@ -466,13 +469,13 @@ test("read-only user cannot create risk assessments", async ({ page }) => {
   await login(page);
   await page.goto("/safety/risk-assessments");
   await expect(
-    page.getByRole("heading", { name: "Risk Assessments" }),
+    page.getByRole("heading", { name: "Оценки риска" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Create risk assessment" }),
+    page.getByRole("link", { name: "Создать оценку риска" }),
   ).toHaveCount(0);
   await page.goto("/safety/risk-assessments/new");
-  await expect(page.getByText("Cannot create risk assessments")).toBeVisible();
+  await expect(page.getByText("Нельзя создать оценки риска")).toBeVisible();
 });
 
 test("create validation error maps title field", async ({ page }) => {
@@ -520,7 +523,7 @@ test("create validation error maps title field", async ({ page }) => {
   await login(page);
   await page.goto("/safety/risk-assessments/new");
   await fillCreateForm(page);
-  await page.getByRole("button", { name: "Create draft" }).click();
+  await page.getByRole("button", { name: "Создать черновик" }).click();
   await expect(
     page
       .getByRole("alert")
@@ -584,11 +587,11 @@ test("stale edit shows conflict dialog", async ({ page }) => {
 
   await login(page);
   await page.goto(`/safety/risk-assessments/${riskAssessmentId}`);
-  await page.getByRole("button", { name: "Edit draft" }).click();
-  await page.getByLabel("Title").fill("Conflict title");
-  await page.getByRole("button", { name: "Save changes" }).click();
+  await page.getByRole("button", { name: "Изменить черновик" }).click();
+  await page.getByLabel("Название").fill("Conflict title");
+  await page.getByRole("button", { name: "Сохранить изменения" }).click();
   await expect(
-    page.getByRole("heading", { name: "Risk assessment changed elsewhere" }),
+    page.getByRole("heading", { name: "Оценка риска изменена в другом месте" }),
   ).toBeVisible();
 });
 
@@ -614,7 +617,7 @@ test("unknown risk assessment shows not found", async ({ page }) => {
 
   await login(page);
   await page.goto(`/safety/risk-assessments/${riskAssessmentId}`);
-  await expect(page.getByText("Risk assessment not found")).toBeVisible();
+  await expect(page.getByText("Оценка риска не найдена")).toBeVisible();
 });
 
 test("partial create recovery retries risk detail patch", async ({ page }) => {
@@ -711,18 +714,20 @@ test("partial create recovery retries risk detail patch", async ({ page }) => {
   await login(page);
   await page.goto("/safety/risk-assessments/new");
   await fillCreateForm(page);
-  await page.getByRole("button", { name: "Create draft" }).click();
+  await page.getByRole("button", { name: "Создать черновик" }).click();
 
   await expect(
     page.getByRole("alert").filter({
-      hasText: "Draft created with incomplete details",
+      hasText: "Черновик создан с неполными данными",
     }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Retry saving risk details" }),
+    page.getByRole("button", { name: "Повторить сохранение сведений о риске" }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "Retry saving risk details" }).click();
+  await page
+    .getByRole("button", { name: "Повторить сохранение сведений о риске" })
+    .click();
   await expect(page).toHaveURL(`/safety/risk-assessments/${riskAssessmentId}`);
   await expect(
     page.getByRole("heading", { name: "E2E Risk Assessment" }),

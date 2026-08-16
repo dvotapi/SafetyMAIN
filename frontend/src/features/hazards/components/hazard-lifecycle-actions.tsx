@@ -24,11 +24,12 @@ import type {
   HazardCapabilities,
   HazardLifecycleAction,
 } from "@/features/hazards/types/hazard-types";
+import { hazardStatusLabel } from "@/features/hazards/utils/hazard-status";
 
 const ACTION_LABELS: Record<HazardLifecycleAction, string> = {
-  activate: "Activate hazard",
-  archive: "Archive hazard",
-  restore: "Restore hazard",
+  activate: "Активировать опасность",
+  archive: "Архивировать опасность",
+  restore: "Восстановить опасность",
 };
 
 export function HazardLifecycleActions({
@@ -60,8 +61,8 @@ export function HazardLifecycleActions({
     return (
       <Panel>
         <Text tone="secondary">
-          No lifecycle actions are available for this hazard in its current
-          state.
+          Для этой опасности в текущем состоянии нет доступных действий
+          жизненного цикла.
         </Text>
       </Panel>
     );
@@ -72,8 +73,8 @@ export function HazardLifecycleActions({
   return (
     <Panel>
       <NextActionCard
-        title="Lifecycle"
-        description={`Current status: ${hazard.status}. Choose the next permitted action.`}
+        title="Жизненный цикл"
+        description={`Текущий статус: ${hazardStatusLabel(hazard.status)}. Выберите следующее разрешённое действие.`}
         actions={
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {actions.map((action) => (
@@ -100,16 +101,16 @@ export function HazardLifecycleActions({
         }
       />
       {errorMessage ? (
-        <Alert tone="danger" title="Lifecycle action failed">
+        <Alert tone="danger" title="Не удалось выполнить действие">
           {errorMessage}
         </Alert>
       ) : null}
       <ConfirmationDialog
         open={activateOpen}
         onOpenChange={setActivateOpen}
-        title="Activate hazard"
-        description={`Activate this hazard using version ${hazard.version}?`}
-        confirmLabel="Activate hazard"
+        title="Активировать опасность"
+        description={`Активировать эту опасность с версией ${hazard.version}?`}
+        confirmLabel="Активировать опасность"
         loading={busyAction === "activate"}
         onConfirm={() => {
           void onActivate();
@@ -128,14 +129,16 @@ export function HazardLifecycleActions({
         <DialogContent>
           <DialogHeader
             title={
-              reasonAction ? ACTION_LABELS[reasonAction] : "Lifecycle action"
+              reasonAction
+                ? ACTION_LABELS[reasonAction]
+                : "Действие жизненного цикла"
             }
-            description={`This action uses version ${hazard.version}.`}
+            description={`Действие использует версию ${hazard.version}.`}
           />
           <DialogBody>
             <div style={{ display: "grid", gap: 8 }}>
               <Label htmlFor="lifecycle-reason" required>
-                Reason
+                Причина
               </Label>
               <TextArea
                 id="lifecycle-reason"
@@ -144,7 +147,7 @@ export function HazardLifecycleActions({
                 rows={3}
               />
               {reasonError ? (
-                <Alert tone="danger" title="Reason required">
+                <Alert tone="danger" title="Укажите причину">
                   {reasonError}
                 </Alert>
               ) : null}
@@ -159,14 +162,14 @@ export function HazardLifecycleActions({
                 setReasonError(null);
               }}
             >
-              Cancel
+              Отмена
             </Button>
             <Button
               variant="primary"
               loading={busyAction === "archive" || busyAction === "restore"}
               onClick={() => {
                 if (reason.trim().length === 0) {
-                  setReasonError("Reason is required");
+                  setReasonError("Укажите причину");
                   return;
                 }
                 const action = reasonAction;
@@ -183,7 +186,7 @@ export function HazardLifecycleActions({
                 })();
               }}
             >
-              {reasonAction ? ACTION_LABELS[reasonAction] : "Confirm"}
+              {reasonAction ? ACTION_LABELS[reasonAction] : "Подтвердить"}
             </Button>
           </DialogFooter>
         </DialogContent>

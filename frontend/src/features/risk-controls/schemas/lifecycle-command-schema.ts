@@ -11,7 +11,7 @@ import type {
  * ---------------------------------------------------------------------- */
 
 export const suspendFormSchema = z.object({
-  reason: z.string().trim().min(1, "Reason is required"),
+  reason: z.string().trim().min(1, "Укажите причину"),
   expectedResolutionDate: z.string().trim(),
 });
 
@@ -46,9 +46,9 @@ export const supersedeFormSchema = z.object({
   replacementControlId: z
     .string()
     .trim()
-    .min(1, "Replacement control ID is required")
-    .uuid("Enter a valid UUID"),
-  reason: z.string().trim().min(1, "Reason is required"),
+    .min(1, "Укажите ID замещающей меры")
+    .uuid("Введите корректный UUID"),
+  reason: z.string().trim().min(1, "Укажите причину"),
 });
 
 export type SupersedeFormValues = z.infer<typeof supersedeFormSchema>;
@@ -74,7 +74,7 @@ export function supersedeFormValuesToRequest(
  * ---------------------------------------------------------------------- */
 
 export const reasonOnlyFormSchema = z.object({
-  reason: z.string().trim().min(1, "Reason is required"),
+  reason: z.string().trim().min(1, "Укажите причину"),
 });
 
 export type ReasonOnlyFormValues = z.infer<typeof reasonOnlyFormSchema>;

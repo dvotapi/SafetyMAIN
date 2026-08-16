@@ -44,7 +44,7 @@ export function StatusBadge({
     <span
       className={cx(styles.badge, styles.status, styles[status], className)}
       data-tone={visualStatusTone[status]}
-      aria-label={`Status: ${text}`}
+      aria-label={`Статус: ${text}`}
       {...rest}
     >
       {showIcon ? (

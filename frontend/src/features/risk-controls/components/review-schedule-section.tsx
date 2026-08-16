@@ -150,11 +150,11 @@ export function ReviewScheduleSection({
           message={
             <span style={{ display: "grid", gap: 4 }}>
               <Text as="span" variant="label">
-                Review overdue
+                Пересмотр просрочен
               </Text>
               <Text as="span" variant="caption" tone="muted">
-                The scheduled review date has passed. Complete the review to
-                bring this control back into compliance.
+                Запланированная дата пересмотра прошла. Завершите пересмотр,
+                чтобы вернуть меру в соответствие.
               </Text>
             </span>
           }
@@ -162,7 +162,7 @@ export function ReviewScheduleSection({
       ) : null}
 
       <Panel
-        heading={<Text variant="label">Review schedule</Text>}
+        heading={<Text variant="label">График пересмотра</Text>}
         actions={
           <div style={{ display: "flex", gap: 8 }}>
             {canSchedule ? (
@@ -171,7 +171,7 @@ export function ReviewScheduleSection({
                 size="sm"
                 onClick={() => onScheduleOpenChange(true)}
               >
-                Schedule review
+                Назначить пересмотр
               </Button>
             ) : null}
             {canComplete ? (
@@ -180,7 +180,7 @@ export function ReviewScheduleSection({
                 size="sm"
                 onClick={() => onCompleteOpenChange(true)}
               >
-                Complete review
+                Завершить пересмотр
               </Button>
             ) : null}
           </div>
@@ -189,17 +189,17 @@ export function ReviewScheduleSection({
         <div style={{ display: "grid", gap: 4 }}>
           <Text>
             {reviewSchedule.reviewRequired
-              ? "Review required"
-              : "Review not required"}
+              ? "Пересмотр требуется"
+              : "Пересмотр не требуется"}
           </Text>
           <Text variant="caption" tone="muted">
-            Next review: {formatDate(reviewSchedule.nextReviewDate)} · Last
-            review: {formatDate(reviewSchedule.lastReviewDate)} · Basis:{" "}
-            {formatRiskControlEnumLabel(reviewSchedule.reviewBasis)}
+            Следующий пересмотр: {formatDate(reviewSchedule.nextReviewDate)} ·
+            Последний пересмотр: {formatDate(reviewSchedule.lastReviewDate)} ·
+            Основание: {formatRiskControlEnumLabel(reviewSchedule.reviewBasis)}
           </Text>
           {!reviewSchedule.reviewRequired && reviewSchedule.noReviewReason ? (
             <Text variant="caption" tone="muted">
-              No-review reason: {reviewSchedule.noReviewReason}
+              Причина отказа от пересмотра: {reviewSchedule.noReviewReason}
             </Text>
           ) : null}
         </div>
@@ -208,10 +208,10 @@ export function ReviewScheduleSection({
       <RiskControlCommandDialog
         open={scheduleOpen}
         onOpenChange={onScheduleOpenChange}
-        title="Schedule review"
+        title="Назначить пересмотр"
         version={version}
         errorMessage={errorMessage}
-        confirmLabel="Schedule review"
+        confirmLabel="Назначить пересмотр"
         loading={scheduleLoading}
         onConfirm={scheduleForm.handleSubmit((values) => onSchedule(values))}
       >
@@ -233,7 +233,7 @@ export function ReviewScheduleSection({
                   onCheckedChange={field.onChange}
                 />
                 <Label htmlFor="schedule-review-required">
-                  Review required
+                  Пересмотр требуется
                 </Label>
               </div>
             )}
@@ -243,7 +243,7 @@ export function ReviewScheduleSection({
             <>
               <div style={{ display: "grid", gap: 8 }}>
                 <Label htmlFor="schedule-frequency-days">
-                  Review frequency (days)
+                  Частота пересмотра (дней)
                 </Label>
                 <Controller
                   control={scheduleForm.control}
@@ -265,8 +265,8 @@ export function ReviewScheduleSection({
                   )}
                 />
                 <HelperText>
-                  Used to derive the next review date when one is not set
-                  explicitly below.
+                  Используется для расчёта даты следующего пересмотра, если она
+                  не задана явно ниже.
                 </HelperText>
                 {scheduleForm.formState.errors.reviewFrequencyDays?.message ? (
                   <FieldError>
@@ -277,7 +277,7 @@ export function ReviewScheduleSection({
 
               <div style={{ display: "grid", gap: 8 }}>
                 <Label htmlFor="schedule-next-review-date">
-                  Next review date
+                  Дата следующего пересмотра
                 </Label>
                 <DatePicker
                   id="schedule-next-review-date"
@@ -286,7 +286,7 @@ export function ReviewScheduleSection({
               </div>
 
               <div style={{ display: "grid", gap: 8 }}>
-                <Label htmlFor="schedule-basis">Review basis</Label>
+                <Label htmlFor="schedule-basis">Основание пересмотра</Label>
                 <Controller
                   control={scheduleForm.control}
                   name="reviewBasis"
@@ -303,7 +303,7 @@ export function ReviewScheduleSection({
 
               <div style={{ display: "grid", gap: 8 }}>
                 <Label htmlFor="schedule-escalation-policy-ref">
-                  Escalation policy reference
+                  Ссылка на политику эскалации
                 </Label>
                 <Input
                   id="schedule-escalation-policy-ref"
@@ -314,7 +314,7 @@ export function ReviewScheduleSection({
           ) : (
             <div style={{ display: "grid", gap: 8 }}>
               <Label htmlFor="schedule-no-review-reason" required>
-                No-review reason
+                Причина отказа от пересмотра
               </Label>
               <TextArea
                 id="schedule-no-review-reason"
@@ -334,24 +334,24 @@ export function ReviewScheduleSection({
       <RiskControlCommandDialog
         open={completeOpen}
         onOpenChange={onCompleteOpenChange}
-        title="Complete review"
+        title="Завершить пересмотр"
         version={version}
         errorMessage={errorMessage}
-        confirmLabel="Complete review"
+        confirmLabel="Завершить пересмотр"
         loading={completeLoading}
         onConfirm={completeForm.handleSubmit((values) => onComplete(values))}
       >
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "grid", gap: 8 }}>
             <Label htmlFor="complete-review-next-review-date">
-              New next review date
+              Новая дата следующего пересмотра
             </Label>
             <DatePicker
               id="complete-review-next-review-date"
               {...completeForm.register("nextReviewDate")}
             />
             <HelperText>
-              Leave blank to keep the schedule&apos;s existing frequency.
+              Оставьте пустым, чтобы сохранить текущую частоту графика.
             </HelperText>
           </div>
 
@@ -363,7 +363,7 @@ export function ReviewScheduleSection({
                 id="complete-review-include-verification"
                 checked={field.value}
                 onCheckedChange={(checked) => field.onChange(checked === true)}
-                label="Record a verification as part of this review"
+                label="Записать подтверждение в рамках этого пересмотра"
               />
             )}
           />
@@ -379,7 +379,7 @@ export function ReviewScheduleSection({
             >
               <div style={{ display: "grid", gap: 8 }}>
                 <Label htmlFor="complete-review-verification-type" required>
-                  Verification type
+                  Тип подтверждения
                 </Label>
                 <Controller
                   control={completeForm.control}
@@ -397,7 +397,7 @@ export function ReviewScheduleSection({
 
               <div style={{ display: "grid", gap: 8 }}>
                 <Label htmlFor="complete-review-verification-method" required>
-                  Method
+                  Метод
                 </Label>
                 <Input
                   id="complete-review-verification-method"
@@ -414,7 +414,7 @@ export function ReviewScheduleSection({
               </div>
 
               <div style={{ display: "grid", gap: 8 }}>
-                <Label required>Result</Label>
+                <Label required>Результат</Label>
                 <Controller
                   control={completeForm.control}
                   name="verification.result"
@@ -422,7 +422,7 @@ export function ReviewScheduleSection({
                     <RadioGroup
                       value={field.value}
                       onValueChange={field.onChange}
-                      aria-label="Result"
+                      aria-label="Результат"
                     >
                       {VERIFIABLE_RESULTS.map((value) => (
                         <Radio
@@ -440,7 +440,7 @@ export function ReviewScheduleSection({
 
               <div style={{ display: "grid", gap: 8 }}>
                 <Label htmlFor="complete-review-verification-evidence-refs">
-                  Evidence references
+                  Ссылки на доказательства
                 </Label>
                 <Controller
                   control={completeForm.control}
@@ -457,7 +457,7 @@ export function ReviewScheduleSection({
                             .filter((line) => line.length > 0),
                         )
                       }
-                      placeholder="One reference per line"
+                      placeholder="По одной ссылке в строке"
                     />
                   )}
                 />
@@ -481,7 +481,7 @@ export function ReviewScheduleSection({
 
               <div style={{ display: "grid", gap: 8 }}>
                 <Label htmlFor="complete-review-verification-next-review-date">
-                  Verification next review date
+                  Дата следующего пересмотра по подтверждению
                 </Label>
                 <Input
                   id="complete-review-verification-next-review-date"

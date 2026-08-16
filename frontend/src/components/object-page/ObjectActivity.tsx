@@ -15,7 +15,7 @@ export interface ObjectActivityProps {
 
 export function ObjectActivity({
   items,
-  heading = "Activity",
+  heading = "Активность",
   className,
 }: ObjectActivityProps) {
   return (

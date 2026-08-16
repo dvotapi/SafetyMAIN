@@ -30,6 +30,7 @@ import { Button } from "@/components/primitives/Button";
 import { Text } from "@/components/primitives/Text";
 import { Icon } from "@/icons/Icon";
 import { cx } from "@/utils/cx";
+import { formatPluralRu } from "@/utils/format-plural";
 
 import styles from "./DataTable.module.css";
 
@@ -89,7 +90,7 @@ export function DataTable<TData>({
   bulkActions,
   loading = false,
   error,
-  emptyMessage = "No records found",
+  emptyMessage = "Нет записей",
   pageSize = 10,
   stickyHeader = true,
   enableColumnVisibility = true,
@@ -126,7 +127,7 @@ export function DataTable<TData>({
       header: ({ table }) => (
         <input
           type="checkbox"
-          aria-label="Select all rows"
+          aria-label="Выбрать все строки"
           checked={table.getIsAllPageRowsSelected()}
           ref={(el) => {
             if (el) {
@@ -141,7 +142,7 @@ export function DataTable<TData>({
       cell: ({ row }) => (
         <input
           type="checkbox"
-          aria-label={`Select row ${row.index + 1}`}
+          aria-label={`Выбрать строку ${row.index + 1}`}
           checked={row.getIsSelected()}
           disabled={!row.getCanSelect()}
           onChange={row.getToggleSelectedHandler()}
@@ -211,9 +212,9 @@ export function DataTable<TData>({
           <tr>
             <td colSpan={table.getVisibleLeafColumns().length}>
               <div className={styles.state} role="status">
-                <Spinner label="Loading table data" />
+                <Spinner label="Загрузка данных таблицы" />
                 <Text tone="muted" variant="caption">
-                  Loading…
+                  Загрузка…
                 </Text>
               </div>
             </td>
@@ -228,7 +229,7 @@ export function DataTable<TData>({
           <tr>
             <td colSpan={table.getVisibleLeafColumns().length}>
               <div className={styles.state}>
-                <Alert tone="danger" title="Unable to load data">
+                <Alert tone="danger" title="Не удалось загрузить данные">
                   {error}
                 </Alert>
               </div>
@@ -305,7 +306,7 @@ export function DataTable<TData>({
     <div className={cx(styles.tableWrap, className)} id={tableId}>
       {selectedCount > 0 && bulkActions ? (
         <div className={styles.bulkBar} role="status">
-          <Text variant="label">{selectedCount} selected</Text>
+          <Text variant="label">Выбрано: {selectedCount}</Text>
           {bulkActions}
         </div>
       ) : null}
@@ -313,7 +314,13 @@ export function DataTable<TData>({
       <div className={styles.toolbar}>
         <div className={styles.toolbarGroup}>
           <Text variant="caption" tone="muted">
-            {table.getFilteredRowModel().rows.length} rows
+            {table.getFilteredRowModel().rows.length}{" "}
+            {formatPluralRu(
+              table.getFilteredRowModel().rows.length,
+              "строка",
+              "строки",
+              "строк",
+            )}
           </Text>
         </div>
         {enableColumnVisibility ? (
@@ -326,7 +333,7 @@ export function DataTable<TData>({
               aria-expanded={columnMenuOpen}
               aria-haspopup="true"
             >
-              Columns
+              Столбцы
             </Button>
             {columnMenuOpen ? (
               <div className={styles.columnMenu} role="menu">
@@ -425,7 +432,7 @@ export function DataTable<TData>({
                                 className={styles.resizeHandle}
                                 onMouseDown={header.getResizeHandler()}
                                 onTouchStart={header.getResizeHandler()}
-                                aria-label={`Resize ${header.column.id} column`}
+                                aria-label={`Изменить ширину столбца ${header.column.id}`}
                               />
                             ) : null}
                           </>
@@ -444,7 +451,7 @@ export function DataTable<TData>({
       {!virtualize && !loading && !error && rows.length > 0 ? (
         <div className={styles.footer}>
           <div className={styles.pageInfo}>
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            Страница {table.getState().pagination.pageIndex + 1} из{" "}
             {table.getPageCount()}
           </div>
           <div className={styles.toolbarGroup}>
@@ -455,7 +462,7 @@ export function DataTable<TData>({
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              Previous
+              Назад
             </Button>
             <Button
               type="button"
@@ -464,7 +471,7 @@ export function DataTable<TData>({
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

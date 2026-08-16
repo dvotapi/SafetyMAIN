@@ -14,8 +14,8 @@ export function RiskControlActivity({
   if (!canView) {
     return (
       <EmptyState
-        title="Activity unavailable"
-        description="Risk control activity requires the audit:read permission. No client-generated history is shown."
+        title="История недоступна"
+        description="История меры требует право audit:read. Клиентская история не показывается."
       />
     );
   }
@@ -23,8 +23,8 @@ export function RiskControlActivity({
   if (loading) {
     return (
       <EmptyState
-        title="Loading activity"
-        description="Fetching audit events…"
+        title="Загрузка истории"
+        description="Загрузка событий аудита…"
       />
     );
   }
@@ -33,12 +33,12 @@ export function RiskControlActivity({
     return (
       <div style={{ display: "grid", gap: "var(--sm-space-3)" }}>
         <EmptyState
-          title="No activity yet"
-          description="No audit events are available for this risk control."
+          title="Истории пока нет"
+          description="Для этой меры нет событий аудита."
         />
         <Text variant="caption" tone="muted">
-          Materialization is recorded against the source risk assessment and
-          appears in that assessment&apos;s activity.
+          Создание фиксируется в исходной оценке риска и отображается в её
+          истории.
         </Text>
       </div>
     );
@@ -51,7 +51,7 @@ export function RiskControlActivity({
     description: [
       item.action,
       item.outcome,
-      item.actorUserId ? `Actor ${item.actorUserId}` : null,
+      item.actorUserId ? `Исполнитель ${item.actorUserId}` : null,
     ]
       .filter(Boolean)
       .join(" · "),

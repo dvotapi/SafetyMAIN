@@ -40,7 +40,7 @@ describe("useRiskControlCommand", () => {
       outcome = await result.current.runCommand(
         "suspend",
         runner,
-        "Control suspended",
+        "Мера приостановлена",
         "The control is now suspended.",
       );
     });
@@ -50,7 +50,7 @@ describe("useRiskControlCommand", () => {
     expect(result.current.busyAction).toBeNull();
     expect(result.current.commandError).toBeNull();
     expect(result.current.conflictOpen).toBe(false);
-    expect(await screen.findByText("Control suspended")).toBeInTheDocument();
+    expect(await screen.findByText("Мера приостановлена")).toBeInTheDocument();
     expect(
       screen.getByText("The control is now suspended."),
     ).toBeInTheDocument();
@@ -68,7 +68,11 @@ describe("useRiskControlCommand", () => {
 
     let pending: Promise<boolean> | undefined;
     act(() => {
-      pending = result.current.runCommand("resume", runner, "Control resumed");
+      pending = result.current.runCommand(
+        "resume",
+        runner,
+        "Мера возобновлена",
+      );
     });
 
     await waitFor(() => {
@@ -98,7 +102,7 @@ describe("useRiskControlCommand", () => {
       pending = result.current.runCommand(
         "suspend",
         runner,
-        "Control suspended",
+        "Мера приостановлена",
       );
     });
 
@@ -130,7 +134,7 @@ describe("useRiskControlCommand", () => {
       outcome = await result.current.runCommand(
         "suspend",
         runner,
-        "Control suspended",
+        "Мера приостановлена",
       );
     });
 
@@ -144,7 +148,7 @@ describe("useRiskControlCommand", () => {
   it("routes a duplicate-materialization ConflictError to the duplicate_materialization variant", async () => {
     const { result } = renderCommandHook();
     const conflictError = new ConflictError({
-      message: "Already materialized",
+      message: "Уже создано",
       status: 409,
       code: "risk_control_already_materialized",
     });
@@ -165,7 +169,7 @@ describe("useRiskControlCommand", () => {
       status: 422,
       details: {
         violations: [
-          { location: ["body", "reason"], message: "Reason is required" },
+          { location: ["body", "reason"], message: "Укажите причину" },
           { loc: ["body", "notes"], msg: "Notes too long" },
         ],
       },
@@ -173,11 +177,11 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(validationError);
 
     await act(async () => {
-      await result.current.runCommand("suspend", runner, "Control suspended");
+      await result.current.runCommand("suspend", runner, "Мера приостановлена");
     });
 
     expect(result.current.commandError).toBe(
-      "reason: Reason is required; notes: Notes too long",
+      "reason: Укажите причину; notes: Notes too long",
     );
     expect(result.current.conflictOpen).toBe(false);
   });
@@ -192,7 +196,7 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(validationError);
 
     await act(async () => {
-      await result.current.runCommand("suspend", runner, "Control suspended");
+      await result.current.runCommand("suspend", runner, "Мера приостановлена");
     });
 
     expect(result.current.commandError).toBe(
@@ -209,7 +213,7 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(validationError);
 
     await act(async () => {
-      await result.current.runCommand("suspend", runner, "Control suspended");
+      await result.current.runCommand("suspend", runner, "Мера приостановлена");
     });
 
     expect(result.current.commandError).toBe(
@@ -226,7 +230,7 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(permissionError);
 
     await act(async () => {
-      await result.current.runCommand("suspend", runner, "Control suspended");
+      await result.current.runCommand("suspend", runner, "Мера приостановлена");
     });
 
     expect(result.current.commandError).toBe(
@@ -244,7 +248,7 @@ describe("useRiskControlCommand", () => {
     const runner = vi.fn().mockRejectedValue(notFoundError);
 
     await act(async () => {
-      await result.current.runCommand("suspend", runner, "Control suspended");
+      await result.current.runCommand("suspend", runner, "Мера приостановлена");
     });
 
     expect(result.current.commandError).toBe(toUserSafeMessage(notFoundError));

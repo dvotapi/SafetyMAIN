@@ -32,7 +32,7 @@ export function ImplementationSummary({
   return (
     <div style={{ display: "grid", gap: "var(--sm-space-6)" }}>
       <Panel>
-        <Heading level={2}>Implementation</Heading>
+        <Heading level={2}>Внедрение</Heading>
         <Text>
           {implementationStateLabel({
             status: status.status,
@@ -44,7 +44,7 @@ export function ImplementationSummary({
           <div style={{ flex: 1 }}>
             <ProgressBar
               value={implementation.progress}
-              label="Implementation progress"
+              label="Прогресс внедрения"
             />
           </div>
           <Text variant="caption">{implementation.progress}%</Text>
@@ -54,27 +54,27 @@ export function ImplementationSummary({
           <>
             <DescriptionList>
               <DescriptionItem
-                term="Target start date"
+                term="Плановая дата начала"
                 details={formatDateOnly(implementation.targetStartDate)}
               />
               <DescriptionItem
-                term="Target completion date"
+                term="Плановая дата завершения"
                 details={formatDateOnly(implementation.targetCompletionDate)}
               />
               <DescriptionItem
-                term="Actual start date"
+                term="Фактическая дата начала"
                 details={formatDateOnly(implementation.actualStartDate)}
               />
               <DescriptionItem
-                term="Actual completion date"
+                term="Фактическая дата завершения"
                 details={formatDateOnly(implementation.actualCompletionDate)}
               />
               <DescriptionItem
-                term="Method"
+                term="Метод"
                 details={implementation.implementationMethod || "—"}
               />
               <DescriptionItem
-                term="Dependencies"
+                term="Зависимости"
                 details={
                   implementation.dependencies.length > 0
                     ? implementation.dependencies.join(", ")
@@ -82,11 +82,11 @@ export function ImplementationSummary({
                 }
               />
               <DescriptionItem
-                term="Resource notes"
+                term="Заметки о ресурсах"
                 details={implementation.resourceNotes || "—"}
               />
               <DescriptionItem
-                term="Evidence requirements"
+                term="Требования к доказательствам"
                 details={
                   implementation.evidenceRequirements.length > 0
                     ? implementation.evidenceRequirements.join(", ")
@@ -94,12 +94,12 @@ export function ImplementationSummary({
                 }
               />
               <DescriptionItem
-                term="Evidence waiver reason"
+                term="Причина отказа от доказательств"
                 details={implementation.evidenceWaiverReason ?? "—"}
               />
             </DescriptionList>
 
-            <Heading level={3}>Milestones</Heading>
+            <Heading level={3}>Вехи</Heading>
             {implementation.milestones.length > 0 ? (
               <DescriptionList>
                 {implementation.milestones.map((milestone, index) => (
@@ -109,10 +109,10 @@ export function ImplementationSummary({
                     details={[
                       formatRiskControlEnumLabel(milestone.status),
                       milestone.dueDate
-                        ? `Due: ${formatDateOnly(milestone.dueDate)}`
+                        ? `Срок: ${formatDateOnly(milestone.dueDate)}`
                         : null,
                       milestone.completedAt
-                        ? `Completed: ${formatDateOnly(milestone.completedAt)}`
+                        ? `Завершено: ${formatDateOnly(milestone.completedAt)}`
                         : null,
                     ]
                       .filter(Boolean)
@@ -121,11 +121,11 @@ export function ImplementationSummary({
                 ))}
               </DescriptionList>
             ) : (
-              <Text tone="muted">No milestones recorded.</Text>
+              <Text tone="muted">Вехи не зафиксированы.</Text>
             )}
           </>
         ) : (
-          <EmptyState title="No implementation plan yet" />
+          <EmptyState title="Плана внедрения пока нет" />
         )}
       </Panel>
     </div>

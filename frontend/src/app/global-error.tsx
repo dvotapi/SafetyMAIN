@@ -11,7 +11,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html lang="en">
+    <html lang="ru">
       <body
         style={{
           fontFamily: "system-ui, sans-serif",
@@ -20,20 +20,20 @@ export default function GlobalError({
           color: "#0E1418",
         }}
       >
-        <h1>Something went wrong</h1>
+        <h1>Что-то пошло не так</h1>
         <Text as="p">
-          An unexpected error occurred. You can try again.
+          Произошла непредвиденная ошибка. Повторите попытку.
           {process.env.NODE_ENV === "development" ? (
             <span> {error.message}</span>
           ) : null}
         </Text>
         {error.digest ? (
           <Text as="p" tone="muted" variant="caption">
-            Reference: {error.digest}
+            Код ошибки: {error.digest}
           </Text>
         ) : null}
         <Button type="button" onClick={reset}>
-          Retry
+          Повторить
         </Button>
       </body>
     </html>

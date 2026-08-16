@@ -8,12 +8,12 @@ export default function ForbiddenPage() {
     <div
       style={{ padding: "var(--sm-space-8)", maxWidth: 560, margin: "0 auto" }}
     >
-      <Heading level={1}>Access denied</Heading>
-      <Alert tone="danger" title="403 Forbidden">
-        You do not have permission to view this area.
+      <Heading level={1}>Доступ запрещён</Heading>
+      <Alert tone="danger" title="Ошибка 403">
+        Недостаточно прав для просмотра этого раздела.
       </Alert>
       <Text tone="secondary">
-        <Link href="/">Return to Overview</Link>
+        <Link href="/">Вернуться к обзору</Link>
       </Text>
     </div>
   );

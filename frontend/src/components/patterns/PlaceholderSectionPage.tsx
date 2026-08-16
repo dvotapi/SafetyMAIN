@@ -6,8 +6,8 @@ export default function PlaceholderSectionPage({ title }: { title: string }) {
     <PageContainer>
       <PageHeader title={title} />
       <Text tone="secondary">
-        Placeholder route for navigation structure. Business UI is deferred to
-        later tasks.
+        Заглушка маршрута для структуры навигации. Бизнес-интерфейс будет
+        добавлен в следующих задачах.
       </Text>
     </PageContainer>
   );

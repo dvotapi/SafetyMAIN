@@ -24,14 +24,14 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SafetyMAIN",
-  description: "SafetyMAIN frontend application foundation",
+  title: "SafetyMAIN — управление безопасностью",
+  description: "Система управления охраной труда и безопасностью",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
-      lang="en"
+      lang="ru"
       className={`${plexSans.variable} ${plexMono.variable}`}
       suppressHydrationWarning
     >

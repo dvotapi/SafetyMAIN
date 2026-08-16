@@ -8,7 +8,7 @@ export default function Page() {
     <Suspense
       fallback={
         <div style={{ padding: "var(--sm-space-8)" }}>
-          <LoadingState label="Loading create form" />
+          <LoadingState label="Загрузка формы создания" />
         </div>
       }
     >
