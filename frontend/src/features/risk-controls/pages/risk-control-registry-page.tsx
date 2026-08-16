@@ -109,11 +109,11 @@ export function RiskControlRegistryPage() {
   const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
 
   useEffect(() => {
-    if (state.page > totalPages && totalPages >= 1) {
+    if (query.data && state.page > totalPages && totalPages >= 1) {
       updateState({ page: totalPages });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- self-correct stale deep links only
-  }, [state.page, totalPages]);
+  }, [state.page, totalPages, query.data]);
 
   const columns = useMemo<DataTableColumnDef<RiskControl>[]>(
     () => [

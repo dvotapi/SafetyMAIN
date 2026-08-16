@@ -14,33 +14,7 @@ import type {
   RiskControlHazardSummary,
 } from "@/features/risk-controls/types/risk-control-types";
 import { formatRiskControlEnumLabel } from "@/features/risk-controls/utils/risk-control-status";
-
-function formatDateOnly(value: string | null | undefined): string {
-  if (!value) {
-    return "—";
-  }
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
-
-function formatDateTime(value: string | null | undefined): string {
-  if (!value) {
-    return "—";
-  }
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
+import { formatDateOnly, formatDateTime } from "@/utils/format-date";
 
 export function RiskControlSummary({ control }: { control: RiskControl }) {
   return (

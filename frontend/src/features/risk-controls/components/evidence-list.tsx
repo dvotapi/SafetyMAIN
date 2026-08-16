@@ -6,27 +6,11 @@ import type {
   RiskControlCapabilities,
   RiskControlEvidence,
 } from "@/features/risk-controls/types/risk-control-types";
-import { formatRiskControlEnumLabel } from "@/features/risk-controls/utils/risk-control-status";
-
-/** `add_evidence` is blocked by the domain once a control is terminal-inactive. */
-const ADD_EVIDENCE_BLOCKED_STATUSES = new Set([
-  "superseded",
-  "archived",
-  "cancelled",
-]);
-
-function formatDateOnly(value: string | null | undefined): string {
-  if (!value) {
-    return "—";
-  }
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
+import {
+  TERMINAL_INACTIVE_STATUSES,
+  formatRiskControlEnumLabel,
+} from "@/features/risk-controls/utils/risk-control-status";
+import { formatDateOnly } from "@/utils/format-date";
 
 /**
  * Evidence is a reference, not a file — this list (and the add-evidence
@@ -55,7 +39,7 @@ export function EvidenceList({
   errorMessage?: string | null;
 }) {
   const canAdd =
-    capabilities.canImplement && !ADD_EVIDENCE_BLOCKED_STATUSES.has(status);
+    capabilities.canImplement && !TERMINAL_INACTIVE_STATUSES.has(status);
 
   return (
     <>

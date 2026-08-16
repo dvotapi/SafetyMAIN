@@ -32,17 +32,19 @@ export function riskControlConflictVariantFromCode(
 
 const VARIANT_COPY: Record<
   RiskControlConflictVariant,
-  { title: string; description: string }
+  { title: string; description: string; alertTitle: string }
 > = {
   version_conflict: {
     title: "Risk control changed elsewhere",
     description:
       "Another user updated this control. Your changes were not saved.",
+    alertTitle: "Version conflict",
   },
   duplicate_materialization: {
     title: "Controls already materialized",
     description:
       "One or more proposed controls already have a risk control. Materialization is all-or-nothing, so nothing was created. Reload to see the current controls.",
+    alertTitle: "Already materialized",
   },
 };
 
@@ -78,7 +80,7 @@ export function RiskControlConflictDialog({
       >
         <DialogHeader title={copy.title} description={copy.description} />
         <DialogBody>
-          <Alert tone="warning" title="Version conflict">
+          <Alert tone="warning" title={copy.alertTitle}>
             Reload the latest version, then re-apply your edits. The command
             will not retry automatically.
           </Alert>

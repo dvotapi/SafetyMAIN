@@ -98,6 +98,60 @@ export const OWNER_TYPES: readonly OwnerTypeDto[] = [
   "external_party",
 ];
 
+/**
+ * Statuses in which a control is terminal-inactive — mirrors the domain's
+ * `_TERMINAL_INACTIVE` set (backend/core/domain/entities/risk_control.py).
+ * Single source of truth: import this instead of re-declaring the set.
+ */
+export const TERMINAL_INACTIVE_STATUSES: ReadonlySet<string> =
+  new Set(["superseded", "archived", "cancelled"]);
+
+/**
+ * Statuses `record_verification` accepts — mirrors the domain's
+ * `record_verification` guard. Single source of truth.
+ */
+export const VERIFY_ALLOWED_STATUSES: ReadonlySet<string> =
+  new Set(["implemented", "verified_effective", "verified_ineffective"]);
+
+/** `_TRANSITIONS["suspend"]` sources — every non-draft, non-terminal status. */
+export const SUSPEND_ALLOWED_STATUSES: ReadonlySet<string> =
+  new Set([
+    "planned",
+    "in_implementation",
+    "implemented",
+    "verified_effective",
+    "verified_ineffective",
+  ]);
+
+/** `_TRANSITIONS["supersede"]` sources. */
+export const SUPERSEDE_ALLOWED_STATUSES: ReadonlySet<string> =
+  new Set([
+    "implemented",
+    "verified_effective",
+    "verified_ineffective",
+    "suspended",
+  ]);
+
+/** `_TRANSITIONS["cancel"]` sources. */
+export const CANCEL_ALLOWED_STATUSES: ReadonlySet<string> =
+  new Set(["draft", "planned", "in_implementation", "suspended"]);
+
+/**
+ * `_TRANSITIONS["archive"]` sources — notably not `planned` or
+ * `in_implementation`, which must resolve (or be cancelled/suspended)
+ * before they can be archived.
+ */
+export const ARCHIVE_ALLOWED_STATUSES: ReadonlySet<string> =
+  new Set([
+    "draft",
+    "implemented",
+    "verified_effective",
+    "verified_ineffective",
+    "suspended",
+    "superseded",
+    "cancelled",
+  ]);
+
 const STATUS_TO_VISUAL: Record<RiskControlStatusDto, VisualStatus> = {
   draft: "draft",
   planned: "planned",

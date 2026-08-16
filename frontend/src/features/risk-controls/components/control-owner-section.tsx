@@ -27,15 +27,10 @@ import type {
 } from "@/features/risk-controls/types/risk-control-types";
 import {
   OWNER_TYPES,
+  TERMINAL_INACTIVE_STATUSES,
   formatRiskControlEnumLabel,
 } from "@/features/risk-controls/utils/risk-control-status";
-
-/** `assign_owner` is blocked by the domain once a control is terminal-inactive. */
-const OWNER_ASSIGNMENT_BLOCKED_STATUSES = new Set([
-  "superseded",
-  "archived",
-  "cancelled",
-]);
+import { formatDateTime } from "@/utils/format-date";
 
 const DEFAULT_VALUES: OwnerFormValues = {
   ownerType: "user",
@@ -43,20 +38,6 @@ const DEFAULT_VALUES: OwnerFormValues = {
   displayName: "",
   reason: "",
 };
-
-function formatDateTime(value: string | null): string {
-  if (!value) {
-    return "—";
-  }
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
 
 const OWNER_TYPE_OPTIONS = OWNER_TYPES.map((value) => ({
   value,
@@ -86,7 +67,7 @@ export function ControlOwnerSection({
 }) {
   const canAssign =
     capabilities.canAssignOwner &&
-    !OWNER_ASSIGNMENT_BLOCKED_STATUSES.has(status);
+    !TERMINAL_INACTIVE_STATUSES.has(status);
 
   const form = useForm<OwnerFormValues>({
     resolver: zodResolver(ownerFormSchema),

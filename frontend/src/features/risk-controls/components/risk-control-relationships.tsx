@@ -17,6 +17,7 @@ import type {
 interface RelatedQueryState<T> {
   data: T | null | undefined;
   isError: boolean;
+  isLoading: boolean;
 }
 
 /**
@@ -47,6 +48,10 @@ export function RiskControlRelationships({
         <Link href={`/safety/hazards/${control.hazardId}`}>
           {hazard.data!.code} — {hazard.data!.title}
         </Link>
+      ) : hazard.isLoading ? (
+        <Text as="span" tone="muted" variant="caption">
+          Loading…
+        </Text>
       ) : (
         <>
           <Text as="span">{control.hazardId}</Text>{" "}
@@ -70,6 +75,10 @@ export function RiskControlRelationships({
         <Link href={`/safety/risk-assessments/${control.riskAssessmentId}`}>
           {assessment.data!.code} — {assessment.data!.title}
         </Link>
+      ) : assessment.isLoading ? (
+        <Text as="span" tone="muted" variant="caption">
+          Loading…
+        </Text>
       ) : (
         <>
           <Text as="span">{control.riskAssessmentId}</Text>{" "}

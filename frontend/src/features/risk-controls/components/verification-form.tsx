@@ -26,6 +26,7 @@ import type { RiskControlCapabilities } from "@/features/risk-controls/types/ris
 import {
   VERIFIABLE_RESULTS,
   VERIFICATION_TYPES,
+  VERIFY_ALLOWED_STATUSES,
   effectivenessLabel,
   formatRiskControlEnumLabel,
 } from "@/features/risk-controls/utils/risk-control-status";
@@ -34,16 +35,6 @@ const VERIFICATION_TYPE_OPTIONS = VERIFICATION_TYPES.map((value) => ({
   value,
   label: formatRiskControlEnumLabel(value),
 }));
-
-/** `record_verification` is only accepted on these statuses (see the
- * domain's `record_verification` guard) — the trigger button and form are
- * hidden outside them so the client never offers a submission the backend
- * would reject with a lifecycle error. */
-const VERIFY_ALLOWED_STATUSES = new Set([
-  "implemented",
-  "verified_effective",
-  "verified_ineffective",
-]);
 
 function linesToArray(value: string): string[] {
   return value

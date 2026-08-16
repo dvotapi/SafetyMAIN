@@ -63,14 +63,24 @@ function useInvalidateRiskControls() {
         queryKey: riskControlKeys.activity(organizationId, id),
       }),
     invalidateAssessmentRelated: (riskAssessmentId?: string) =>
-      invalidateAssessmentRelatedControls(queryClient, {
-        organizationId,
-        ...(riskAssessmentId ? { riskAssessmentId } : {}),
-      }),
+      riskAssessmentId
+        ? invalidateAssessmentRelatedControls(queryClient, {
+            organizationId,
+            riskAssessmentId,
+          })
+        : Promise.resolve(),
   };
 }
 
-export function useAssignRiskControlOwnerMutation(riskControlId: string) {
+/**
+ * Every lifecycle command mutation shares the same onSuccess sequence
+ * (cache the new detail, invalidate lists/activity/related-assessment) and
+ * differs only in the command function and its request DTO type.
+ */
+function useRiskControlLifecycleMutation<TDto>(
+  riskControlId: string,
+  commandFn: (id: string, body: TDto) => Promise<RiskControl>,
+) {
   const {
     setDetail,
     invalidateLists,
@@ -78,8 +88,7 @@ export function useAssignRiskControlOwnerMutation(riskControlId: string) {
     invalidateAssessmentRelated,
   } = useInvalidateRiskControls();
   return useMutation({
-    mutationFn: (body: AssignOwnerDto) =>
-      assignRiskControlOwner(riskControlId, body),
+    mutationFn: (body: TDto) => commandFn(riskControlId, body),
     onSuccess: (control) => {
       setDetail(control.id, control);
       void invalidateLists();
@@ -89,256 +98,108 @@ export function useAssignRiskControlOwnerMutation(riskControlId: string) {
   });
 }
 
+export function useAssignRiskControlOwnerMutation(riskControlId: string) {
+  return useRiskControlLifecycleMutation<AssignOwnerDto>(
+    riskControlId,
+    assignRiskControlOwner,
+  );
+}
+
 export function usePlanRiskControlMutation(riskControlId: string) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: PlanRiskControlDto) =>
-      planRiskControl(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<PlanRiskControlDto>(
+    riskControlId,
+    planRiskControl,
+  );
 }
 
 export function useStartRiskControlImplementationMutation(
   riskControlId: string,
 ) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: VersionOnlyDto) =>
-      startRiskControlImplementation(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<VersionOnlyDto>(
+    riskControlId,
+    startRiskControlImplementation,
+  );
 }
 
 export function useUpdateRiskControlProgressMutation(riskControlId: string) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: ProgressDto) =>
-      updateRiskControlProgress(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<ProgressDto>(
+    riskControlId,
+    updateRiskControlProgress,
+  );
 }
 
 export function useAddRiskControlEvidenceMutation(riskControlId: string) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: EvidenceRequestDto) =>
-      addRiskControlEvidence(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<EvidenceRequestDto>(
+    riskControlId,
+    addRiskControlEvidence,
+  );
 }
 
 export function useCompleteRiskControlImplementationMutation(
   riskControlId: string,
 ) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: CompleteImplementationDto) =>
-      completeRiskControlImplementation(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<CompleteImplementationDto>(
+    riskControlId,
+    completeRiskControlImplementation,
+  );
 }
 
 export function useRecordRiskControlVerificationMutation(
   riskControlId: string,
 ) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: VerificationRequestDto) =>
-      recordRiskControlVerification(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<VerificationRequestDto>(
+    riskControlId,
+    recordRiskControlVerification,
+  );
 }
 
 export function useScheduleRiskControlReviewMutation(riskControlId: string) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: ScheduleReviewDto) =>
-      scheduleRiskControlReview(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<ScheduleReviewDto>(
+    riskControlId,
+    scheduleRiskControlReview,
+  );
 }
 
 export function useCompleteRiskControlReviewMutation(riskControlId: string) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: CompleteReviewDto) =>
-      completeRiskControlReview(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<CompleteReviewDto>(
+    riskControlId,
+    completeRiskControlReview,
+  );
 }
 
 export function useSuspendRiskControlMutation(riskControlId: string) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: SuspendDto) => suspendRiskControl(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<SuspendDto>(
+    riskControlId,
+    suspendRiskControl,
+  );
 }
 
 export function useResumeRiskControlMutation(riskControlId: string) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: VersionOnlyDto) =>
-      resumeRiskControl(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<VersionOnlyDto>(
+    riskControlId,
+    resumeRiskControl,
+  );
 }
 
 export function useSupersedeRiskControlMutation(riskControlId: string) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: SupersedeDto) =>
-      supersedeRiskControl(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<SupersedeDto>(
+    riskControlId,
+    supersedeRiskControl,
+  );
 }
 
 export function useArchiveRiskControlMutation(riskControlId: string) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: ReasonVersionDto) =>
-      archiveRiskControl(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<ReasonVersionDto>(
+    riskControlId,
+    archiveRiskControl,
+  );
 }
 
 export function useCancelRiskControlMutation(riskControlId: string) {
-  const {
-    setDetail,
-    invalidateLists,
-    invalidateActivity,
-    invalidateAssessmentRelated,
-  } = useInvalidateRiskControls();
-  return useMutation({
-    mutationFn: (body: ReasonVersionDto) =>
-      cancelRiskControl(riskControlId, body),
-    onSuccess: (control) => {
-      setDetail(control.id, control);
-      void invalidateLists();
-      void invalidateActivity(control.id);
-      void invalidateAssessmentRelated(control.riskAssessmentId ?? undefined);
-    },
-  });
+  return useRiskControlLifecycleMutation<ReasonVersionDto>(
+    riskControlId,
+    cancelRiskControl,
+  );
 }
 
 export function useMaterializeRiskControlsMutation(riskAssessmentId: string) {

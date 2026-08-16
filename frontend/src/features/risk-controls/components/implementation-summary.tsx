@@ -16,19 +16,7 @@ import {
   formatRiskControlEnumLabel,
   implementationStateLabel,
 } from "@/features/risk-controls/utils/risk-control-status";
-
-function formatDateOnly(value: string | null | undefined): string {
-  if (!value) {
-    return "—";
-  }
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
+import { formatDateOnly } from "@/utils/format-date";
 
 export function ImplementationSummary({
   implementation,

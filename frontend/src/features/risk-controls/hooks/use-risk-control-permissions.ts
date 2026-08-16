@@ -3,6 +3,14 @@ import type {
   RiskControlCapabilities,
   RiskControlLifecycleAction,
 } from "@/features/risk-controls/types/risk-control-types";
+import {
+  ARCHIVE_ALLOWED_STATUSES,
+  CANCEL_ALLOWED_STATUSES,
+  SUPERSEDE_ALLOWED_STATUSES,
+  SUSPEND_ALLOWED_STATUSES,
+  TERMINAL_INACTIVE_STATUSES,
+  VERIFY_ALLOWED_STATUSES,
+} from "@/features/risk-controls/utils/risk-control-status";
 import { useAuth } from "@/hooks/auth";
 
 /**
@@ -38,60 +46,6 @@ export function useRiskControlPermissions(): RiskControlCapabilities {
   return mapRiskControlCapabilities(hasPermission);
 }
 
-/** Statuses `record_verification` accepts — mirrors `VerificationForm`'s
- * `VERIFY_ALLOWED_STATUSES` (the domain's `record_verification` guard). */
-const VERIFY_ALLOWED_STATUSES = new Set([
-  "implemented",
-  "verified_effective",
-  "verified_ineffective",
-]);
-
-/** `schedule_review` is blocked once a control is terminal-inactive —
- * mirrors `ReviewScheduleSection`'s `REVIEW_SCHEDULING_BLOCKED_STATUSES`. */
-const SCHEDULE_REVIEW_BLOCKED_STATUSES = new Set([
-  "superseded",
-  "archived",
-  "cancelled",
-]);
-
-/** `_TRANSITIONS["suspend"]` sources — every non-draft, non-terminal status. */
-const SUSPEND_ALLOWED_STATUSES = new Set([
-  "planned",
-  "in_implementation",
-  "implemented",
-  "verified_effective",
-  "verified_ineffective",
-]);
-
-/** `_TRANSITIONS["supersede"]` sources. */
-const SUPERSEDE_ALLOWED_STATUSES = new Set([
-  "implemented",
-  "verified_effective",
-  "verified_ineffective",
-  "suspended",
-]);
-
-/** `_TRANSITIONS["cancel"]` sources. */
-const CANCEL_ALLOWED_STATUSES = new Set([
-  "draft",
-  "planned",
-  "in_implementation",
-  "suspended",
-]);
-
-/** `_TRANSITIONS["archive"]` sources — notably not `planned` or
- * `in_implementation`, which must resolve (or be cancelled/suspended)
- * before they can be archived. */
-const ARCHIVE_ALLOWED_STATUSES = new Set([
-  "draft",
-  "implemented",
-  "verified_effective",
-  "verified_ineffective",
-  "suspended",
-  "superseded",
-  "cancelled",
-]);
-
 /**
  * Encodes the backend's `_TRANSITIONS` lifecycle table as UI action
  * availability. Each entry is gated on both the legal transition (per the
@@ -122,7 +76,7 @@ export function availableLifecycleActions(
   if (VERIFY_ALLOWED_STATUSES.has(status) && capabilities.canVerify) {
     actions.push("verify");
   }
-  if (!SCHEDULE_REVIEW_BLOCKED_STATUSES.has(status) && capabilities.canReview) {
+  if (!TERMINAL_INACTIVE_STATUSES.has(status) && capabilities.canReview) {
     actions.push("schedule_review");
   }
 

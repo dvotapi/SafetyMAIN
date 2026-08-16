@@ -37,19 +37,13 @@ import type {
 } from "@/features/risk-controls/types/risk-control-types";
 import {
   REVIEW_BASES,
+  TERMINAL_INACTIVE_STATUSES,
   VERIFIABLE_RESULTS,
   VERIFICATION_TYPES,
   effectivenessLabel,
   formatRiskControlEnumLabel,
 } from "@/features/risk-controls/utils/risk-control-status";
-
-/** `schedule_review` is blocked once a control is terminal-inactive —
- * same rule the domain applies to owner assignment. */
-const REVIEW_SCHEDULING_BLOCKED_STATUSES = new Set([
-  "superseded",
-  "archived",
-  "cancelled",
-]);
+import { formatDateOnly as formatDate } from "@/utils/format-date";
 
 const REVIEW_BASIS_OPTIONS = REVIEW_BASES.map((value) => ({
   value,
@@ -60,19 +54,6 @@ const VERIFICATION_TYPE_OPTIONS = VERIFICATION_TYPES.map((value) => ({
   value,
   label: formatRiskControlEnumLabel(value),
 }));
-
-function formatDate(value: string | null): string {
-  if (!value) {
-    return "—";
-  }
-  try {
-    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
-      new Date(value),
-    );
-  } catch {
-    return value;
-  }
-}
 
 /**
  * Review scheduling, review completion, and overdue presentation. `Overdue`
@@ -114,7 +95,7 @@ export function ReviewScheduleSection({
   errorMessage?: string | null;
 }) {
   const canSchedule =
-    capabilities.canReview && !REVIEW_SCHEDULING_BLOCKED_STATUSES.has(status);
+    capabilities.canReview && !TERMINAL_INACTIVE_STATUSES.has(status);
   const canComplete =
     capabilities.canReview &&
     reviewSchedule.reviewRequired &&

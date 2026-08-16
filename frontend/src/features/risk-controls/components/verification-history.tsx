@@ -6,19 +6,7 @@ import {
   effectivenessToVisual,
   formatRiskControlEnumLabel,
 } from "@/features/risk-controls/utils/risk-control-status";
-
-function formatDateOnly(value: string | null | undefined): string {
-  if (!value) {
-    return "—";
-  }
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
+import { formatDateOnly } from "@/utils/format-date";
 
 /** Read-only: no edit or delete control on any historical record (spec §51). */
 export function VerificationHistory({

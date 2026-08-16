@@ -7,19 +7,7 @@ import {
 
 import type { RiskControlSource } from "@/features/risk-controls/types/risk-control-types";
 import { formatRiskControlEnumLabel } from "@/features/risk-controls/utils/risk-control-status";
-
-function formatDateOnly(value: string | null | undefined): string {
-  if (!value) {
-    return "—";
-  }
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
+import { formatDateOnly } from "@/utils/format-date";
 
 /** Read-only. The snapshot is immutable once materialized — no edit affordance. */
 export function SourceSnapshot({ source }: { source: RiskControlSource }) {
