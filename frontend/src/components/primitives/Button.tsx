@@ -64,11 +64,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...rest}
       >
         {loading ? (
-          <span className={styles.loadingSpinner} aria-hidden>
-            <Spinner className={styles.buttonSpinner} label="Загрузка" />
-          </span>
-        ) : null}
-        <span className={cx(loading && styles.loadingContent)}>{children}</span>
+          <>
+            <span className={styles.loadingSpinner} aria-hidden>
+              <Spinner className={styles.buttonSpinner} label="Загрузка" />
+            </span>
+            <span className={styles.loadingContent}>{children}</span>
+          </>
+        ) : (
+          children
+        )}
       </button>
     );
   },
