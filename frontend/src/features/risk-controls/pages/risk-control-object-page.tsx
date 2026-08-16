@@ -14,7 +14,10 @@ import {
   Text,
 } from "@/components";
 import { PageContainer } from "@/components/patterns/Page";
-import { useAssignRiskControlOwnerMutation } from "@/features/risk-controls/api/risk-control-mutations";
+import {
+  useAssignRiskControlOwnerMutation,
+  usePlanRiskControlMutation,
+} from "@/features/risk-controls/api/risk-control-mutations";
 import {
   useRiskControlActivityQuery,
   useRiskControlAssessmentQuery,
@@ -24,6 +27,7 @@ import {
 import { ControlOwnerSection } from "@/features/risk-controls/components/control-owner-section";
 import { EffectivenessSummary } from "@/features/risk-controls/components/effectiveness-summary";
 import { EvidenceList } from "@/features/risk-controls/components/evidence-list";
+import { ImplementationPlanSection } from "@/features/risk-controls/components/implementation-plan-section";
 import { ImplementationSummary } from "@/features/risk-controls/components/implementation-summary";
 import { RiskControlActivity } from "@/features/risk-controls/components/risk-control-activity";
 import { RiskControlConflictDialog } from "@/features/risk-controls/components/risk-control-conflict-dialog";
@@ -37,6 +41,7 @@ import { VerificationHistory } from "@/features/risk-controls/components/verific
 import { useRiskControlCommand } from "@/features/risk-controls/hooks/use-risk-control-command";
 import { mapRiskControlCapabilities } from "@/features/risk-controls/hooks/use-risk-control-permissions";
 import { latestVerification } from "@/features/risk-controls/mappers/risk-control-mappers";
+import { planFormValuesToRequest } from "@/features/risk-controls/schemas/implementation-schema";
 import { ownerFormValuesToRequest } from "@/features/risk-controls/schemas/owner-schema";
 import {
   effectivenessLabel,
@@ -77,8 +82,10 @@ export function RiskControlObjectPage({
 
   const [tab, setTab] = useState("overview");
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
 
   const assignOwnerMutation = useAssignRiskControlOwnerMutation(riskControlId);
+  const planMutation = usePlanRiskControlMutation(riskControlId);
   const {
     runCommand,
     busyAction,
@@ -284,10 +291,36 @@ export function RiskControlObjectPage({
       ) : null}
 
       {tab === "implementation" ? (
-        <ImplementationSummary
-          implementation={control.implementation}
-          status={control}
-        />
+        <div style={{ display: "grid", gap: "var(--sm-space-6)" }}>
+          <ImplementationPlanSection
+            status={control.status}
+            ownerAssigned={control.owner !== null}
+            version={control.version}
+            verificationMethodRequirement={control.verificationMethodRequirement}
+            capabilities={capabilities}
+            open={planDialogOpen}
+            onOpenChange={setPlanDialogOpen}
+            loading={busyAction === "plan"}
+            errorMessage={commandError}
+            onPlan={async (values) => {
+              const succeeded = await runCommand(
+                "plan",
+                () =>
+                  planMutation.mutateAsync(
+                    planFormValuesToRequest(values, control.version),
+                  ),
+                "Implementation planned",
+              );
+              if (succeeded) {
+                setPlanDialogOpen(false);
+              }
+            }}
+          />
+          <ImplementationSummary
+            implementation={control.implementation}
+            status={control}
+          />
+        </div>
       ) : null}
 
       {tab === "evidence" ? <EvidenceList evidence={control.evidence} /> : null}

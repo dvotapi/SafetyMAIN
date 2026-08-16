@@ -3,6 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ControlOwnerSection } from "@/features/risk-controls/components/control-owner-section";
+import { ImplementationPlanSection } from "@/features/risk-controls/components/implementation-plan-section";
+import {
+  buildImplementationFormSchema,
+  planFormValuesToRequest,
+} from "@/features/risk-controls/schemas/implementation-schema";
 import { ownerFormValuesToRequest } from "@/features/risk-controls/schemas/owner-schema";
 import type { RiskControlCapabilities } from "@/features/risk-controls/types/risk-control-types";
 
@@ -120,5 +125,130 @@ describe("ownerFormValuesToRequest", () => {
       },
       reason: "Reassigned after reorg",
     });
+  });
+});
+
+const UPDATE_CAPABILITIES: RiskControlCapabilities = {
+  ...BASE_CAPABILITIES,
+  canUpdate: true,
+};
+
+function renderPlanSection(
+  overrides: Partial<{
+    capabilities: RiskControlCapabilities;
+    status: string;
+    ownerAssigned: boolean;
+    open: boolean;
+    onPlan: (values: unknown) => void | Promise<void>;
+  }> = {},
+) {
+  const onOpenChange = vi.fn();
+  const onPlan = overrides.onPlan ?? vi.fn();
+  render(
+    <ImplementationPlanSection
+      status={overrides.status ?? "draft"}
+      ownerAssigned={overrides.ownerAssigned ?? true}
+      version={3}
+      verificationMethodRequirement="Existing method"
+      capabilities={overrides.capabilities ?? UPDATE_CAPABILITIES}
+      open={overrides.open ?? false}
+      onOpenChange={onOpenChange}
+      onPlan={onPlan}
+    />,
+  );
+  return { onOpenChange, onPlan };
+}
+
+describe("ImplementationPlanSection", () => {
+  it("does not render the plan button when the control has no owner", () => {
+    renderPlanSection({ ownerAssigned: false });
+
+    expect(
+      screen.queryByRole("button", { name: /plan implementation/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Assign an owner before planning implementation."),
+    ).toBeInTheDocument();
+  });
+
+  it("does not render the plan button when status is planned", () => {
+    renderPlanSection({ status: "planned" });
+
+    expect(
+      screen.queryByRole("button", { name: /plan implementation/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders the plan button when permitted, draft, and owner is assigned", () => {
+    renderPlanSection();
+
+    expect(
+      screen.getByRole("button", { name: /plan implementation/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("blocks submit with a field error when a milestone has no title", async () => {
+    const user = userEvent.setup();
+    const { onPlan } = renderPlanSection({ open: true });
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText(/target completion date/i),
+      "2026-09-01",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /add milestone/i }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /plan implementation/i }),
+    );
+
+    expect(
+      within(dialog).getByText("Milestone title is required"),
+    ).toBeInTheDocument();
+    expect(onPlan).not.toHaveBeenCalled();
+  });
+});
+
+describe("planFormValuesToRequest", () => {
+  it("includes expected_version and an ISO target_completion_date", () => {
+    const request = planFormValuesToRequest(
+      {
+        targetStartDate: "2026-08-01",
+        targetCompletionDate: "2026-09-01",
+        implementationMethod: "Install guarding",
+        resourceNotes: "",
+        dependencies: [],
+        evidenceRequirements: [],
+        verificationMethodRequirement: "Visual inspection",
+        milestones: [],
+      },
+      7,
+    );
+
+    expect(request.expected_version).toBe(7);
+    expect(request.implementation.target_completion_date).toBe(
+      "2026-09-01T00:00:00Z",
+    );
+  });
+});
+
+describe("buildImplementationFormSchema milestone validation", () => {
+  it("rejects a milestone without a title", () => {
+    const schema = buildImplementationFormSchema(true);
+    const result = schema.safeParse({
+      targetStartDate: "",
+      targetCompletionDate: "2026-09-01",
+      implementationMethod: "",
+      resourceNotes: "",
+      dependencies: [],
+      evidenceRequirements: [],
+      verificationMethodRequirement: "",
+      milestones: [
+        { title: "", description: "", dueDate: "", status: "pending" },
+      ],
+    });
+
+    expect(result.success).toBe(false);
   });
 });
