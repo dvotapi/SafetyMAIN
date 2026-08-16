@@ -1,0 +1,107 @@
+# SafetyMAIN production stack for the application VDS.
+#
+# PostgreSQL is NOT part of this stack: it runs on a dedicated database server
+# and is reached over the network via DATABASE_URL.
+#
+# Host port bindings are loopback-only. Public traffic arrives through the
+# reverse proxy already running on the host, which joins the external
+# `safetymain-edge` network and addresses the containers by alias.
+
+name: safetymain
+
+services:
+  backend:
+    build:
+      context: ../..
+      dockerfile: infrastructure/production/backend.Dockerfile
+    image: safetymain-backend:${SAFETYMAIN_IMAGE_TAG:-latest}
+    container_name: safetymain-backend
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8100}:8000"
+    networks:
+      default:
+      edge:
+        aliases:
+          - safetymain-api
+    healthcheck:
+      # /api/v1/health is process-only and must not touch the database.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: ../infrastructure/production/frontend.Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        NEXT_PUBLIC_APP_ENV: ${NEXT_PUBLIC_APP_ENV:-production}
+    image: safetymain-frontend:${SAFETYMAIN_IMAGE_TAG:-latest}
+    container_name: safetymain-frontend
+    networks:
+      default:
+      edge:
+        aliases:
+          - safetymain-web
+    ports:
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-3100}:3100"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3100/login').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    restart: unless-stopped
+
+  # One-shot migration runner. Not started by `up`; invoke explicitly:
+  #   docker compose --profile migrate run --rm migrate
+  migrate:
+    image: safetymain-backend:${SAFETYMAIN_IMAGE_TAG:-latest}
+    profiles:
+      - migrate
+    env_file:
+      - .env
+    command: ["alembic", "upgrade", "head"]
+    networks:
+      - default
+    security_opt:
+      - no-new-privileges:true
+    restart: "no"
+
+networks:
+  default:
+    name: safetymain_default
+  edge:
+    external: true
+    name: safetymain-edge

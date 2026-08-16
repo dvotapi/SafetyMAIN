@@ -13,6 +13,8 @@ SafetyMAIN is a multi-tenant enterprise safety management platform.
 - `docs/ai/` — AI-assisted development workflow, prompts, and review guidance
 - `tests/` — automated tests where applicable
 - `alembic/` or backend migration directories — database migrations
+- `infrastructure/production/` — production Docker Compose stack, Dockerfiles, and environment template
+- `docs/infrastructure/ApplicationServerDeployment.md` — production deployment runbook
 
 ## Mandatory workflow
 

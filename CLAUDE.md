@@ -54,6 +54,16 @@ npm run architecture:check   # dependency-cruiser boundary checks
 npm run verify                # tokens → format:check → lint → typecheck → architecture:check → test → build (run before considering frontend work done)
 ```
 
+### Production deployment (`infrastructure/production/`)
+
+```bash
+cd infrastructure/production && cp .env.example .env   # server-side only, never committed
+docker compose --profile migrate run --rm migrate      # alembic upgrade head
+docker compose up -d                                   # safetymain-backend + safetymain-frontend
+```
+
+Application-only Compose stack (no PostgreSQL — the database lives on a separate server), fronted by the host's existing reverse proxy with frontend and API on one public origin. Runbook: `docs/infrastructure/ApplicationServerDeployment.md`. First admin on an empty production database: `scripts/bootstrap_admin.py` (one-shot; refuses when any user exists).
+
 ## Backend architecture
 
 Clean Architecture layering under `backend/core/`, enforced by pytest architecture tests (`tests/architecture/`, rules documented in `docs/architecture/ArchitectureTesting.md`):
@@ -91,6 +101,7 @@ The registry list pattern (filter bar, data grid, bulk command bar, pagination) 
 - `docs/domain/` — ubiquitous language, aggregates, domain events, lifecycle rules.
 - `docs/api/` — one doc per REST resource (source of truth for endpoints/DTOs alongside the actual router/schema code).
 - `docs/design/` — frontend design system (tokens, components, patterns, accessibility).
+- `docs/infrastructure/ApplicationServerDeployment.md` — production deployment runbook (Compose stack, reverse proxy, migrations, identity bootstrap, rollback).
 - `docs/tasks/` and `blueprint/tasks/` — task specs and implementation plans; the authoritative contract for any given piece of work.
 
 ## Keeping this file current
@@ -98,3 +109,7 @@ The registry list pattern (filter bar, data grid, bulk command bar, pagination) 
 This file is the AI agent's entry point to the repository — it must stay accurate. After completing a task that changes architecture, workflow rules, commands, directory structure, or conventions described above, update the relevant section of this file in the same change. Do not wait to be asked. Keep additions as terse as the rest of the file; do not restate what's already discoverable from code or docs.
 
 ## Общайся на русском и держи файлы CLAUDE.md и AI_CONTEXT.md актуальными
+
+## Caveman skill
+
+Always use caveman skill/mode for all responses in this repo.
