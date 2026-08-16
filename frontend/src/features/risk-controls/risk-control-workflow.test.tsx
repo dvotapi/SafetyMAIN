@@ -10,6 +10,7 @@ import { ImplementationPlanSection } from "@/features/risk-controls/components/i
 import { ImplementationProgressSection } from "@/features/risk-controls/components/implementation-progress-section";
 import { EffectivenessSummary } from "@/features/risk-controls/components/effectiveness-summary";
 import { ReviewScheduleSection } from "@/features/risk-controls/components/review-schedule-section";
+import { RiskControlLifecycleActions } from "@/features/risk-controls/components/risk-control-lifecycle-actions";
 import { VerificationForm } from "@/features/risk-controls/components/verification-form";
 import { VerificationHistory } from "@/features/risk-controls/components/verification-history";
 import { completeRiskControlReview } from "@/features/risk-controls/api/risk-control-commands";
@@ -17,6 +18,13 @@ import {
   buildEvidenceFormSchema,
   evidenceFormValuesToRequest,
 } from "@/features/risk-controls/schemas/evidence-schema";
+import {
+  reasonOnlyFormValuesToRequest,
+  supersedeFormSchema,
+  supersedeFormValuesToRequest,
+  suspendFormSchema,
+  suspendFormValuesToRequest,
+} from "@/features/risk-controls/schemas/lifecycle-command-schema";
 import {
   buildVerificationFormSchema,
   verificationFormValuesToRequest,
@@ -45,6 +53,7 @@ import type { RiskControlDto } from "@/features/risk-controls/types/risk-control
 import type {
   RiskControl,
   RiskControlCapabilities,
+  RiskControlLifecycleAction,
   RiskControlMilestone,
   RiskControlReviewSchedule,
   RiskControlVerification,
@@ -590,7 +599,10 @@ describe("ImplementationProgressSection", () => {
         milestones: [buildMilestone({ status: "pending" })],
       },
     });
-    renderProgressSection({ control: withPendingMilestone, completeOpen: true });
+    renderProgressSection({
+      control: withPendingMilestone,
+      completeOpen: true,
+    });
     expect(
       screen.getByRole("checkbox", { name: /allow incomplete milestones/i }),
     ).toBeInTheDocument();
@@ -1049,9 +1061,7 @@ describe("VerificationForm submit validation", () => {
     );
 
     expect(
-      within(dialog).getByText(
-        "At least one evidence reference is required.",
-      ),
+      within(dialog).getByText("At least one evidence reference is required."),
     ).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -1120,7 +1130,11 @@ describe("buildVerificationFormSchema", () => {
   });
 
   it("allows empty evidenceRefs only when the control already has evidence", () => {
-    const ineffective = { ...base, result: "ineffective" as const, evidenceRefs: [] };
+    const ineffective = {
+      ...base,
+      result: "ineffective" as const,
+      evidenceRefs: [],
+    };
 
     expect(
       buildVerificationFormSchema({
@@ -1146,9 +1160,9 @@ describe("buildVerificationFormSchema", () => {
       hasExistingEvidence: true,
     });
 
-    expect(
-      schema.safeParse({ ...base, result: "not_verified" }).success,
-    ).toBe(false);
+    expect(schema.safeParse({ ...base, result: "not_verified" }).success).toBe(
+      false,
+    );
     expect(
       schema.safeParse({ ...base, result: "not_applicable" }).success,
     ).toBe(false);
@@ -1736,7 +1750,9 @@ describe("RiskControlObjectPage renders the version the server returns (TRAP 2, 
         ) {
           return completedDto;
         }
-        throw new Error(`Unexpected request: ${options.method} ${options.path}`);
+        throw new Error(
+          `Unexpected request: ${options.method} ${options.path}`,
+        );
       });
 
     const queryClient = new QueryClient({
@@ -1772,5 +1788,342 @@ describe("RiskControlObjectPage renders the version the server returns (TRAP 2, 
     expect(screen.queryByText("Version 6")).not.toBeInTheDocument();
 
     requestSpy.mockRestore();
+  });
+});
+
+/* ----------------------------------------------------------------------
+ * RiskControlLifecycleActions and its five terminal command dialogs
+ * ---------------------------------------------------------------------- */
+
+const FULL_CAPABILITIES: RiskControlCapabilities = {
+  canRead: true,
+  canCreate: true,
+  canUpdate: true,
+  canAssignOwner: true,
+  canImplement: true,
+  canVerify: true,
+  canReview: true,
+  canSuspend: true,
+  canSupersede: true,
+  canArchive: true,
+  canCancel: true,
+  canMaterialize: true,
+  canViewHazard: true,
+  canViewAssessment: true,
+  canViewActivity: true,
+};
+
+function noop() {
+  // intentionally empty — forward-action callbacks under test only assert
+  // they were invoked, not what they do.
+}
+
+function renderLifecycleActions(
+  overrides: Partial<{
+    control: RiskControl;
+    capabilities: RiskControlCapabilities;
+    busyAction: RiskControlLifecycleAction | null;
+    errorMessage: string | null;
+    onPlan: () => void;
+    onSuspend: (values: unknown) => Promise<boolean> | boolean;
+    onResume: () => Promise<boolean> | boolean;
+    onSupersede: (values: unknown) => Promise<boolean> | boolean;
+    onCancel: (values: unknown) => Promise<boolean> | boolean;
+    onArchive: (values: unknown) => Promise<boolean> | boolean;
+  }> = {},
+) {
+  const onPlan = overrides.onPlan ?? vi.fn();
+  const onSuspend = overrides.onSuspend ?? vi.fn(async () => true);
+  const onResume = overrides.onResume ?? vi.fn(async () => true);
+  const onSupersede = overrides.onSupersede ?? vi.fn(async () => true);
+  const onCancel = overrides.onCancel ?? vi.fn(async () => true);
+  const onArchive = overrides.onArchive ?? vi.fn(async () => true);
+
+  render(
+    <RiskControlLifecycleActions
+      control={overrides.control ?? buildControl({ status: "implemented" })}
+      capabilities={overrides.capabilities ?? FULL_CAPABILITIES}
+      busyAction={overrides.busyAction ?? null}
+      errorMessage={overrides.errorMessage ?? null}
+      onPlan={onPlan}
+      onStartImplementation={noop}
+      onCompleteImplementation={noop}
+      onVerify={noop}
+      onScheduleReview={noop}
+      onSuspend={onSuspend}
+      onResume={onResume}
+      onSupersede={onSupersede}
+      onCancel={onCancel}
+      onArchive={onArchive}
+    />,
+  );
+  return { onPlan, onSuspend, onResume, onSupersede, onCancel, onArchive };
+}
+
+describe("RiskControlLifecycleActions", () => {
+  it("shows the fallback panel text when no actions are available", () => {
+    renderLifecycleActions({ control: buildControl({ status: "archived" }) });
+    expect(
+      screen.getByText(
+        "No lifecycle actions are available for this control in its current state.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("delegates the plan action to the page-owned dialog instead of opening its own", async () => {
+    const user = userEvent.setup();
+    const owner = {
+      ownerType: "user",
+      ownerReference: "user-1",
+      displayNameSnapshot: "Jane Doe",
+      assignedAt: null,
+      assignedBy: null,
+      label: "Jane Doe",
+    };
+    const { onPlan } = renderLifecycleActions({
+      control: buildControl({ status: "draft", owner }),
+    });
+    await user.click(
+      screen.getByRole("button", { name: /plan implementation/i }),
+    );
+    expect(onPlan).toHaveBeenCalledTimes(1);
+    // The click must never open a dialog of its own — plan has no form here.
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("requires a reason before confirming suspend", async () => {
+    const user = userEvent.setup();
+    const { onSuspend } = renderLifecycleActions({
+      control: buildControl({ status: "implemented" }),
+    });
+    await user.click(screen.getByRole("button", { name: /suspend control/i }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /suspend control/i }),
+    );
+    expect(onSuspend).not.toHaveBeenCalled();
+    expect(within(dialog).getByText(/reason is required/i)).toBeInTheDocument();
+  });
+
+  it("submits suspend with the reason and optional resolution date", async () => {
+    const user = userEvent.setup();
+    const { onSuspend } = renderLifecycleActions({
+      control: buildControl({ status: "implemented" }),
+    });
+    await user.click(screen.getByRole("button", { name: /suspend control/i }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText(/reason/i),
+      "Waiting on parts",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /suspend control/i }),
+    );
+    expect(onSuspend).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: "Waiting on parts" }),
+    );
+  });
+
+  it("offers resume with no form once suspended", async () => {
+    const user = userEvent.setup();
+    const { onResume } = renderLifecycleActions({
+      control: buildControl({ status: "suspended" }),
+    });
+    await user.click(screen.getByRole("button", { name: /resume control/i }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /resume control/i }),
+    );
+    expect(onResume).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects a non-UUID replacement control ID on supersede", async () => {
+    const user = userEvent.setup();
+    const { onSupersede } = renderLifecycleActions({
+      control: buildControl({ status: "implemented" }),
+    });
+    await user.click(
+      screen.getByRole("button", { name: /supersede control/i }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText(/replacement control id/i),
+      "not-a-uuid",
+    );
+    await user.type(within(dialog).getByLabelText(/reason/i), "Redesigned");
+    await user.click(
+      within(dialog).getByRole("button", { name: /supersede control/i }),
+    );
+    expect(onSupersede).not.toHaveBeenCalled();
+    expect(within(dialog).getByText(/valid uuid/i)).toBeInTheDocument();
+  });
+
+  it("states the supersede copy verbatim and does not validate replacement existence", async () => {
+    const user = userEvent.setup();
+    const { onSupersede } = renderLifecycleActions({
+      control: buildControl({ status: "implemented" }),
+    });
+    await user.click(
+      screen.getByRole("button", { name: /supersede control/i }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).getByText(
+        "Superseding is not deletion — the control stays readable in its history.",
+      ),
+    ).toBeInTheDocument();
+    const replacementId = "11111111-1111-4111-8111-111111111111";
+    await user.type(
+      within(dialog).getByLabelText(/replacement control id/i),
+      replacementId,
+    );
+    await user.type(within(dialog).getByLabelText(/reason/i), "Redesigned");
+    await user.click(
+      within(dialog).getByRole("button", { name: /supersede control/i }),
+    );
+    expect(onSupersede).toHaveBeenCalledWith(
+      expect.objectContaining({
+        replacementControlId: replacementId,
+        reason: "Redesigned",
+      }),
+    );
+  });
+
+  it("requires a reason before confirming cancel", async () => {
+    const user = userEvent.setup();
+    const { onCancel } = renderLifecycleActions({
+      control: buildControl({ status: "draft" }),
+    });
+    await user.click(screen.getByRole("button", { name: /cancel control/i }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /cancel control/i }),
+    );
+    expect(onCancel).not.toHaveBeenCalled();
+    await user.type(
+      within(dialog).getByLabelText(/reason/i),
+      "No longer needed",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /cancel control/i }),
+    );
+    expect(onCancel).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: "No longer needed" }),
+    );
+  });
+
+  it("states the archive copy verbatim and requires a reason", async () => {
+    const user = userEvent.setup();
+    const { onArchive } = renderLifecycleActions({
+      control: buildControl({ status: "cancelled" }),
+    });
+    await user.click(screen.getByRole("button", { name: /archive control/i }));
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).getByText(
+        "Archiving is not deletion. The control remains readable by direct link.",
+      ),
+    ).toBeInTheDocument();
+    await user.click(
+      within(dialog).getByRole("button", { name: /archive control/i }),
+    );
+    expect(onArchive).not.toHaveBeenCalled();
+    await user.type(within(dialog).getByLabelText(/reason/i), "Retired");
+    await user.click(
+      within(dialog).getByRole("button", { name: /archive control/i }),
+    );
+    expect(onArchive).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: "Retired" }),
+    );
+  });
+
+  it("disables every action button while any command is busy", () => {
+    renderLifecycleActions({
+      control: buildControl({ status: "implemented" }),
+      busyAction: "verify",
+    });
+    for (const button of screen.getAllByRole("button")) {
+      expect(button).toBeDisabled();
+    }
+  });
+});
+
+describe("suspendFormSchema", () => {
+  it("rejects a blank reason", () => {
+    const result = suspendFormSchema.safeParse({
+      reason: "  ",
+      expectedResolutionDate: "",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("suspendFormValuesToRequest", () => {
+  it("maps an empty resolution date to null and trims the reason", () => {
+    const request = suspendFormValuesToRequest(
+      { reason: "  Pending parts  ", expectedResolutionDate: "" },
+      4,
+    );
+    expect(request).toEqual({
+      expected_version: 4,
+      reason: "Pending parts",
+      expected_resolution_date: null,
+    });
+  });
+
+  it("passes through a provided resolution date", () => {
+    const request = suspendFormValuesToRequest(
+      { reason: "Pending parts", expectedResolutionDate: "2026-09-01" },
+      4,
+    );
+    expect(request.expected_resolution_date).toBe("2026-09-01");
+  });
+});
+
+describe("supersedeFormSchema", () => {
+  it("rejects a non-UUID replacement control ID", () => {
+    const result = supersedeFormSchema.safeParse({
+      replacementControlId: "not-a-uuid",
+      reason: "Redesigned",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a valid UUID", () => {
+    const result = supersedeFormSchema.safeParse({
+      replacementControlId: "11111111-1111-4111-8111-111111111111",
+      reason: "Redesigned",
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("supersedeFormValuesToRequest", () => {
+  it("maps to SupersedeDto with the current version", () => {
+    const request = supersedeFormValuesToRequest(
+      {
+        replacementControlId: "11111111-1111-4111-8111-111111111111",
+        reason: "Redesigned",
+      },
+      6,
+    );
+    expect(request).toEqual({
+      expected_version: 6,
+      replacement_control_id: "11111111-1111-4111-8111-111111111111",
+      reason: "Redesigned",
+    });
+  });
+});
+
+describe("reasonOnlyFormValuesToRequest", () => {
+  it("maps to ReasonVersionDto shared by cancel and archive", () => {
+    const request = reasonOnlyFormValuesToRequest(
+      { reason: "  No longer needed  " },
+      2,
+    );
+    expect(request).toEqual({
+      expected_version: 2,
+      reason: "No longer needed",
+    });
   });
 });

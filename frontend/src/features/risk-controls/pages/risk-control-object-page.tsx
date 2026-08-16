@@ -16,13 +16,18 @@ import {
 import { PageContainer } from "@/components/patterns/Page";
 import {
   useAddRiskControlEvidenceMutation,
+  useArchiveRiskControlMutation,
   useAssignRiskControlOwnerMutation,
+  useCancelRiskControlMutation,
   useCompleteRiskControlImplementationMutation,
   useCompleteRiskControlReviewMutation,
   usePlanRiskControlMutation,
   useRecordRiskControlVerificationMutation,
+  useResumeRiskControlMutation,
   useScheduleRiskControlReviewMutation,
   useStartRiskControlImplementationMutation,
+  useSupersedeRiskControlMutation,
+  useSuspendRiskControlMutation,
   useUpdateRiskControlProgressMutation,
 } from "@/features/risk-controls/api/risk-control-mutations";
 import {
@@ -39,6 +44,7 @@ import { ImplementationProgressSection } from "@/features/risk-controls/componen
 import { ImplementationSummary } from "@/features/risk-controls/components/implementation-summary";
 import { RiskControlActivity } from "@/features/risk-controls/components/risk-control-activity";
 import { RiskControlConflictDialog } from "@/features/risk-controls/components/risk-control-conflict-dialog";
+import { RiskControlLifecycleActions } from "@/features/risk-controls/components/risk-control-lifecycle-actions";
 import { ReviewScheduleSection } from "@/features/risk-controls/components/review-schedule-section";
 import { RiskControlRelationships } from "@/features/risk-controls/components/risk-control-relationships";
 import {
@@ -57,6 +63,11 @@ import {
   progressFormValuesToRequest,
 } from "@/features/risk-controls/schemas/implementation-progress-schema";
 import { planFormValuesToRequest } from "@/features/risk-controls/schemas/implementation-schema";
+import {
+  reasonOnlyFormValuesToRequest,
+  supersedeFormValuesToRequest,
+  suspendFormValuesToRequest,
+} from "@/features/risk-controls/schemas/lifecycle-command-schema";
 import { ownerFormValuesToRequest } from "@/features/risk-controls/schemas/owner-schema";
 import {
   completeReviewFormValuesToRequest,
@@ -128,6 +139,11 @@ export function RiskControlObjectPage({
     useScheduleRiskControlReviewMutation(riskControlId);
   const completeReviewMutation =
     useCompleteRiskControlReviewMutation(riskControlId);
+  const suspendMutation = useSuspendRiskControlMutation(riskControlId);
+  const resumeMutation = useResumeRiskControlMutation(riskControlId);
+  const supersedeMutation = useSupersedeRiskControlMutation(riskControlId);
+  const cancelMutation = useCancelRiskControlMutation(riskControlId);
+  const archiveMutation = useArchiveRiskControlMutation(riskControlId);
   const {
     runCommand,
     busyAction,
@@ -289,6 +305,68 @@ export function RiskControlObjectPage({
         }
       />
 
+      <RiskControlLifecycleActions
+        control={control}
+        capabilities={capabilities}
+        busyAction={busyAction}
+        errorMessage={commandError}
+        onPlan={() => setPlanDialogOpen(true)}
+        onStartImplementation={() => setStartDialogOpen(true)}
+        onCompleteImplementation={() => setCompleteDialogOpen(true)}
+        onVerify={() => setVerificationDialogOpen(true)}
+        onScheduleReview={() => setScheduleReviewDialogOpen(true)}
+        onSuspend={(values) =>
+          runCommand(
+            "suspend",
+            () =>
+              suspendMutation.mutateAsync(
+                suspendFormValuesToRequest(values, control.version),
+              ),
+            "Control suspended",
+          )
+        }
+        onResume={() =>
+          runCommand(
+            "resume",
+            () =>
+              resumeMutation.mutateAsync({
+                expected_version: control.version,
+              }),
+            "Control resumed",
+          )
+        }
+        onSupersede={(values) =>
+          runCommand(
+            "supersede",
+            () =>
+              supersedeMutation.mutateAsync(
+                supersedeFormValuesToRequest(values, control.version),
+              ),
+            "Control superseded",
+          )
+        }
+        onCancel={(values) =>
+          runCommand(
+            "cancel",
+            () =>
+              cancelMutation.mutateAsync(
+                reasonOnlyFormValuesToRequest(values, control.version),
+              ),
+            "Control cancelled",
+          )
+        }
+        onArchive={(values) =>
+          runCommand(
+            "archive",
+            () =>
+              archiveMutation.mutateAsync(
+                reasonOnlyFormValuesToRequest(values, control.version),
+              ),
+            "Control archived",
+          )
+        }
+      />
+
       <RiskControlSummary control={control} />
 
       <ObjectTabs tabs={tabs} activeTabId={tab} onTabChange={setTab} />
@@ -379,7 +457,9 @@ export function RiskControlObjectPage({
             status={control.status}
             ownerAssigned={control.owner !== null}
             version={control.version}
-            verificationMethodRequirement={control.verificationMethodRequirement}
+            verificationMethodRequirement={
+              control.verificationMethodRequirement
+            }
             capabilities={capabilities}
             open={planDialogOpen}
             onOpenChange={setPlanDialogOpen}
