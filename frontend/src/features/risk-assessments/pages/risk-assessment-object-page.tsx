@@ -56,6 +56,7 @@ import {
 import type { RiskAssessmentLifecycleAction } from "@/features/risk-assessments/types/risk-assessment-types";
 import { mapRiskAssessmentValidationDetails } from "@/features/risk-assessments/utils/map-validation-errors";
 import { riskAssessmentStatusToVisual } from "@/features/risk-assessments/utils/risk-assessment-status";
+import { MaterializeControlsDialog } from "@/features/risk-controls";
 import { useAuth } from "@/hooks/auth";
 import {
   ConflictError,
@@ -120,6 +121,7 @@ export function RiskAssessmentObjectPage({
 
   const [tab, setTab] = useState("overview");
   const [editOpen, setEditOpen] = useState(false);
+  const [materializeOpen, setMaterializeOpen] = useState(false);
   const [conflictOpen, setConflictOpen] = useState(false);
   const [lifecycleError, setLifecycleError] = useState<string | null>(null);
   const [busyAction, setBusyAction] =
@@ -406,6 +408,18 @@ export function RiskAssessmentObjectPage({
           controls={relatedControls.data ?? []}
           loading={relatedControls.isLoading}
           canView={capabilities.canViewRelatedControls}
+          actions={
+            <MaterializeControlsDialog
+              riskAssessmentId={riskAssessmentId}
+              assessmentStatus={assessment.status}
+              proposedControls={assessment.controls}
+              open={materializeOpen}
+              onOpenChange={setMaterializeOpen}
+              onSuccess={() => {
+                void relatedControls.refetch();
+              }}
+            />
+          }
         />
       ) : null}
 

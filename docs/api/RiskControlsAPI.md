@@ -20,7 +20,21 @@ No DELETE. Cross-tenant access → 404.
 
 `status`, `hierarchy_level`, `control_nature`, `hazard_id`, `risk_assessment_id`,
 `owner_reference`, `latest_effectiveness_result`, `review_due_before`,
-`review_due_after`, `overdue_only`, `awaiting_verification`, `search`, pagination.
+`review_due_after`, `overdue_only`, `awaiting_verification`, `include_terminal`,
+`search`, pagination.
+
+`include_terminal` (bool, default `false`): when `true`, includes terminal-inactive
+controls (superseded/archived/cancelled) in the listing.
+
+Unknown values for the enum-typed filters (`status`, `hierarchy_level`,
+`control_nature`, `latest_effectiveness_result`) return `422` with a
+`{"loc": ["query", "<field>"], "msg": "Value must be one of: ...", "type": "value_error.enum"}`
+violation, not `500`.
+
+## Response (notable fields)
+
+`is_overdue: bool` — backend-authoritative, computed server-side from
+`RiskControl.is_overdue_for_review()`; never compute this on the client.
 
 ## RBAC
 

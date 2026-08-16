@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { EmptyState, Heading, Panel, Text } from "@/components";
 
 import type {
@@ -12,11 +14,13 @@ export function RiskAssessmentRelatedControls({
   controls,
   loading,
   canView,
+  actions,
 }: {
   proposedControls: ControlMeasure[];
   controls: RelatedRiskControlSummary[];
   loading?: boolean;
   canView: boolean;
+  actions?: ReactNode;
 }) {
   if (!canView) {
     return (
@@ -49,14 +53,15 @@ export function RiskAssessmentRelatedControls({
     return (
       <EmptyState
         title="No materialized Risk Controls"
-        description="Proposed controls exist on this assessment, but none have been materialized as Risk Controls yet. Materialization is outside this UI."
+        description="Proposed controls exist on this assessment. Use Materialize controls to create operational Risk Controls."
+        action={actions}
       />
     );
   }
 
   return (
     <div style={{ display: "grid", gap: "var(--sm-space-4)" }}>
-      <Panel>
+      <Panel actions={actions}>
         <Heading level={2}>Related Risk Controls</Heading>
         <Text tone="secondary">
           Read-only view of materialized controls linked to this assessment.

@@ -233,6 +233,7 @@ export async function listRelatedRiskControls(
     path: "/api/v1/risk-controls",
     query: {
       risk_assessment_id: riskAssessmentId,
+      include_terminal: true,
       offset: 0,
       limit: 50,
     },

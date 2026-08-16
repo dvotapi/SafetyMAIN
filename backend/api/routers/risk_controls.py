@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from backend.api.constants import API_V1_PREFIX
@@ -167,6 +169,28 @@ from backend.core.domain.value_objects.safety_ids import (
     RiskControlId,
 )
 
+
+def _parse_enum_param[EnumT: Enum](
+    raw: str | None, enum_cls: type[EnumT], field_name: str
+) -> EnumT | None:
+    """Map an unknown query enum value to 422 instead of an unhandled 500."""
+    if raw is None:
+        return None
+    try:
+        return enum_cls(raw)
+    except ValueError as exc:
+        allowed = ", ".join(member.value for member in enum_cls)
+        raise RequestValidationError(
+            [
+                {
+                    "loc": ("query", field_name),
+                    "msg": f"Value must be one of: {allowed}.",
+                    "type": "value_error.enum",
+                }
+            ]
+        ) from exc
+
+
 router = APIRouter(prefix="/risk-controls", tags=["Risk Controls"])
 materialize_router = APIRouter(prefix="/risk-assessments", tags=["Risk Assessments"])
 
@@ -270,6 +294,7 @@ def list_risk_controls(
     review_due_after: datetime | None = None,
     overdue_only: bool = False,
     awaiting_verification: bool = False,
+    include_terminal: bool = False,
     search: str | None = None,
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, ge=1, le=200),
@@ -283,23 +308,24 @@ def list_risk_controls(
                 if risk_assessment_id is None
                 else RiskAssessmentId(value=risk_assessment_id)
             ),
-            status=None if status_filter is None else RiskControlStatus(status_filter),
-            hierarchy_level=(
-                None if hierarchy_level is None else ControlType(hierarchy_level)
+            status=_parse_enum_param(status_filter, RiskControlStatus, "status"),
+            hierarchy_level=_parse_enum_param(
+                hierarchy_level, ControlType, "hierarchy_level"
             ),
-            control_nature=(
-                None if control_nature is None else ControlNature(control_nature)
+            control_nature=_parse_enum_param(
+                control_nature, ControlNature, "control_nature"
             ),
             owner_reference=owner_reference,
-            latest_effectiveness_result=(
-                None
-                if latest_effectiveness_result is None
-                else EffectivenessResult(latest_effectiveness_result)
+            latest_effectiveness_result=_parse_enum_param(
+                latest_effectiveness_result,
+                EffectivenessResult,
+                "latest_effectiveness_result",
             ),
             review_due_before=review_due_before,
             review_due_after=review_due_after,
             overdue_only=overdue_only,
             awaiting_verification=awaiting_verification,
+            include_terminal=include_terminal,
             search=search,
             offset=offset,
             limit=limit,
