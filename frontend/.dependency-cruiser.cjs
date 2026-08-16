@@ -41,6 +41,25 @@ module.exports = {
       },
     },
     {
+      name: "risk-control-api-no-components",
+      severity: "error",
+      comment: "Risk Control API modules must not import React components.",
+      from: { path: "^src/features/risk-controls/api" },
+      to: {
+        path: "^src/components|^src/features/risk-controls/components|^src/features/risk-controls/pages",
+      },
+    },
+    {
+      name: "risk-control-presentation-no-fetch",
+      severity: "error",
+      comment:
+        "Risk Control presentation must go through the feature API layer, never the raw client.",
+      from: {
+        path: "^src/features/risk-controls/(components|pages)",
+      },
+      to: { path: "^src/services/api/client" },
+    },
+    {
       name: "features-no-cross-feature-internals",
       severity: "error",
       comment: "Features must not import another feature's internals.",
