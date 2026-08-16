@@ -15,6 +15,7 @@ import {
 } from "@/components";
 import { PageContainer } from "@/components/patterns/Page";
 import {
+  useAddRiskControlEvidenceMutation,
   useAssignRiskControlOwnerMutation,
   useCompleteRiskControlImplementationMutation,
   usePlanRiskControlMutation,
@@ -45,6 +46,7 @@ import { VerificationHistory } from "@/features/risk-controls/components/verific
 import { useRiskControlCommand } from "@/features/risk-controls/hooks/use-risk-control-command";
 import { mapRiskControlCapabilities } from "@/features/risk-controls/hooks/use-risk-control-permissions";
 import { latestVerification } from "@/features/risk-controls/mappers/risk-control-mappers";
+import { evidenceFormValuesToRequest } from "@/features/risk-controls/schemas/evidence-schema";
 import {
   completeImplementationFormValuesToRequest,
   progressFormValuesToRequest,
@@ -94,8 +96,10 @@ export function RiskControlObjectPage({
   const [startDialogOpen, setStartDialogOpen] = useState(false);
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [evidenceDialogOpen, setEvidenceDialogOpen] = useState(false);
 
   const assignOwnerMutation = useAssignRiskControlOwnerMutation(riskControlId);
+  const addEvidenceMutation = useAddRiskControlEvidenceMutation(riskControlId);
   const planMutation = usePlanRiskControlMutation(riskControlId);
   const startImplementationMutation =
     useStartRiskControlImplementationMutation(riskControlId);
@@ -394,7 +398,31 @@ export function RiskControlObjectPage({
         </div>
       ) : null}
 
-      {tab === "evidence" ? <EvidenceList evidence={control.evidence} /> : null}
+      {tab === "evidence" ? (
+        <EvidenceList
+          evidence={control.evidence}
+          status={control.status}
+          version={control.version}
+          capabilities={capabilities}
+          open={evidenceDialogOpen}
+          onOpenChange={setEvidenceDialogOpen}
+          loading={busyAction === "add_evidence"}
+          errorMessage={commandError}
+          onAdd={async (values) => {
+            const succeeded = await runCommand(
+              "add_evidence",
+              () =>
+                addEvidenceMutation.mutateAsync(
+                  evidenceFormValuesToRequest(values, control.version),
+                ),
+              "Evidence added",
+            );
+            if (succeeded) {
+              setEvidenceDialogOpen(false);
+            }
+          }}
+        />
+      ) : null}
 
       {tab === "verification" ? (
         <div style={{ display: "grid", gap: "var(--sm-space-6)" }}>

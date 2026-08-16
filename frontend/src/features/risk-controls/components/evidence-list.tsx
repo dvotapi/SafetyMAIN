@@ -1,7 +1,19 @@
-import { EmptyState, Panel } from "@/components";
+import { Button, EmptyState, Panel, Text } from "@/components";
 
-import type { RiskControlEvidence } from "@/features/risk-controls/types/risk-control-types";
+import { EvidenceForm } from "@/features/risk-controls/components/evidence-form";
+import type { EvidenceFormValues } from "@/features/risk-controls/schemas/evidence-schema";
+import type {
+  RiskControlCapabilities,
+  RiskControlEvidence,
+} from "@/features/risk-controls/types/risk-control-types";
 import { formatRiskControlEnumLabel } from "@/features/risk-controls/utils/risk-control-status";
+
+/** `add_evidence` is blocked by the domain once a control is terminal-inactive. */
+const ADD_EVIDENCE_BLOCKED_STATUSES = new Set([
+  "superseded",
+  "archived",
+  "cancelled",
+]);
 
 function formatDateOnly(value: string | null | undefined): string {
   if (!value) {
@@ -17,48 +29,90 @@ function formatDateOnly(value: string | null | undefined): string {
 }
 
 /**
- * Evidence is a reference, not a file — this list never renders an upload
- * control. Uploads (if ever added) belong to a future implementation-command
- * flow, not this read-only object page.
+ * Evidence is a reference, not a file — this list (and the add-evidence
+ * form it opens) never renders an upload control. Evidence records only
+ * point at external systems, documents, or checksums.
  */
 export function EvidenceList({
   evidence,
+  status,
+  version,
+  capabilities,
+  open,
+  onOpenChange,
+  onAdd,
+  loading = false,
+  errorMessage = null,
 }: {
   evidence: RiskControlEvidence[];
+  status: string;
+  version: number;
+  capabilities: RiskControlCapabilities;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAdd: (values: EvidenceFormValues) => void | Promise<void>;
+  loading?: boolean;
+  errorMessage?: string | null;
 }) {
-  if (evidence.length === 0) {
-    return (
-      <EmptyState
-        title="No evidence yet"
-        description="Evidence references are added during implementation."
-      />
-    );
-  }
+  const canAdd =
+    capabilities.canImplement && !ADD_EVIDENCE_BLOCKED_STATUSES.has(status);
 
   return (
-    <Panel>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={{ textAlign: "left" }}>Title</th>
-            <th style={{ textAlign: "left" }}>Type</th>
-            <th style={{ textAlign: "left" }}>External reference</th>
-            <th style={{ textAlign: "left" }}>Captured at</th>
-            <th style={{ textAlign: "left" }}>Captured by</th>
-          </tr>
-        </thead>
-        <tbody>
-          {evidence.map((item) => (
-            <tr key={item.id}>
-              <td>{item.title || "—"}</td>
-              <td>{formatRiskControlEnumLabel(item.evidenceType)}</td>
-              <td>{item.externalReference || "—"}</td>
-              <td>{formatDateOnly(item.capturedAt)}</td>
-              <td>{item.capturedByUserId ?? "—"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Panel>
+    <>
+      <Panel
+        heading={<Text variant="label">Evidence</Text>}
+        actions={
+          canAdd ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onOpenChange(true)}
+            >
+              Add evidence
+            </Button>
+          ) : null
+        }
+      >
+        {evidence.length === 0 ? (
+          <EmptyState
+            title="No evidence yet"
+            description="Evidence references are added during implementation."
+          />
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left" }}>Title</th>
+                <th style={{ textAlign: "left" }}>Type</th>
+                <th style={{ textAlign: "left" }}>External reference</th>
+                <th style={{ textAlign: "left" }}>Captured at</th>
+                <th style={{ textAlign: "left" }}>Captured by</th>
+              </tr>
+            </thead>
+            <tbody>
+              {evidence.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.title || "—"}</td>
+                  <td>{formatRiskControlEnumLabel(item.evidenceType)}</td>
+                  <td>{item.externalReference || "—"}</td>
+                  <td>{formatDateOnly(item.capturedAt)}</td>
+                  <td>{item.capturedByUserId ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Panel>
+
+      <EvidenceForm
+        status={status}
+        version={version}
+        open={open}
+        onOpenChange={onOpenChange}
+        onSubmit={onAdd}
+        loading={loading}
+        errorMessage={errorMessage}
+      />
+    </>
   );
 }

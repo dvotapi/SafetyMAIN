@@ -3,8 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ControlOwnerSection } from "@/features/risk-controls/components/control-owner-section";
+import { EvidenceForm } from "@/features/risk-controls/components/evidence-form";
 import { ImplementationPlanSection } from "@/features/risk-controls/components/implementation-plan-section";
 import { ImplementationProgressSection } from "@/features/risk-controls/components/implementation-progress-section";
+import {
+  buildEvidenceFormSchema,
+  evidenceFormValuesToRequest,
+} from "@/features/risk-controls/schemas/evidence-schema";
 import {
   buildCompleteImplementationFormSchema,
   completeImplementationFormValuesToRequest,
@@ -656,6 +661,183 @@ describe("completeImplementationFormValuesToRequest", () => {
     expect(withoutWaiver).toEqual({
       expected_version: 9,
       summary: "Guarding installed",
+    });
+  });
+});
+
+function renderEvidenceForm(
+  overrides: Partial<{
+    status: string;
+    open: boolean;
+    onSubmit: (values: unknown) => void | Promise<void>;
+  }> = {},
+) {
+  const onOpenChange = vi.fn();
+  const onSubmit = overrides.onSubmit ?? vi.fn();
+  render(
+    <EvidenceForm
+      status={overrides.status ?? "planned"}
+      version={4}
+      open={overrides.open ?? true}
+      onOpenChange={onOpenChange}
+      onSubmit={onSubmit}
+    />,
+  );
+  return { onOpenChange, onSubmit };
+}
+
+describe("EvidenceForm", () => {
+  it("never offers binary evidence upload", () => {
+    const { container } = render(
+      <EvidenceForm
+        status="planned"
+        version={4}
+        open
+        onOpenChange={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+    expect(container.querySelector('input[type="file"]')).toBeNull();
+  });
+
+  it("shows the allow-after-implemented checkbox only in implemented/verified states", async () => {
+    renderEvidenceForm({ status: "in_implementation" });
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).queryByLabelText(/add evidence after implementation/i),
+    ).not.toBeInTheDocument();
+    cleanup();
+
+    for (const status of [
+      "implemented",
+      "verified_effective",
+      "verified_ineffective",
+    ]) {
+      renderEvidenceForm({ status });
+      const implementedDialog = await screen.findByRole("dialog");
+      expect(
+        within(implementedDialog).getByLabelText(
+          /add evidence after implementation/i,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        within(implementedDialog).getByText(
+          "This control is already implemented. Adding evidence now is an explicit append to the record.",
+        ),
+      ).toBeInTheDocument();
+      cleanup();
+    }
+  });
+
+  it("blocks submit until allow-after-implemented is checked", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderEvidenceForm({ status: "implemented" });
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText(/external reference/i),
+      "DOC-123",
+    );
+    await user.type(within(dialog).getByLabelText(/title/i), "Install photo");
+    await user.click(
+      within(dialog).getByRole("button", { name: /add evidence/i }),
+    );
+
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    await user.click(
+      within(dialog).getByLabelText(/add evidence after implementation/i),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /add evidence/i }),
+    );
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ allowAfterImplemented: true }),
+    );
+  });
+
+  it("blocks submit with a field error when the external reference is blank", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderEvidenceForm();
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText(/title/i), "Install photo");
+    await user.click(
+      within(dialog).getByRole("button", { name: /add evidence/i }),
+    );
+
+    expect(
+      within(dialog).getByText("External reference is required"),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+describe("buildEvidenceFormSchema", () => {
+  const baseValues = {
+    evidenceType: "document" as const,
+    externalReference: "DOC-123",
+    title: "Install photo",
+    description: "",
+    checksum: "",
+    allowAfterImplemented: false,
+  };
+
+  it("requires allowAfterImplemented only when the control is post-implementation", () => {
+    const requiredSchema = buildEvidenceFormSchema(true);
+    expect(requiredSchema.safeParse(baseValues).success).toBe(false);
+    expect(
+      requiredSchema.safeParse({ ...baseValues, allowAfterImplemented: true })
+        .success,
+    ).toBe(true);
+
+    const optionalSchema = buildEvidenceFormSchema(false);
+    expect(optionalSchema.safeParse(baseValues).success).toBe(true);
+  });
+});
+
+describe("evidenceFormValuesToRequest", () => {
+  it("carries expected_version and omits optional blank fields", () => {
+    const request = evidenceFormValuesToRequest(
+      {
+        evidenceType: "document",
+        externalReference: "DOC-123",
+        title: "Install photo",
+        description: "",
+        checksum: "",
+        allowAfterImplemented: false,
+      },
+      6,
+    );
+    expect(request).toEqual({
+      expected_version: 6,
+      evidence_type: "document",
+      external_reference: "DOC-123",
+      title: "Install photo",
+    });
+  });
+
+  it("includes description, checksum, and allow_after_implemented when set", () => {
+    const request = evidenceFormValuesToRequest(
+      {
+        evidenceType: "photo",
+        externalReference: "DOC-124",
+        title: "Guarding photo",
+        description: "Post-installation photo",
+        checksum: "sha256:abc123",
+        allowAfterImplemented: true,
+      },
+      7,
+    );
+    expect(request).toEqual({
+      expected_version: 7,
+      evidence_type: "photo",
+      external_reference: "DOC-124",
+      title: "Guarding photo",
+      description: "Post-installation photo",
+      checksum: "sha256:abc123",
+      allow_after_implemented: true,
     });
   });
 });
