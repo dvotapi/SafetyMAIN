@@ -128,7 +128,9 @@ async function login(
 }
 
 async function logout(page: Page, displayName = "Test User") {
-  await page.getByRole("button", { name: new RegExp(displayName, "i") }).click();
+  await page
+    .getByRole("button", { name: new RegExp(displayName, "i") })
+    .click();
   await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login/);
 }
@@ -285,7 +287,10 @@ async function mockRiskControlRoutes(
       return;
     }
 
-    if (method === "GET" && url.pathname.endsWith(`/risk-controls/${controlId}`)) {
+    if (
+      method === "GET" &&
+      url.pathname.endsWith(`/risk-controls/${controlId}`)
+    ) {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -321,14 +326,8 @@ async function mockRiskControlRoutes(
       }
 
       const bump = () => (current!.version = (current!.version as number) + 1);
-      const implementation = current.implementation as Record<
-        string,
-        unknown
-      >;
-      const reviewSchedule = current.review_schedule as Record<
-        string,
-        unknown
-      >;
+      const implementation = current.implementation as Record<string, unknown>;
+      const reviewSchedule = current.review_schedule as Record<string, unknown>;
 
       switch (suffix) {
         case "assign-owner": {
@@ -457,10 +456,7 @@ async function mockRiskControlRoutes(
             : current.next_review_date;
           bump();
           if (body.verification) {
-            const verification = body.verification as Record<
-              string,
-              unknown
-            >;
+            const verification = body.verification as Record<string, unknown>;
             const verifications = current.verifications as unknown[];
             current.verifications = [
               ...verifications,
@@ -632,10 +628,7 @@ test.describe("Risk Control lifecycle — main workflow", () => {
         return;
       }
 
-      if (
-        method === "POST" &&
-        url.pathname.endsWith("/materialize-controls")
-      ) {
+      if (method === "POST" && url.pathname.endsWith("/materialize-controls")) {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -674,9 +667,7 @@ test.describe("Risk Control lifecycle — main workflow", () => {
       .getByRole("checkbox", { name: /Engineering — Install guard rail/ })
       .check();
     await page.getByRole("button", { name: "Materialize" }).click();
-    await expect(
-      page.getByText(/Materialized 1 risk control/),
-    ).toBeVisible();
+    await expect(page.getByText(/Materialized 1 risk control/)).toBeVisible();
 
     await page.goto(`/safety/risk-controls/${riskControlId}`);
     await expect(
@@ -737,9 +728,7 @@ test.describe("Risk Control lifecycle — main workflow", () => {
     // Add evidence
     await page.getByRole("tab", { name: "Evidence" }).click();
     await page.getByRole("button", { name: "Add evidence" }).click();
-    await page
-      .getByLabel("External reference")
-      .fill("DOC-100");
+    await page.getByLabel("External reference").fill("DOC-100");
     await page.getByLabel("Title").fill("Guard rail photo");
     await page
       .getByRole("dialog")
@@ -861,9 +850,7 @@ test.describe("Risk Control lifecycle — effectiveness results", () => {
     await expect(
       page.getByText("Verified Effective", { exact: true }).first(),
     ).toBeVisible();
-    await expect(page.getByText("Verified Partially Effective")).toHaveCount(
-      0,
-    );
+    await expect(page.getByText("Verified Partially Effective")).toHaveCount(0);
     await expect(page.getByText("Verified Ineffective")).toHaveCount(0);
   });
 
@@ -904,12 +891,10 @@ test.describe("Risk Control lifecycle — effectiveness results", () => {
     await expect(
       page.getByText("Verified Ineffective", { exact: true }).first(),
     ).toBeVisible();
-    await expect(page.getByText("Verified Effective", { exact: true })).toHaveCount(
-      0,
-    );
-    await expect(page.getByText("Verified Partially Effective")).toHaveCount(
-      0,
-    );
+    await expect(
+      page.getByText("Verified Effective", { exact: true }),
+    ).toHaveCount(0);
+    await expect(page.getByText("Verified Partially Effective")).toHaveCount(0);
   });
 
   test("partially effective result never collapses into effective or ineffective, and leaves the status badge unchanged", async ({
@@ -953,9 +938,9 @@ test.describe("Risk Control lifecycle — effectiveness results", () => {
     await expect(
       page.getByText("Verified Partially Effective", { exact: true }).first(),
     ).toBeVisible();
-    await expect(page.getByText("Verified Effective", { exact: true })).toHaveCount(
-      0,
-    );
+    await expect(
+      page.getByText("Verified Effective", { exact: true }),
+    ).toHaveCount(0);
     await expect(
       page.getByText("Verified Ineffective", { exact: true }),
     ).toHaveCount(0);
@@ -1100,7 +1085,10 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
       const method = request.method();
       const url = new URL(request.url());
 
-      if (method === "GET" && url.pathname.endsWith(`/risk-controls/${riskControlId}`)) {
+      if (
+        method === "GET" &&
+        url.pathname.endsWith(`/risk-controls/${riskControlId}`)
+      ) {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -1201,10 +1189,7 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
         return;
       }
 
-      if (
-        method === "POST" &&
-        url.pathname.endsWith("/materialize-controls")
-      ) {
+      if (method === "POST" && url.pathname.endsWith("/materialize-controls")) {
         await route.fulfill({
           status: 409,
           contentType: "application/json",
@@ -1258,7 +1243,10 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
       const method = request.method();
       const url = new URL(request.url());
 
-      if (method === "GET" && url.pathname.endsWith(`/risk-controls/${riskControlId}`)) {
+      if (
+        method === "GET" &&
+        url.pathname.endsWith(`/risk-controls/${riskControlId}`)
+      ) {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -1287,7 +1275,10 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
     await page.getByRole("tab", { name: "Implementation" }).click();
-    await page.getByRole("button", { name: "Start implementation" }).first().click();
+    await page
+      .getByRole("button", { name: "Start implementation" })
+      .first()
+      .click();
     await page
       .getByRole("dialog")
       .getByRole("button", { name: "Start implementation" })
@@ -1367,20 +1358,20 @@ test.describe("Risk Control lifecycle — negative scenarios", () => {
       await expect(
         page.getByRole("heading", { name: "E2E Risk Control", level: 1 }),
       ).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: /delete/i }),
-      ).toHaveCount(0);
+      await expect(page.getByRole("button", { name: /delete/i })).toHaveCount(
+        0,
+      );
     }
   });
 });
 
 test.describe("Risk Control lifecycle — terminal commands", () => {
-  test("suspend then resume returns to the prior status", async ({
-    page,
-  }) => {
+  test("suspend then resume returns to the prior status", async ({ page }) => {
     await mockAuth(page, ALL_PERMISSIONS);
     await mockAuditRoutes(page);
-    const control = sampleRiskControl({ lifecycle_status: "in_implementation" });
+    const control = sampleRiskControl({
+      lifecycle_status: "in_implementation",
+    });
     await mockRiskControlRoutes(page, control);
 
     await login(page);
@@ -1459,9 +1450,7 @@ test.describe("Risk Control lifecycle — terminal commands", () => {
     await login(page);
     await page.goto(`/safety/risk-controls/${riskControlId}`);
     await page.getByRole("button", { name: "Supersede control" }).click();
-    await page
-      .getByLabel("Replacement control ID")
-      .fill(replacementControlId);
+    await page.getByLabel("Replacement control ID").fill(replacementControlId);
     await page
       .getByLabel("Reason")
       .fill("Replaced by an improved guard design");

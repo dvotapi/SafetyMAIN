@@ -105,11 +105,13 @@ function mockApiClient(
   });
 }
 
-function renderDialog(overrides: {
-  assessmentStatus?: MaterializableAssessmentStatus;
-  proposedControls?: MaterializeProposedControl[];
-  open?: boolean;
-} = {}) {
+function renderDialog(
+  overrides: {
+    assessmentStatus?: MaterializableAssessmentStatus;
+    proposedControls?: MaterializeProposedControl[];
+    open?: boolean;
+  } = {},
+) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -170,9 +172,7 @@ describe("MaterializeControlsDialog status gating", () => {
         "Controls can only be materialized from an approved risk assessment.",
       ),
     ).toBeInTheDocument();
-    expect(
-      dialog.querySelector('[role="checkbox"]'),
-    ).not.toBeInTheDocument();
+    expect(dialog.querySelector('[role="checkbox"]')).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /^materialize$/i }),
     ).toBeDisabled();

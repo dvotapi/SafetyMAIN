@@ -112,7 +112,47 @@ Logout clears the QueryClient through AuthProvider.
 
 - Hazard → Create Risk Assessment: public route `/safety/risk-assessments/new?hazardId=…`
 - Hazard related assessments: public routes `/safety/risk-assessments/{id}`
+- Risk Assessment → Risk Control materialization: `MaterializeControlsDialog`,
+  imported only from `@/features/risk-controls`'s public `index.ts` (see
+  below)
 - No cross-feature internal imports (dependency-cruiser enforced)
+
+## Related controls and materialization
+
+The Object Page's "Related controls" tab (`RiskAssessmentRelatedControls`)
+renders `GET /api/v1/risk-controls?risk_assessment_id=` results read-only,
+plus an `actions` slot the page fills with Risk Control's
+`MaterializeControlsDialog` — the only Risk Control import anywhere in this
+feature, and it comes exclusively through `@/features/risk-controls`'s
+public `index.ts`. Risk Assessment never imports a Risk Control type,
+mapper, mutation, or query key.
+
+Three distinct empty states (`relatedControlsEmptyKind`, `utils/related-
+controls-empty.ts`) distinguish:
+
+- **`no_proposed`** — "No proposed controls": the assessment has no
+  proposed controls at all, so no related Risk Controls are expected.
+- **`not_materialized`** — "No materialized Risk Controls": proposed
+  controls exist but none has been turned into a Risk Control yet. This is
+  the empty state that changed with materialization — its copy now reads
+  "Proposed controls exist on this assessment. Use Materialize controls to
+  create operational Risk Controls." and renders the `Materialize controls`
+  action inline so the next step is discoverable from the empty state
+  itself, rather than only from a populated table's toolbar.
+- **populated** — at least one materialized control exists; renders the
+  read-only summary table (Reference, Title, Hierarchy, Status, Owner,
+  Effectiveness, Next review) plus the same `Materialize controls` action in
+  the panel header, so materializing additional proposed controls later
+  remains reachable.
+
+Materialization itself — permission gating, selection, all-or-nothing
+confirmation, conflict handling, and query invalidation — is entirely owned
+and documented by Risk Control; see
+[RiskControlManagementUI.md#materialization](RiskControlManagementUI.md#materialization).
+This feature's only responsibility is refreshing its own related-controls
+query (`relatedControls.refetch()`) via the dialog's `onSuccess` callback,
+and exposing enough of `assessment` (`status`, `controls`) for the dialog to
+work — it never mutates `assessment` itself as a result of materialization.
 
 ## Optimistic concurrency
 
@@ -136,7 +176,7 @@ Date-only form inputs (`YYYY-MM-DD`) are normalized to ISO datetime (`…T00:00:
 - No profile-list/configuration API — minimal frontend catalog may drift; keep it minimal.
 - **`extension_references` is deferred** — supported by the create/update API but not on the form.
 - Sending `null` for `assessment_date` or `review_schedule` on PATCH does **not** clear existing values (backend treats `None` as “omit field”).
-- Materialize-controls is out of UI scope; related controls may be empty while proposed controls exist (empty states distinguish “no proposed” vs “not materialized”).
+- Materialization is implemented by the Risk Control feature (`MaterializeControlsDialog`, integrated via `@/features/risk-controls`'s public API) — see [Related controls and materialization](#related-controls-and-materialization) above.
 - Product UI hides Draft→Approve while backend allows it.
 - Registry filter UI is an intentional subset of supported list query params.
 

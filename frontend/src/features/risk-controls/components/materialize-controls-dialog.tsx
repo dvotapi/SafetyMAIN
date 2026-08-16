@@ -38,11 +38,7 @@ import {
  * structurally compatible without an import.
  */
 export type MaterializableAssessmentStatus =
-  | "draft"
-  | "under_review"
-  | "approved"
-  | "superseded"
-  | "archived";
+  "draft" | "under_review" | "approved" | "superseded" | "archived";
 
 /**
  * Structural shape of a proposed control the assessment supplies. Kept
@@ -232,11 +228,7 @@ export function MaterializeControlsDialog({
 
   return (
     <>
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => onOpenChange(true)}
-      >
+      <Button variant="secondary" size="sm" onClick={() => onOpenChange(true)}>
         Materialize controls
       </Button>
 
@@ -316,9 +308,9 @@ export function MaterializeControlsDialog({
               )}
 
               <Alert tone="warning" title="Before you continue">
-                This creates operational Risk Control records in Draft with
-                no owner. Materialization is all-or-nothing — if any
-                selected control already exists, nothing is created.
+                This creates operational Risk Control records in Draft with no
+                owner. Materialization is all-or-nothing — if any selected
+                control already exists, nothing is created.
               </Alert>
 
               {submitError ? (
@@ -329,10 +321,7 @@ export function MaterializeControlsDialog({
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button
-              variant="secondary"
-              onClick={() => handleOpenChange(false)}
-            >
+            <Button variant="secondary" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
             <Button

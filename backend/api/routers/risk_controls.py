@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Annotated, TypeVar
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
@@ -169,12 +169,10 @@ from backend.core.domain.value_objects.safety_ids import (
     RiskControlId,
 )
 
-_EnumT = TypeVar("_EnumT", bound=Enum)
 
-
-def _parse_enum_param(
-    raw: str | None, enum_cls: type[_EnumT], field_name: str
-) -> _EnumT | None:
+def _parse_enum_param[EnumT: Enum](
+    raw: str | None, enum_cls: type[EnumT], field_name: str
+) -> EnumT | None:
     """Map an unknown query enum value to 422 instead of an unhandled 500."""
     if raw is None:
         return None

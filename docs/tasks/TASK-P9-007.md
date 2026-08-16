@@ -2568,3 +2568,478 @@ TASK-P8-005 — Inspection Management
 ```
 
 and then return to the frontend Inspection vertical slice.
+
+---
+
+## Completion Report
+
+Status: **Complete.** Delivered as three sequential sub-tasks —
+`TASK-P9-007a` (backend contract patches + read-only slice),
+`TASK-P9-007b` (lifecycle & workflow commands), `TASK-P9-007c`
+(materialization, guardrails, E2E, documentation) — commit range
+`19e9c52..fae1498` on `feature/task-p9-007-risk-control-ui`.
+
+### Implementation summary
+
+The Risk Control feature is the third production-connected frontend
+business vertical slice, completing the frontend core risk-management
+chain `Hazard → Risk Assessment → Risk Control`. It provides a Risk
+Control Registry and Object Page backed entirely by the production
+`RiskControl` backend (`TASK-P8-004`/`TASK-P8-004-H1`), a materialization
+workflow that turns an approved Risk Assessment's proposed controls into
+operational Risk Controls, and the full operational lifecycle: owner
+assignment, implementation planning/start/progress/completion, evidence
+references, effectiveness verification (Effective / Partially Effective /
+Ineffective, kept distinct throughout), review scheduling/completion, and
+the five terminal commands (suspend, resume, supersede, cancel, archive —
+no delete). Three small backend patches closed concrete gaps the frontend
+surfaced (`include_terminal` query param, backend-authoritative
+`is_overdue`, `422` instead of `500` for unknown enum query values); no
+other backend behavior was changed.
+
+### Frontend routes
+
+```text
+/safety/risk-controls               — registry
+/safety/risk-controls/[riskControlId] — object page
+```
+
+Both are authenticated, gated on `risk_control:read`, and support direct
+URL navigation, browser back/forward, and standard not-found rendering for
+both unknown and cross-tenant IDs. There is no `/safety/risk-controls/new`
+route — controls originate only through Risk Assessment materialization.
+
+### Backend endpoints used
+
+```text
+GET    /api/v1/risk-controls
+GET    /api/v1/risk-controls/{id}
+GET    /api/v1/admin/audit-events?resource_type=RISK_CONTROL&resource_id=
+POST   /api/v1/risk-controls/{id}/assign-owner
+POST   /api/v1/risk-controls/{id}/plan
+POST   /api/v1/risk-controls/{id}/start-implementation
+POST   /api/v1/risk-controls/{id}/update-progress
+POST   /api/v1/risk-controls/{id}/evidence
+POST   /api/v1/risk-controls/{id}/complete-implementation
+POST   /api/v1/risk-controls/{id}/verify
+POST   /api/v1/risk-controls/{id}/schedule-review
+POST   /api/v1/risk-controls/{id}/complete-review
+POST   /api/v1/risk-controls/{id}/suspend
+POST   /api/v1/risk-controls/{id}/resume
+POST   /api/v1/risk-controls/{id}/supersede
+POST   /api/v1/risk-controls/{id}/cancel
+POST   /api/v1/risk-controls/{id}/archive
+POST   /api/v1/risk-assessments/{assessmentId}/materialize-controls
+GET    /api/v1/hazards/{id}            (RC-local lite read)
+GET    /api/v1/risk-assessments/{id}   (RC-local lite read)
+```
+
+`POST /api/v1/risk-controls/materialize` and `POST /api/v1/risk-controls`
+(direct creation) exist on the backend but are never called by the
+frontend — materialization always goes through the Risk Assessment-scoped
+endpoint above. No `DELETE` route is called anywhere; none exists for this
+resource by design.
+
+### Permissions used
+
+`risk_control:read` (Registry + Object Page), `risk_control:assign` (owner),
+`risk_control:implement` (plan/start/progress/complete implementation,
+evidence), `risk_control:verify` (effectiveness verification),
+`risk_control:review` (schedule/complete review), `risk_control:suspend`
+(both suspend and resume — one backend permission gates both),
+`risk_control:supersede`, `risk_control:cancel`, `risk_control:archive`,
+`risk_control:materialize` (the materialization dialog). Related reads
+piggyback on their owning feature's permission: `hazard:read` (linked
+Hazard summary), `risk:read` (linked Risk Assessment summary), `audit:read`
+(Activity tab). Capabilities are mapped from the actual permission strings
+in `mapRiskControlCapabilities` — never by role name — and every lifecycle
+button is additionally gated on the legal transition for the control's
+current status, so a capability alone never makes an illegal action appear.
+
+### Feature structure
+
+```text
+frontend/src/features/risk-controls/
+  api/        transport, TanStack Query, lifecycle command mutations,
+              materialization mutation, boundary-safe RA-related-controls
+              invalidation
+  components/ 18 presentation components incl. MaterializeControlsDialog
+  schemas/    RHF + Zod schema per command
+  pages/      RiskControlRegistryPage, RiskControlObjectPage
+  mappers/    DTO -> view model
+  hooks/      permission capabilities, lifecycle action availability,
+              command mutation hook
+  utils/      status/effectiveness presentation, URL filter state
+  types/      transport DTOs + view/capability models
+  index.ts    RiskControlRegistryPage, RiskControlObjectPage,
+              MaterializeControlsDialog — the only public surface
+```
+
+Full structure and rationale: `docs/architecture/frontend/RiskControlManagementUI.md`.
+
+### Shared components reused
+
+`Registry`/`RegistryTable`/`DataTable`, `FilterBar`, `ObjectHeader`,
+`ObjectTabs`, `PropertyGrid`/`DescriptionList`, `Panel`/`Card`, `StatusBadge`,
+`Timeline`/Activity list, `Dialog`/`ConfirmationDialog`/`WarningDialog`,
+`EmptyState`, `Alert`/`Toast`, `Button`, `Checkbox`/`RadioGroup`/`Input`/
+form primitives, `NextActionCard`, `BlockingReason` — all imported from
+`@/components`, matching the Hazard and Risk Assessment precedent.
+
+### New shared components
+
+**None.** Every UI primitive came from the existing `@/components` Design
+System; the feature added zero new entries to the shared component
+library. (One shared-component *gap* was found and worked around locally —
+see Known limitations in the architecture doc — but not fixed at the
+shared-component level, which is out of this task's scope.)
+
+### Registry capabilities
+
+Server-side pagination (offset/limit, default page size 25), backend-fixed
+ordering (`created_at DESC, id DESC` — no client sort), and the full
+backend filter set wired through URL state: `status`, `hierarchy_level`,
+`control_nature`, `hazard_id`, `risk_assessment_id`, `owner_reference`,
+`latest_effectiveness_result`, `review_due_before/after`, `overdue_only`,
+`awaiting_verification`, `include_terminal` (defaults `false` — terminal
+controls hidden unless toggled on), `search`. Distinct loading, first-use
+empty, filtered-empty, and error+retry states. Columns: Reference, Control,
+Hierarchy Level, Status, Owner, Implementation, Effectiveness, Hazard, Risk
+Assessment, Next Review, Overdue, Updated At — all backend-sourced.
+
+### Materialization workflow
+
+`MaterializeControlsDialog`, rendered from the Risk Assessment Object
+Page's Related Controls tab through Risk Control's public `index.ts`. Calls
+`POST /risk-assessments/{id}/materialize-controls`; enabled unconditionally
+from `approved` assessments and behind an explicit checkbox from
+`under_review`; lets the user select specific proposed controls or leave
+the selection empty for "materialize all eligible"; already-materialized
+proposed controls render checked/disabled as a UX affordance (not the
+source of truth — the backend still enforces uniqueness); the confirmation
+`Alert` states the operation is all-or-nothing; on success, created
+control codes are surfaced in a toast and both the Risk Control list
+queries and the assessment's related-controls query are invalidated; a
+`409` with the `risk_control_already_materialized` code routes to the
+duplicate-variant `RiskControlConflictDialog`, distinct from the
+stale-version variant. The assessment itself is never mutated client-side.
+
+### Source snapshot behavior
+
+`SourceSnapshot` renders `control.source.snapshot` (source type, source
+control reference, assessment version/approved-at, residual level, captured
+proposed-control fields) strictly read-only — it never reconstructs the
+snapshot from a live fetch of the current Risk Assessment, and shows an
+explicit empty state rather than guessing when a control was not
+materialized (`snapshot === null`).
+
+### Owner assignment
+
+`ControlOwnerSection` shows the current owner or an empty state, with an
+assign/change action gated on `risk_control:assign` and blocked only on the
+three terminal-inactive statuses (`superseded`, `archived`, `cancelled`).
+Every request carries `expected_version`. No employee/user directory exists
+yet — the owner reference is unvalidated free text (documented limitation,
+Employee Management is explicitly out of scope for this task).
+
+### Implementation workflow
+
+`ImplementationPlanSection` (plan, `draft` only, once an owner exists:
+target dates, method, resource notes, dependencies, evidence/verification
+requirements, milestones) plus `ImplementationProgressSection` (start —
+`planned → in_implementation`; progress updates — percentage + note,
+`in_implementation` only; completion — `in_implementation → implemented`,
+required summary, conditional evidence-waiver reason, optional "allow
+incomplete milestones"). Completing implementation prompts effectiveness
+verification as the next action via `NextActionCard`.
+
+### Evidence behavior
+
+`EvidenceList`/`EvidenceForm` add reference-only evidence records
+(external reference, title, description, checksum) — never binary files;
+neither component renders a file-upload affordance. Adding evidence after
+`implemented` is still legal but requires an explicit "Add evidence after
+implementation" acknowledgement checkbox.
+
+### Effectiveness verification
+
+`VerificationForm` offers exactly `effective` / `partially_effective` /
+`ineffective` as a `radiogroup` (never `not_verified`/`not_applicable`,
+which the backend always rejects here). Display language is "Verified
+Effective" / "Verified Partially Effective" / "Verified Ineffective"
+throughout — Object Header, Registry, Verification tab, and Activity all
+keep Partially Effective visually and textually distinct from both other
+outcomes; recording a verification never changes the control's lifecycle
+`status`.
+
+### Verification history
+
+Append-only by construction: `VerificationHistory` renders every record
+newest-first with the newest tagged "Latest", and no component anywhere
+offers edit or delete on a historical record. Dedicated `CorrectionRecord`
+support remains deferred to `TASK-P8-HARDENING-001`, per §51 of this
+umbrella spec — the frontend does not simulate it.
+
+### Review scheduling
+
+`ReviewScheduleSection` bundles `schedule_review` (frequency and/or
+explicit next-review-date, review basis, optional escalation reference, or
+a mandatory `noReviewReason` when disabled) and `complete_review` (offered
+only once a review is due, optionally bundling a full verification via the
+shared verification schema). Two intentional backend quirks are handled
+explicitly and covered by dedicated tests: the nested, validated-but-
+ignored `expected_version` inside `CompleteReviewRequest.verification`, and
+the double version-bump when a verification is included — the frontend
+never derives the post-command version itself, it always reads `version`
+back from the mapped response.
+
+### Overdue behavior
+
+`control.isOverdue` is read straight from the backend-authoritative
+`is_overdue` field (added to `RiskControlResponse` in this task's first
+backend patch) and never recomputed client-side; Registry exposes an
+`overdue_only` toggle sent straight through as a query parameter.
+
+### Lifecycle actions
+
+`RiskControlLifecycleActions` derives the legal next action(s) from
+`availableLifecycleActions`, which mirrors the backend's `_TRANSITIONS`
+table as a status→action lookup gated on both the legal transition and the
+matching capability. Forward actions (`plan → start_implementation →
+complete_implementation → verify → schedule_review`) render first, then the
+five terminal commands (`suspend`, `resume`, `supersede`, `cancel`,
+`archive`) — none of which is ever presented as, or behaves as, deletion.
+No delete action exists anywhere in the feature — verified explicitly by a
+dedicated E2E test ("no delete affordance exists on any reachable status").
+
+### Optimistic concurrency
+
+Every mutation, including version-only and reason-only commands, carries
+`expected_version`. `RiskControlCommandDialog` surfaces the version being
+used in its header. On `409`, the frontend never retries automatically and
+never guesses the server's current version — the only recovery path is
+`RiskControlConflictDialog`'s "Reload latest," which re-fetches the detail
+query. Responses are written into cache directly (never client-computed),
+which is what makes the review-completion double version-bump render
+correctly without special-casing.
+
+### Tenant isolation
+
+Every query is keyed by `organizationId`. A `404` on detail is rendered
+identically whether the control does not exist or belongs to another
+organization — the frontend performs no distinguishing check, matching the
+backend's masking intent. Related Hazard/Risk Assessment reads only fire
+when the corresponding read permission is present and fail silently into
+their own section's empty/error state rather than crashing the page.
+Logout clears all Risk Control-keyed cache entries through the shared
+`AuthProvider` QueryClient reset. Verified directly by the two-organization
+E2E scenario ("logout clears data — re-login as a different org shows no
+stale rows") and by architecture — no code path bypasses the organization
+scoping.
+
+### Hazard integration
+
+The Object Page's Overview tab and header display the linked Hazard via a
+lite read (`GET /api/v1/hazards/{id}`), gated on `hazard:read`, navigating
+through Hazard's public route. Risk Control imports no Hazard internals;
+Hazard imports no Risk Control internals (both directions enforced by
+dependency-cruiser).
+
+### Risk Assessment integration
+
+Two integration points, both one-directional through public feature
+boundaries: (1) the Object Page displays the linked Risk Assessment and its
+immutable source snapshot via a lite read, gated on `risk:read`; (2) the
+Risk Assessment Object Page renders Risk Control's `MaterializeControlsDialog`
+(imported only via `@/features/risk-controls`) inside its Related Controls
+tab. Neither feature imports the other's internal types, mappers,
+mutations, or query keys — see `RiskAssessmentManagementUI.md`'s "Related
+controls and materialization" section for the Risk Assessment side.
+
+### Activity source
+
+`RiskControlActivity` reads exclusively from
+`GET /api/v1/admin/audit-events?resource_type=RISK_CONTROL&resource_id=`,
+gated on `audit:read`. `ACTIVITY_TITLES` maps the `safety.risk_control.*`
+audit taxonomy to human-readable titles, falling back to the raw event name
+for anything unmapped. No fake or client-synthesized history is ever
+rendered — the Activity tab itself only renders when the permission is
+present.
+
+### Backend changes
+
+Three focused patches, each with dedicated tests, all preserving
+TenantContext/RBAC/audit/optimistic-concurrency/cross-tenant masking/
+migration compatibility:
+
+1. `19e9c52` — `feat(api): expose include_terminal on risk control registry
+   endpoint` (`backend/api/routers/risk_controls.py`). The parameter
+   already flowed through the query and both repositories but was never
+   exposed over HTTP, so the registry always hid superseded/archived/
+   cancelled controls. Test: `test_list_risk_controls_include_terminal_
+   exposes_archived`.
+2. `8059722` — `feat(api): expose backend-authoritative is_overdue on risk
+   control responses` (`backend/api/mappers/risk_controls.py`,
+   `backend/api/schemas/risk_controls.py`). Test:
+   `test_risk_control_response_exposes_is_overdue`.
+3. `68efdbf` — `fix(api): return 422 for unknown risk control enum query
+   params` (`backend/api/routers/risk_controls.py`). Previously an unknown
+   enum value in a list filter (e.g. `status=bogus`) fell through to an
+   unhandled `500`; `_parse_enum_param` now maps it to a `422` with an
+   explicit `allowed values` message. Tests:
+   `test_list_risk_controls_rejects_unknown_enum_param[status]`,
+   `[hierarchy_level]`, `[control_nature]`, `[latest_effectiveness_result]`.
+
+During this completion pass, `_parse_enum_param`'s `TypeVar`-based generic
+was additionally converted to PEP 695 syntax (`def _parse_enum_param[EnumT:
+Enum](...)`) to clear a `ruff` `UP047` finding introduced by that same
+function — a one-line style fix, not a behavior change; covered by the
+existing tests above (all still pass).
+
+### Unit test count
+
+**259 frontend unit/component tests pass** across 24 test files
+(`npm run test` / Vitest), of which **171 are Risk Control-specific**:
+`risk-control-mappers.test.ts` (11), `risk-control-status.test.ts` (6),
+`risk-control-permissions.test.ts` (15), `risk-control-query-keys.test.ts`
+(4), `risk-control-filters.test.ts` (12), `risk-control-commands.test.ts`
+(9), `risk-control-command.test.tsx` (4), `risk-control-command-hook.
+test.tsx` (10), `materialization.test.tsx` (7), and `risk-control-
+workflow.test.tsx` (93, covering every Phase B component plus an
+axe-core accessibility pass). The remaining 88 tests cover the
+pre-existing Hazard, Risk Assessment, auth, and shared-component suites
+and all remain green — no regression.
+
+### E2E test count
+
+**34 Playwright tests pass** (`npm run test:e2e`), of which **20 are Risk
+Control-specific** (`e2e/risk-controls.spec.ts`: 1 main-workflow, 3
+effectiveness-result, 11 negative-scenario, 4 terminal-command). The
+remaining 14 are the pre-existing `auth.spec.ts` (4), `hazards.spec.ts`
+(4), `risk-assessments.spec.ts` (5), and `smoke.spec.ts` (1) — all pass
+unchanged, confirming no regression in authentication, Hazard, or Risk
+Assessment E2E coverage.
+
+### Storybook result
+
+`npm run build-storybook` **succeeds**. `risk-controls.stories.tsx` covers
+`RiskControlSummary`, `ControlOwnerSection`, `ImplementationPlanSection`,
+`ImplementationProgressSection`, `EvidenceList`, `EffectivenessSummary`,
+`VerificationHistory`, `VerificationForm`, `ReviewScheduleSection`,
+`SourceSnapshot`, and `RiskControlLifecycleActions` across their key
+states (default/loading/empty/read-only/unassigned/planned/in-progress/
+implemented/Effective/Partially Effective/Ineffective/overdue/archived/
+permission-limited/dark theme/narrow viewport) with deterministic fixtures.
+
+### Production build result
+
+`next build` **succeeds**. Both new routes compile and prerender/render
+correctly: `/safety/risk-controls` (static, 253 kB First Load JS) and
+`/safety/risk-controls/[riskControlId]` (dynamic, 253 kB First Load JS).
+
+### Architecture result
+
+`npm run architecture:check` **passes** — 0 dependency violations across
+349 modules / 1,247 dependencies. Two Risk-Control-specific dependency-
+cruiser rules were added in this sub-task (`risk-control-api-no-
+components`, `risk-control-presentation-no-fetch`), alongside the
+pre-existing cross-feature boundary rules, which continue to hold for
+`risk-controls` unchanged.
+
+### CorrectionRecord deferred status
+
+Confirmed deferred, unchanged from the umbrella spec's Outcome A. The
+frontend renders all verification history as read-only and append-only,
+offers no edit/delete affordance on any historical record, and does not
+simulate correction-record behavior anywhere. Tracked for a future task:
+`TASK-P8-HARDENING-001 — Historical Correction Records`.
+
+### Known limitations
+
+- No employee/user directory — owner assignment and any reviewer/verifier
+  references use raw, backend-unvalidated free text.
+- `409` responses do not carry the server's current version; recovery is
+  always a re-GET through the conflict dialog's "Reload latest," never an
+  inferred merge.
+- `competency_requirements` and `related_entities` are read-only over HTTP
+  and always empty in the current backend — displayed but not editable.
+- Suspension/cancel/archive/supersede reasons are only visible via the
+  audit API (`audit:read`), not on the Risk Control response itself.
+- The shared `components/dialogs/*` primitives (`Dialog`,
+  `ConfirmationDialog`, `WarningDialog`) restore focus to `Dialog.Trigger`
+  by default, which is `null` for every dialog in this feature (all are
+  opened from a plain `Button` against externally-held `open` state).
+  `RiskControlCommandDialog`, `RiskControlConflictDialog`, and
+  `MaterializeControlsDialog` all work around this locally; the shared
+  primitive itself was not changed (see Deferred work).
+- The "already materialized" checkbox state in the materialization dialog
+  is a client-side UX affordance derived from a fetch at dialog-open time,
+  not authoritative — a concurrent materialization between that fetch and
+  submit still surfaces as a `409` handled by the standard conflict path.
+
+### Deferred work
+
+Per §52 of this specification, explicitly deferred: dedicated
+`CorrectionRecord` UI (→ `TASK-P8-HARDENING-001`), binary evidence upload,
+document management, Inspection UI, Finding UI, Corrective Action UI,
+Incident UI, Employee Management UI, Competency Management UI, Training UI,
+Knowledge UI, organization switching, offline mode, bulk Risk Control
+editing, bulk evidence upload, saved registry views backed by persistence,
+advanced analytics, AI control recommendations, AI verification decisions,
+automatic residual-risk mutation, real-time collaborative editing,
+websocket updates. Additionally deferred as a carry-over from Phase B: the
+shared `components/dialogs/*` focus-restore fix (see Known limitations).
+
+### Recommended next task
+
+The Inspection domain has only a bare entity (`backend/core/domain/
+entities/inspection.py`) and repository interface (`backend/core/domain/
+repositories/inspection_repository.py`) — no application handlers, no
+persistence, and no API router wired into `backend/api/app.py` or
+`backend/bootstrap/container.py`. The Inspection backend is therefore
+**not yet production-usable**. Recommended next task:
+
+```text
+TASK-P8-005 — Inspection Management
+```
+
+(backend: aggregate, handlers, persistence, REST API), followed by the
+frontend Inspection Management UI vertical slice once that backend is
+complete.
+
+### Verification summary (actual numbers, this pass)
+
+```text
+Frontend
+  npm run verify              PASS  (tokens, format, lint, typecheck,
+                                      architecture:check, 259 tests / 24
+                                      files, production build)
+  npm run architecture:check  PASS  (0 violations, 349 modules, 1247 deps)
+  npm run build-storybook     PASS
+  npm run test:e2e            PASS  (34/34, incl. 20 risk-controls)
+
+Backend
+  pytest -k risk_control -v          35 passed, 11 skipped (DB-marked)
+  pytest (full suite, no DB)         788 passed, 133 skipped
+  pytest -m db -k risk_control       11 passed (against real PostgreSQL 17,
+                                      after `alembic upgrade head`)
+  ruff check .                       367 pre-existing findings, unrelated
+                                      to this plan (verified identical at
+                                      commit 03817cc, before TASK-P9-007
+                                      began, via a disposable git worktree);
+                                      one additional finding introduced by
+                                      this plan's own new code (UP047 in
+                                      backend/api/routers/risk_controls.py)
+                                      was fixed during this pass, restoring
+                                      the count to the 367 baseline
+```
+
+All gates pass. No test was skipped to reach a green result other than the
+pre-existing, environment-gated `-m db` skip semantics (resolved here by
+starting Postgres via `docker compose up -d` and running with
+`SAFETYMAIN_RUN_DB_TESTS=1` and a `postgresql+psycopg://` URL matching the
+installed `psycopg[binary]` v3 driver — the brief's example URL uses the
+bare `postgresql://` scheme, which SQLAlchemy resolves to the psycopg2
+driver by default; that driver is not installed in this environment, only
+`psycopg[binary]` per `pyproject.toml`, so the `+psycopg` scheme is
+required here).

@@ -1,9 +1,9 @@
 # Risk Control Management UI
 
-Status: Active (Phase A read-only slice + Phase B write/lifecycle slice)
+Status: Complete (Phase A read-only slice + Phase B write/lifecycle slice + Phase C materialization/E2E/docs)
 Date: 2026-08-16
-Task: [TASK-P9-007a](../../tasks/TASK-P9-007a.md), [TASK-P9-007b](../../tasks/TASK-P9-007b.md)
-(sub-tasks of [TASK-P9-007](../../tasks/TASK-P9-007.md))
+Task: [TASK-P9-007a](../../tasks/TASK-P9-007a.md), [TASK-P9-007b](../../tasks/TASK-P9-007b.md),
+[TASK-P9-007c](../../tasks/TASK-P9-007c.md) (sub-tasks of [TASK-P9-007](../../tasks/TASK-P9-007.md))
 
 Related:
 
@@ -18,22 +18,35 @@ Related:
 ```text
 frontend/src/features/risk-controls/
   api/           # transport + TanStack Query (list, detail, activity, RC-local Hazard/Assessment lite reads,
-                 # lifecycle command mutations — risk-control-commands.ts)
+                 # lifecycle command mutations — risk-control-commands.ts, materialization mutation,
+                 # boundary-safe Risk Assessment related-controls invalidation —
+                 # invalidate-assessment-related.ts)
   components/    # summary, properties, source snapshot, owner, implementation plan/progress,
                  # evidence, effectiveness, verification history/form, review schedule,
-                 # lifecycle actions, shared command/conflict dialog shells, relationships, activity
+                 # lifecycle actions, shared command/conflict dialog shells, relationships, activity,
+                 # materialize-controls-dialog.tsx (TASK-P9-007c)
   schemas/       # react-hook-form + Zod schemas, one per command (owner, implementation,
                  # implementation-progress, evidence, verification, review, lifecycle-command)
-  pages/         # Registry (read-only) / Object Page (read-only + Phase B write actions)
+  pages/         # Registry (read-only) / Object Page (read-only + write + terminal actions)
   mappers/       # DTO -> view model (risk-control-mappers.ts)
   hooks/         # permission capabilities + lifecycle action availability
                  # (use-risk-control-permissions.ts), command mutation hook
                  # (use-risk-control-command.ts)
   utils/         # status/effectiveness presentation, URL filter state
   types/         # transport DTOs (risk-control-dto.ts) + view/capability models (risk-control-types.ts)
-  risk-controls.stories.tsx  # Storybook coverage (TASK-P9-007b)
-  index.ts       # public page exports only
+  risk-controls.stories.tsx  # Storybook coverage
+  index.ts       # public page + MaterializeControlsDialog exports only
 ```
+
+`MaterializeControlsDialog` is exported from `index.ts` alongside the two pages —
+it is the one non-page component in the public surface, because it is the
+approved integration point the Risk Assessment feature uses to render a
+materialization affordance without importing any other Risk Control
+internal (types, mutations, mappers). Its own props (`Materializable
+AssessmentStatus`, `MaterializeProposedControl`) are declared locally in the
+component file as structural shapes, not re-exports of Risk Assessment
+types, so neither feature imports the other's internals in either
+direction.
 
 Phase A shipped no `schemas/` (no forms yet — every mutation was out of scope).
 Phase B adds one `schemas/*.ts` module per lifecycle command, each pairing a
@@ -78,13 +91,14 @@ materialization (`TASK-P9-007c`).
 | Cancel | `POST /api/v1/risk-controls/{id}/cancel` |
 | Archive | `POST /api/v1/risk-controls/{id}/archive` |
 
+| Materialize | `POST /api/v1/risk-assessments/{assessmentId}/materialize-controls` |
+
 No list sort parameters are sent — ordering is backend-fixed
 (`created_at DESC, id DESC`, see `risk_control_repository.py`). Every
 lifecycle command endpoint above is a `POST` carrying `expected_version`
 (optimistic concurrency, see below); none of them uses `PATCH`/`PUT`. There
 is still no direct-creation endpoint used by the frontend — controls
-originate from Risk Assessment materialization (`TASK-P9-007c`), and
-`POST /api/v1/risk-controls/materialize` remains uncalled by any Phase B UI.
+originate from Risk Assessment materialization.
 
 ### List filters (supported and wired)
 
@@ -112,8 +126,9 @@ starting/progressing/completing implementation, and adding evidence,
 `:verify` gates recording a verification, `:review` gates scheduling and
 completing a review, `:suspend` gates both suspend *and* resume (the backend
 guards them with the same permission), `:supersede`/`:cancel`/`:archive` gate
-their respective terminal commands, and `:materialize` remains unused by any
-Phase B UI (materialization ships in `TASK-P9-007c`). Capabilities are mapped
+their respective terminal commands, and `:materialize` gates
+`MaterializeControlsDialog`'s render (the dialog renders `null` entirely
+without the permission, rather than a disabled affordance). Capabilities are mapped
 in `mapRiskControlCapabilities` — never by role name — and every command
 button is gated on both the matching capability **and** the legal lifecycle
 transition for the control's current status (see `availableLifecycleActions`
@@ -271,26 +286,87 @@ QueryClient reset in `AuthProvider`.
   `npm run build-storybook`. Dark theme and narrow-viewport variants reuse
   the existing `@storybook/addon-themes`/`addon-viewport` globals rather than
   duplicating story components.
-- Playwright E2E is out of scope for Phase B — see Deferred work below.
-- Architecture: dependency-cruiser rules already in place from Hazard/Risk
-  Assessment (shared components never import feature code; features import
-  each other only through `index.ts`) apply unchanged to `risk-controls`; no
-  Phase-B-specific rule was needed since the feature makes no cross-feature
-  internal imports.
+- Unit (materialization): `materialization.test.tsx` covers request shaping
+  (`control_ids: null` vs. explicit selection, `allow_under_review`),
+  already-materialized checkbox disabling, all-or-nothing success toast
+  content, `409`→conflict-dialog routing (both variants), `422`→inline error
+  routing, and query invalidation (list + assessment related-controls).
+- Playwright E2E: `e2e/risk-controls.spec.ts` — see Browser end-to-end tests
+  below.
+- Architecture: two feature-specific dependency-cruiser rules were added in
+  `TASK-P9-007c` (`.dependency-cruiser.cjs`): `risk-control-api-no-
+  components` (Risk Control `api/` must not import `@/components`,
+  `risk-controls/components`, or `risk-controls/pages`) and `risk-control-
+  presentation-no-fetch` (Risk Control `components`/`pages` must not import
+  `@/services/api/client` directly — all transport goes through `api/`).
+  These mirror the pre-existing `risk-assessment-api-no-components` rule.
+  The pre-existing cross-feature rules (shared components never import
+  feature code; features import each other only through `index.ts`) apply
+  unchanged — `risk-controls` makes no cross-feature internal imports, and
+  the Risk Assessment feature's only Risk Control import is
+  `MaterializeControlsDialog` through the public `index.ts`.
 
 ---
 
-## Materialization (Phase B/C)
+## Materialization
 
-Not delivered in Phase B. `POST /api/v1/risk-controls/materialize` and the
-`risk_control:materialize` capability exist in the type/capability model
-already but no Phase B component calls the endpoint or renders a
-materialize affordance — controls in every Phase B story and test still
-originate as pre-existing fixtures. Materialization UI (turning a Risk
-Assessment's proposed controls into real Risk Controls) ships in
-`TASK-P9-007c`, which also owns `RiskControlConflictDialog`'s
-`duplicate_materialization` variant end to end (the variant selector already
-exists — see Error handling above — but Phase B never triggers it).
+`MaterializeControlsDialog` (`components/materialize-controls-dialog.tsx`)
+implements `Approved Risk Assessment → Proposed Control → Materialized Risk
+Control`. It is rendered from the Risk Assessment Object Page's "Related
+controls" tab (`risk-assessment-object-page.tsx`), imported only through
+`@/features/risk-controls`'s public `index.ts` — the Risk Assessment feature
+never imports a Risk Control internal type, mapper, or mutation.
+
+- **Trigger and gating.** The dialog renders nothing (`capabilities.
+  canMaterialize` gates `risk_control:materialize`) unless the user holds the
+  permission. It calls `POST /api/v1/risk-assessments/{assessmentId}/
+  materialize-controls` — never `POST /api/v1/risk-controls/materialize`,
+  which is not used anywhere in the frontend. Materialization is enabled
+  from `approved` assessments unconditionally, and from `under_review`
+  assessments only behind an explicit "Materialize from an assessment still
+  under review" checkbox (`allow_under_review` in the request body) — draft,
+  superseded, and archived assessments show a `BlockingReason` instead of a
+  selectable list.
+- **Selection.** Each proposed control from `assessment.controls` (passed in
+  as the caller's own `ControlMeasure[]`, never fetched or reconstructed by
+  Risk Control) renders as a checkbox. A control whose `id` already appears
+  as a `source.sourceControlReference` on an existing Risk Control for this
+  assessment (fetched via `GET /risk-controls?risk_assessment_id=&
+  include_terminal=true`) is shown checked, disabled, and labelled "Already
+  materialized" — this is a client-side UX affordance to prevent an
+  avoidable 409, not the source of truth; the backend still enforces
+  uniqueness. Leaving the selection empty sends `control_ids: null`, which
+  the backend interprets as "materialize every eligible proposed control".
+- **All-or-nothing.** The confirmation `Alert` states explicitly:
+  "Materialization is all-or-nothing — if any selected control already
+  exists, nothing is created." The frontend never renders a partial-success
+  state because the backend transaction is atomic; on success, every
+  returned `RiskControl` is written into the detail cache and the created
+  controls' codes are shown in the success toast
+  ("Materialized N risk control(s): RC-001, RC-002").
+- **Conflict handling.** A `409` is routed through the same
+  `RiskControlConflictDialog` used by every other lifecycle command.
+  `riskControlConflictVariantFromCode` maps the backend's
+  `risk_control_already_materialized` error code to the
+  `duplicate_materialization` variant (distinct copy from the generic
+  stale-version variant); this is the first place in the feature that
+  variant is actually reachable end-to-end. A `422` (e.g. attempting to
+  materialize from a non-approved, non-under-review assessment) renders
+  inline through the same flattened-violations error path the lifecycle
+  command dialogs use.
+- **Refresh.** On success, `useMaterializeRiskControlsMutation` invalidates
+  the Risk Control list queries (so the Registry picks up the new controls)
+  and the Risk Assessment's related-controls query via
+  `invalidateAssessmentRelatedControls` (`api/invalidate-assessment-
+  related.ts`) — a predicate/prefix-based invalidator that matches the Risk
+  Assessment feature's `["risk-assessments", organizationId, "detail", id,
+  "related-controls"]` key shape by convention, without importing Risk
+  Assessment's key-builder module. The assessment object itself is never
+  written to client-side.
+- **Focus.** Like every other dialog in this feature, it captures
+  `document.activeElement` on open and restores it via `onCloseAutoFocus`,
+  working around the same Radix `Dialog.Trigger`-vs-externally-controlled-
+  `open` gap documented under Known limitations.
 
 ## Owner assignment
 
@@ -503,13 +579,39 @@ archived / permission-limited / a narrow-viewport variant using the shared
 
 ## Browser end-to-end tests
 
-Not delivered in Phase B — no Playwright spec exists for `risk-controls` yet
-(`frontend/e2e/` has none). `risk-control-workflow.test.tsx`'s
-component/integration coverage (React Testing Library, real DOM, real
-`react-hook-form`/Zod validation, mocked `apiClient`) is Phase B's
-substitute for now. Real end-to-end coverage against a running backend is
-deferred to `TASK-P9-007c`, which is expected to add it alongside
-materialization.
+`frontend/e2e/risk-controls.spec.ts` — 20 tests, run against a real `next
+start` server with the backend replaced by Playwright route interception
+(`page.route`), the same pattern `hazards.spec.ts` and `risk-assessments.
+spec.ts` already use (no live FastAPI backend is required to run
+`npm run test:e2e`). Grouped into four `test.describe` blocks:
+
+- **Main workflow** (1 test): login → open an approved Risk Assessment →
+  materialize a proposed control → open the created Risk Control → assign
+  owner → plan implementation → start implementation → update progress →
+  add evidence → complete implementation → record an Effective verification
+  → schedule a review → assert the final Object Page state.
+- **Effectiveness results** (3 tests): Verified Effective, Verified
+  Partially Effective, and Verified Ineffective each render their own
+  distinct label and hide the other two — proving the three outcomes never
+  collapse into each other in a real browser, not just in component tests.
+- **Negative scenarios** (11 tests): read-only user cannot mutate; no-verify-
+  permission user does not see Verify; a verify-only user sees Verify but
+  not implement/review actions; a review-only user sees Schedule review but
+  not Verify; unknown control renders not-found; cross-tenant control
+  renders the identical not-found copy; a stale mutation shows the conflict
+  dialog without auto-retrying; duplicate materialization shows the
+  duplicate-variant conflict dialog; an invalid lifecycle transition is
+  rejected and leaves the status badge unchanged; logout clears Risk Control
+  data (re-login as a different org shows no stale rows); no delete
+  affordance exists on any reachable status.
+- **Terminal commands** (4 tests): suspend → resume returns to the prior
+  status; archive leaves the control readable by direct link; cancel moves
+  the control to `cancelled`; supersede moves the control to `superseded`.
+
+All 20 tests pass alongside the pre-existing `auth.spec.ts`, `hazards.
+spec.ts`, `risk-assessments.spec.ts`, and `smoke.spec.ts` (34 total across
+`npm run test:e2e`), confirming no regression in authentication, Hazard, or
+Risk Assessment E2E coverage.
 
 ## Known limitations
 
@@ -527,25 +629,62 @@ materialization.
   plain `Button` (not `Dialog.Trigger`) against externally-held `open`
   state — `context.triggerRef` is always `null`, so without an explicit
   fix focus would silently drop to `<body>` on close instead of returning
-  to the button that opened the dialog. `RiskControlCommandDialog` and
-  `RiskControlConflictDialog` both work around this locally (capture
-  `document.activeElement` on open, restore it via `onCloseAutoFocus`) —
-  found and fixed during this task's accessibility pass (step 3). The
-  shared `components/dialogs/*` primitives have the same gap for any other
-  feature that opens a `Dialog` the same way; fixing it there is out of
-  scope for this task (see Deferred work).
+  to the button that opened the dialog. `RiskControlCommandDialog`,
+  `RiskControlConflictDialog`, and `MaterializeControlsDialog` all work
+  around this locally (capture `document.activeElement` on open, restore it
+  via `onCloseAutoFocus`) — found and fixed during the Phase B accessibility
+  pass, applied again to the Phase C materialization dialog. The shared
+  `components/dialogs/*` primitives have the same gap for any other feature
+  that opens a `Dialog` the same way; fixing it there is out of scope for
+  this task (see Deferred work).
+- No dedicated historical `CorrectionRecord` UI. Verification history is
+  append-only and rendered read-only by construction (see Verification
+  history above); this remains an intentional backend decision (Outcome A —
+  `CorrectionRecord` deferred), not a frontend gap. Reference:
+  `TASK-P8-HARDENING-001 — Historical Correction Records`.
+- The "already materialized" checkbox state in `MaterializeControlsDialog`
+  is derived client-side from a fresh `GET /risk-controls?risk_assessment_
+  id=&include_terminal=true` fetch at dialog-open time — it is a UX
+  affordance to avoid an avoidable `409`, not authoritative; a concurrent
+  materialization by another user between that fetch and submit is still
+  possible and is handled by the same `409` → conflict-dialog path as any
+  other duplicate.
 
 ## Deferred work
 
-- Materialization UI (`TASK-P9-007c`).
-- Playwright E2E for the Risk Control Registry and Object Page
-  (`TASK-P9-007c`).
+Per the umbrella specification's §52 deferred-work list:
+
+- Dedicated `CorrectionRecord` UI (→ `TASK-P8-HARDENING-001`).
+- Binary evidence upload.
+- Document management.
+- Inspection UI.
+- Finding UI.
+- Corrective Action UI.
+- Incident UI.
+- Employee Management UI.
+- Competency Management UI.
+- Training UI.
+- Knowledge UI.
+- Organization switching.
+- Offline mode.
+- Bulk Risk Control editing.
+- Bulk evidence upload.
+- Saved registry views backed by persistence.
+- Advanced analytics.
+- AI control recommendations.
+- AI verification decisions.
+- Automatic residual-risk mutation.
+- Real-time collaborative editing.
+- Websocket updates.
+
+Additionally, carried over from Phase B and still out of scope for this
+feature specifically:
+
 - Fixing the externally-controlled-dialog focus-restore gap in the shared
   `components/dialogs/*` primitives (`Dialog`, `ConfirmationDialog`,
   `WarningDialog`, etc.) rather than locally in `risk-controls` — every
   other feature that opens a `Dialog` without `Dialog.Trigger` likely has
-  the same gap; a `RiskAssessmentConflictDialog`/`RiskAssessmentLifecycle
-  Actions`-style audit across features would confirm the blast radius
-  before deciding whether to fix it once in the shared primitive.
+  the same gap; a cross-feature audit would confirm the blast radius before
+  deciding whether to fix it once in the shared primitive.
 - An employee/user directory to replace the raw owner-reference free-text
   field.
