@@ -43,6 +43,8 @@ docker compose up -d                      # local Postgres (safetymain/safetymai
 
 Tests marked `db` are skipped unless `SAFETYMAIN_RUN_DB_TESTS=1` **and** `DATABASE_URL` is set and reachable — otherwise `tests/infrastructure/db_fixtures.py` fails loudly rather than silently skipping. CI (`.github/workflows/postgresql-tests.yml`) runs migrations then `pytest -m db` against a real Postgres 17 service, and asserts zero DB tests were skipped.
 
+Planned, not yet implemented: background worker `safetymain-worker` (ADR-0007) and a MinIO development service in `docker-compose.yml` (ADR-0006); the P11 tasks that introduce them add their commands here.
+
 ### Frontend (`frontend/`, Next.js 15 App Router, React 19, strict TypeScript)
 
 ```bash
@@ -104,6 +106,7 @@ The registry list pattern (filter bar, data grid, bulk command bar, pagination) 
 - `docs/design/` — frontend design system (tokens, components, patterns, accessibility).
 - `docs/infrastructure/ApplicationServerDeployment.md` — production deployment runbook (Compose stack, reverse proxy, migrations, identity bootstrap, rollback).
 - `docs/tasks/` and `blueprint/tasks/` — task specs and implementation plans; the authoritative contract for any given piece of work.
+- `docs/tasks/EPIC-P11-compliance-documentation.md` — P11 epic (compliance documentation, electronic journals, deadline control); its architecture decisions: ADR-0006 object storage, ADR-0007 background worker, ADR-0008 HR integration, ADR-0009 knowledge blocks, document assembly and AI, ADR-0010 electronic journals and simple electronic signature.
 
 ## Keeping this file current
 

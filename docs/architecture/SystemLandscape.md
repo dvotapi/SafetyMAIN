@@ -187,3 +187,12 @@ Describe long-term evolution.
 ✓ Consistent with all ADRs
 
 ✓ Ready for C4 diagrams
+
+---
+
+# Infrastructure Decision Status (P11)
+
+- Workers — decided, see [ADR-0007](ADR-0007-Background-Worker-and-Scheduling.md)
+- Object Storage — decided, see [ADR-0006](ADR-0006-Document-and-Evidence-Storage.md)
+- AI Services — decided, see [ADR-0009](ADR-0009-Knowledge-Blocks-and-Document-Assembly.md)
+- Redis — not required for the P11 scope, see [ADR-0007](ADR-0007-Background-Worker-and-Scheduling.md); Redis stays in [Architecture Decision Freeze](ArchitectureDecisionFreeze.md) §6

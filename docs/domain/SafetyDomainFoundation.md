@@ -261,7 +261,8 @@ Immutable, self-validating VOs include identifiers, lifecycle statuses, risk dim
 - No API, migrations, or ORM mappings in this task
 - No risk scoring algorithm
 - No async domain event bus
-- Person masters (Employee/Contractor/Visitor) and Chemical inventory deferred
+- Employee person master: read-model synchronised from `hr_form`, introduced by P11-004 — see [ADR-0008](../architecture/ADR-0008-HR-Integration-Contract.md)
+- Contractor/Visitor person masters and Chemical inventory deferred
 - Preventive Action may share or split from CorrectiveAction later
 
 ---
