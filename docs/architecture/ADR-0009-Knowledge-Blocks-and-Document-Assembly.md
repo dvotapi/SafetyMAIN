@@ -1,6 +1,6 @@
 # ADR-0009 — Knowledge Blocks and Document Assembly
 
-**Status:** Proposed
+**Status:** Accepted
 
 **Date:** 2026-09-14
 

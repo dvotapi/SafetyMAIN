@@ -1,6 +1,6 @@
 # ADR-0007 — Background Worker and Scheduling
 
-**Status:** Proposed
+**Status:** Accepted
 
 **Date:** 2026-09-14
 

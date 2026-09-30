@@ -1,6 +1,6 @@
 # TASK-P11-000 — Architecture Decisions for Compliance Documentation
 
-Status: Proposed
+Status: Completed
 Epic: `docs/tasks/EPIC-P11-compliance-documentation.md`
 Depends on: —
 
@@ -213,3 +213,99 @@ Decide:
 - Markdown lint / link check as used in the repository (if any).
 - Manual review by the product owner (Phase 3 Plan Review applies to the ADR
   texts themselves).
+
+---
+
+## Completion Report
+
+Status: **Completed** 2026-09-30. Documentation only: no application code,
+migrations, or dependencies were added.
+
+### Delivered
+
+Architecture decisions (§1–§5), accepted by the product owner on 2026-09-30:
+
+- ADR-0006 — Document and Evidence Storage: S3-compatible object storage
+  (MinIO in development, Yandex Object Storage in production), presigned
+  upload and download, metadata in PostgreSQL, read-only references to
+  `hr_form` files, no physical deletion.
+- ADR-0007 — Background Worker and Scheduling: `safetymain-worker` process
+  with a PostgreSQL `scheduled_jobs` queue (`SKIP LOCKED`), schedules
+  declared in code, no Redis or Celery for P11.
+- ADR-0008 — HR Integration Contract: `hr_form` owns employee master data;
+  SafetyMAIN keeps an `Employee` read-model synced from versioned read-only
+  views (v1) and HR push events (v2).
+- ADR-0009 — Knowledge Blocks and Document Assembly: instructions assembled
+  from curated, versioned knowledge blocks; AI behind provider ports with
+  human-in-the-loop curation.
+- ADR-0010 — Electronic Journals and Simple Electronic Signature:
+  append-only journals anchored in the audit hash chain; simple electronic
+  signature as separate append-only signature records.
+
+This acceptance is also the Architecture Review approval that ADR-0006
+needs under the Architecture Decision Freeze Change Policy to read the §6
+MinIO entry as S3-compatible object storage.
+
+Documentation updates (§6):
+
+- `docs/domain/SafetyDomainFoundation.md` §12 — the Employee person master
+  references ADR-0008; Contractor/Visitor person masters and Chemical
+  inventory stay deferred.
+- `docs/architecture/SystemLandscape.md` — new section "Infrastructure
+  Decision Status (P11)".
+- `CLAUDE.md` — the P11 epic and ADR-0006…0010 in the documentation map; a
+  placeholder for the worker and MinIO commands.
+- No `docs/architecture/README` or ADR index exists, so none was updated.
+
+Repository hygiene (§7): the nested stale clone `SafetyMAIN/SafetyMAIN/` was
+deleted after checking that nothing inside it was tracked or unique (clean
+working tree, no stash, every ref present in this repository). It was not
+added to `.gitignore`.
+
+### Acceptance Criteria
+
+| Criterion | Result |
+|---|---|
+| Five ADRs with Status, Date, Context, Decision, Consequences, Related ADRs in the ADR-0005 style | Met |
+| Every §1–§5 decision present; no contradiction with ADR-0001…0005 | Met — checked in each phase review |
+| Domain foundation and system landscape updated | Met |
+| Nested clone gone; `git status` shows only intended changes | Met |
+| No application code, migrations, or dependencies | Met — the commits touch only `docs/` and `CLAUDE.md` |
+
+### Review
+
+- Phase 1 (ADR-0006, ADR-0007): accepted 2026-09-14.
+- Phase 2 (ADR-0008…0010): independent review, APPROVE WITH MINOR
+  CORRECTIONS; corrections applied; accepted 2026-09-30.
+- Phase 3 (§6, §7): independent review, no critical or important findings;
+  wording corrections applied; accepted 2026-09-30.
+
+### Verification
+
+- The repository has no markdown lint or link check. Relative links in the
+  changed documents resolve (checked with `test -e`); `git diff --check` is
+  clean.
+- Manual review by the product owner: done (see Review).
+
+### Commits
+
+- `15d997e` — P11 epic and task specifications
+- `896a83d` — ADR-0006, ADR-0007
+- `ad3bed0` — ADR-0008, ADR-0009, ADR-0010
+- `e2c7d70` — domain foundation, system landscape, `CLAUDE.md`
+- the commit that adds this report and marks ADR-0006…0010 Accepted
+
+### Known limitations and follow-ups
+
+- `ADR-0002-*.md` and `SystemLandscape.md` still contain task text rather
+  than finished documents; rewriting them is a separate task.
+- The Related ADRs sections of ADR-0001…0005 still name planned numbers
+  that differ from the numbers now in use (for example "ADR-0006 Event
+  Engine"). ADR-0006 records that the Event Engine and Knowledge Graph ADRs
+  take the next free numbers.
+- `docs/domain/DomainDictionary.md` does not yet define the new terms
+  (Knowledge Block, Compliance Document, Journal, simple electronic
+  signature).
+- §6 of this task names P11-001/P11-006 for the worker and MinIO commands.
+  ADR-0007 assigns the worker to the first P11 task that needs a job
+  (P11-002 or P11-004); ADR-0007 takes precedence.

@@ -1,6 +1,6 @@
 # ADR-0010 — Electronic Journals and Simple Electronic Signature
 
-**Status:** Proposed
+**Status:** Accepted
 
 **Date:** 2026-09-14
 

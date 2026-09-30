@@ -1,6 +1,6 @@
 # ADR-0006 — Document and Evidence Storage
 
-**Status:** Proposed
+**Status:** Accepted
 
 **Date:** 2026-09-14
 
