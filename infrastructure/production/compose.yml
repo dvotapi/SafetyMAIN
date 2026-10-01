@@ -3,6 +3,10 @@
 # PostgreSQL is NOT part of this stack: it runs on a dedicated database server
 # and is reached over the network via DATABASE_URL.
 #
+# Object storage is NOT part of this stack either: documents live in Yandex
+# Object Storage (STORAGE_* in .env). The backend only signs presigned URLs;
+# browsers transfer file bytes directly to and from the storage endpoint.
+#
 # Host port bindings are loopback-only. Public traffic arrives through the
 # reverse proxy already running on the host, which joins the external
 # `safetymain-edge` network and addresses the containers by alias.

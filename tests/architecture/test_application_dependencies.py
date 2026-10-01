@@ -21,6 +21,8 @@ def test_application_layer_does_not_depend_on_infrastructure() -> None:
             "sqlalchemy",
             "redis",
             "minio",
+            "boto3",
+            "botocore",
         ),
         rule="Application layer must depend on contracts, not concrete infrastructure or API.",
     )

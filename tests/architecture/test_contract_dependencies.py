@@ -21,6 +21,8 @@ def test_contracts_do_not_depend_on_concrete_infrastructure() -> None:
             "sqlalchemy",
             "redis",
             "minio",
+            "boto3",
+            "botocore",
         ),
         rule="Contracts and ports must not depend on concrete adapters or API modules.",
     )

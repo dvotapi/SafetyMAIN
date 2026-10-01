@@ -19,11 +19,19 @@ Caddy (existing shared reverse proxy, container `caddy-proxy`)
                         ▼
                 Dedicated database server
                    database `safetymain`, role `safetymain_app`
+
+Browser ──HTTPS presigned PUT/GET──▶ Yandex Object Storage
+                                     (storage.yandexcloud.net, SafetyMAIN bucket)
+FastAPI ──HTTPS HEAD (S3 API)──────▶ same bucket
 ```
 
-Frontend and API share a single public origin, so the browser never talks to a
-second host and CORS stays disabled. PostgreSQL is never part of this stack and
-is never exposed through the application VDS.
+Frontend and API share a single public origin, so the API needs no CORS.
+PostgreSQL is never part of this stack and is never exposed through the
+application VDS.
+
+Document files are the one exception to the single origin: the API only signs
+presigned URLs, and the browser transfers file bytes directly to and from Yandex
+Object Storage (ADR-0006). File bytes never pass through the API container.
 
 ## 2. Server layout
 
@@ -67,6 +75,15 @@ Backend runtime (`/srv/safetymain/secrets/production.env`, template:
 `JWT_REFRESH_ABSOLUTE_TTL_SECONDS`, `REFRESH_TOKEN_ROTATION_ENABLED`,
 `AUTH_ENFORCEMENT=true`, `CORS_ALLOWED_ORIGINS`.
 
+Object storage (section 6): `STORAGE_ENDPOINT_URL`, `STORAGE_REGION`,
+`STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`,
+`STORAGE_PRESIGN_TTL_SECONDS` (60–604800, default 900),
+`STORAGE_MAX_UPLOAD_BYTES` (default 52428800 = 50 MB), and the read-only
+`STORAGE_EXTERNAL_ACCESS_KEY` / `STORAGE_EXTERNAL_SECRET_KEY` reserved for
+TASK-P11-008 (not required yet). `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY` and
+`STORAGE_SECRET_KEY` are mandatory in production: the backend refuses to start
+without them.
+
 Frontend build-time (same file; consumed as Compose build arguments):
 `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_ENV`.
 
@@ -89,7 +106,49 @@ that permits `hostssl` connections only from the application VDS address and
 rejects that role from anywhere else. The application VDS never administers the
 database server.
 
-## 6. Migration procedure
+## 6. Object storage dependency
+
+Documents are stored in Yandex Object Storage. Provision it before deploying a
+backend version that contains TASK-P11-001, otherwise startup fails validation:
+
+1. Create a bucket for SafetyMAIN (private access, no public listing or read).
+2. Create a service account with `storage.editor` scoped to that bucket and a
+   static access key for it. Put the key id and secret into
+   `STORAGE_ACCESS_KEY` / `STORAGE_SECRET_KEY`; never reuse the `hr_form`
+   credential.
+3. Set `STORAGE_ENDPOINT_URL=https://storage.yandexcloud.net`,
+   `STORAGE_REGION=ru-central1` and `STORAGE_BUCKET=<bucket>`.
+4. Apply a CORS rule that admits the public SafetyMAIN origin only:
+
+   ```bash
+   cat > cors.json <<'JSON'
+   {
+     "CORSRules": [
+       {
+         "AllowedOrigins": ["https://<safetymain-domain>"],
+         "AllowedMethods": ["PUT", "GET", "HEAD"],
+         "AllowedHeaders": ["content-type", "x-amz-meta-sha256"],
+         "ExposeHeaders": ["ETag"],
+         "MaxAgeSeconds": 3600
+       }
+     ]
+   }
+   JSON
+   aws s3api put-bucket-cors --endpoint-url https://storage.yandexcloud.net \
+     --bucket <bucket> --cors-configuration file://cors.json
+   ```
+
+Presigned URLs are signed for the host in `STORAGE_ENDPOINT_URL`, so that
+endpoint must be reachable both from the application VDS (the API checks
+uploaded objects with `HEAD`) and from users' browsers. Do not point it at an
+internal-only address.
+
+A presigned upload pins `Content-Type`, `Content-Length` and the
+`x-amz-meta-sha256` header; storage rejects a transfer that differs in any of
+them. The SHA-256 is computed by the client and is not re-verified server-side
+yet.
+
+## 7. Migration procedure
 
 Migrations always run before the backend starts, from the same image:
 
@@ -103,7 +162,7 @@ If a migration fails, do not start the backend: report the failing revision,
 the current database revision and the expected head. Never downgrade or reset
 the production database as part of a deployment.
 
-## 7. Startup, shutdown, update, rollback
+## 8. Startup, shutdown, update, rollback
 
 ```bash
 cd /srv/safetymain/app/infrastructure/production
@@ -129,7 +188,7 @@ docker compose build && docker compose up -d
 Rollback covers application code only. A migration that has already been
 applied is rolled back deliberately and separately, never automatically.
 
-## 8. Identity bootstrap
+## 9. Identity bootstrap
 
 An empty production database has no user, and users can only be created by an
 already authenticated admin. `scripts/bootstrap_admin.py` breaks that cycle
@@ -149,7 +208,7 @@ currently exposes no password-change or password-reset operation, so rotating
 it means re-hashing the credential directly against the database until such an
 endpoint exists. Every later account goes through `POST /api/v1/admin/users`.
 
-## 9. Health checks
+## 10. Health checks
 
 | Check | Command |
 |-------|---------|
@@ -161,7 +220,7 @@ endpoint exists. Every later account goes through `POST /api/v1/admin/users`.
 `/api/v1/ready` performs `SELECT 1` against PostgreSQL; a healthy container
 alone is not evidence of a successful deployment.
 
-## 10. Logs
+## 11. Logs
 
 ```bash
 docker logs -f safetymain-backend      # startup, request and error logs
@@ -174,7 +233,7 @@ files, so log growth is bounded. Startup logging reports only `app_env`,
 `jwt_algorithm`, whether an issuer is configured, and `auth_enforcement` —
 never the JWT secret, the database URL, or any token.
 
-## 11. Reverse proxy integration
+## 12. Reverse proxy integration
 
 The SafetyMAIN virtual host is appended to the shared `/root/caddy/Caddyfile`
 following the conventions already used by the other applications on the server.
@@ -192,7 +251,7 @@ leaves the container reading the old content, and the reload then reports
 recreate the container with `docker compose up -d` in `/root/caddy` — which
 briefly interrupts every site on the server and therefore needs owner approval.
 
-## 12. Known limitations
+## 13. Known limitations
 
 - The frontend image runs `next start` with the full production dependency
   tree. Next.js `output: "standalone"` would shrink it, but that is an
@@ -205,3 +264,6 @@ briefly interrupts every site on the server and therefore needs owner approval.
   no acting principal exists before the first user.
 - There is no password-change or password-reset endpoint yet, so the initial
   admin password cannot be rotated through the application.
+- Object storage is provisioned by hand (bucket, service account, CORS); there
+  is no infrastructure-as-code for it yet. Objects are never deleted by the
+  application (ADR-0006).

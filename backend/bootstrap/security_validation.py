@@ -16,6 +16,12 @@ MAX_REFRESH_ABSOLUTE_TTL_SECONDS = 15_552_000
 
 MIN_PRODUCTION_JWT_SECRET_LENGTH = 32
 
+MIN_STORAGE_PRESIGN_TTL_SECONDS = 60
+# SigV4 presigned URLs cannot outlive seven days.
+MAX_STORAGE_PRESIGN_TTL_SECONDS = 604_800
+# A single S3 PUT cannot exceed 5 GiB.
+MAX_STORAGE_UPLOAD_BYTES = 5 * 1024 * 1024 * 1024
+
 INSECURE_JWT_SECRET_VALUES: frozenset[str] = frozenset(
     {
         "secret",
@@ -45,6 +51,10 @@ def validate_security_configuration(settings: AppSettings) -> None:
     _validate_refresh_rotation(settings.refresh_token_rotation_enabled)
     _validate_jwt_issuer(settings.jwt_issuer)
     _validate_auth_enforcement(settings.auth_enforcement)
+    _validate_storage_limits(
+        presign_ttl_seconds=settings.storage_presign_ttl_seconds,
+        max_upload_bytes=settings.storage_max_upload_bytes,
+    )
 
     if _is_production_environment(settings.app_env):
         _validate_production_security_configuration(settings)
@@ -148,6 +158,24 @@ def _validate_auth_enforcement(auth_enforcement: bool) -> None:
         )
 
 
+def _validate_storage_limits(*, presign_ttl_seconds: int, max_upload_bytes: int) -> None:
+    if not (
+        MIN_STORAGE_PRESIGN_TTL_SECONDS
+        <= presign_ttl_seconds
+        <= MAX_STORAGE_PRESIGN_TTL_SECONDS
+    ):
+        raise SecurityConfigurationError(
+            "STORAGE_PRESIGN_TTL_SECONDS must be between "
+            f"{MIN_STORAGE_PRESIGN_TTL_SECONDS} and "
+            f"{MAX_STORAGE_PRESIGN_TTL_SECONDS} seconds."
+        )
+    if not 0 < max_upload_bytes <= MAX_STORAGE_UPLOAD_BYTES:
+        raise SecurityConfigurationError(
+            "STORAGE_MAX_UPLOAD_BYTES must be between 1 and "
+            f"{MAX_STORAGE_UPLOAD_BYTES} bytes."
+        )
+
+
 def _validate_production_security_configuration(settings: AppSettings) -> None:
     _validate_production_jwt_secret(settings.jwt_secret_key)
 
@@ -165,6 +193,21 @@ def _validate_production_security_configuration(settings: AppSettings) -> None:
         raise SecurityConfigurationError(
             "DATABASE_URL must be configured in production for persistent identity."
         )
+
+    _validate_production_storage(settings)
+
+
+def _validate_production_storage(settings: AppSettings) -> None:
+    required = (
+        ("STORAGE_BUCKET", settings.storage_bucket),
+        ("STORAGE_ACCESS_KEY", settings.storage_access_key),
+        ("STORAGE_SECRET_KEY", settings.storage_secret_key),
+    )
+    for name, value in required:
+        if value is None or not value.strip():
+            raise SecurityConfigurationError(
+                f"{name} must be configured in production for document storage."
+            )
 
 
 def _validate_production_jwt_secret(jwt_secret_key: str) -> None:

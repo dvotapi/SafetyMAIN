@@ -20,6 +20,7 @@ from backend.core.application.tenant.tenant_context_resolver import (
 from backend.core.contracts.membership_lookup import MembershipLookupPort
 from backend.core.contracts.membership_verification import MembershipVerificationPort
 from backend.core.contracts.password_hasher import PasswordHasherContract
+from backend.core.contracts.storage import StorageContract
 from backend.core.contracts.token_service import TokenServiceContract
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.contracts.user_credentials import UserCredentialsPort
@@ -53,10 +54,14 @@ from backend.core.infrastructure.persistence.sqlalchemy.engine import (
 from backend.core.infrastructure.persistence.sqlalchemy.unit_of_work import (
     SQLAlchemyUnitOfWork,
 )
+from backend.core.infrastructure.storage.in_memory_storage import InMemoryStorage
+from backend.core.infrastructure.storage.s3_storage import S3Storage
 from backend.core.infrastructure.time.utc_clock import UtcClock
 
 UowFactory = Callable[[], UnitOfWorkContract]
 ReadinessCheck = Callable[[], None]
+
+IN_MEMORY_STORAGE_BUCKET = "safetymain-in-memory"
 
 
 @dataclass(slots=True)
@@ -82,6 +87,7 @@ class AppContainer:
     membership_store: InMemoryMembershipStore | SQLAlchemyMembershipAdapter
     authorization_service: AuthorizationService
     tenant_context_resolver: TenantContextResolver
+    storage: StorageContract
 
     def dispose(self) -> None:
         if self.engine is not None:
@@ -102,6 +108,9 @@ def create_container(
     identity or membership stores. Non-production environments may use in-memory
     stores only when the database is intentionally unset or stores are injected
     for tests.
+
+    Object storage uses the S3 adapter whenever ``STORAGE_BUCKET`` is set.
+    Production never falls back to in-memory storage.
     """
 
     validate_security_configuration(settings)
@@ -176,6 +185,29 @@ def create_container(
         issuer=settings.jwt_issuer,
         clock=clock,
     )
+    storage: StorageContract
+    if settings.storage_bucket:
+        storage = S3Storage(
+            bucket=settings.storage_bucket,
+            endpoint_url=settings.storage_endpoint_url,
+            region=settings.storage_region,
+            access_key=settings.storage_access_key,
+            secret_key=settings.storage_secret_key,
+            presign_ttl_seconds=settings.storage_presign_ttl_seconds,
+            max_upload_bytes=settings.storage_max_upload_bytes,
+            clock=clock,
+        )
+    elif production:
+        raise SecurityConfigurationError(
+            "Production document storage requires STORAGE_BUCKET."
+        )
+    else:
+        storage = InMemoryStorage(
+            bucket=IN_MEMORY_STORAGE_BUCKET,
+            presign_ttl_seconds=settings.storage_presign_ttl_seconds,
+            max_upload_bytes=settings.storage_max_upload_bytes,
+            clock=clock,
+        )
     authorization_service = AuthorizationService(
         membership_verification=resolved_membership_store,
         membership_lookup=resolved_membership_store,
@@ -201,4 +233,5 @@ def create_container(
         membership_store=resolved_membership_store,
         authorization_service=authorization_service,
         tenant_context_resolver=tenant_context_resolver,
+        storage=storage,
     )

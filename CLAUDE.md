@@ -38,12 +38,14 @@ python -m pytest -m db                    # PostgreSQL-backed tests (see below)
 python -m ruff check .                    # lint
 python -m alembic upgrade head            # apply migrations
 python -m alembic revision -m "..." --autogenerate  # new migration
-docker compose up -d                      # local Postgres (safetymain/safetymain@localhost:5432/safetymain)
+docker compose up -d                      # local Postgres (safetymain/safetymain@localhost:5432/safetymain) + MinIO (localhost:9000, bucket safetymain-documents created by minio-bootstrap)
 ```
 
 Tests marked `db` are skipped unless `SAFETYMAIN_RUN_DB_TESTS=1` **and** `DATABASE_URL` is set and reachable — otherwise `tests/infrastructure/db_fixtures.py` fails loudly rather than silently skipping. CI (`.github/workflows/postgresql-tests.yml`) runs migrations then `pytest -m db` against a real Postgres 17 service, and asserts zero DB tests were skipped.
 
-Planned, not yet implemented: background worker `safetymain-worker` (ADR-0007) and a MinIO development service in `docker-compose.yml` (ADR-0006); the P11 tasks that introduce them add their commands here.
+Object storage (ADR-0006): `STORAGE_*` settings in `.env.example` point at the compose MinIO (images from `cgr.dev/chainguard/*`, the upstream `minio/*` images are no longer published). Without `STORAGE_BUCKET`, non-production runs use `InMemoryStorage`; production requires bucket and keys (Yandex Object Storage).
+
+Planned, not yet implemented: background worker `safetymain-worker` (ADR-0007); the P11 task that introduces it adds its commands here.
 
 ### Frontend (`frontend/`, Next.js 15 App Router, React 19, strict TypeScript)
 
@@ -71,7 +73,7 @@ Application-only Compose stack (no PostgreSQL — the database lives on a separa
 
 Clean Architecture layering under `backend/core/`, enforced by pytest architecture tests (`tests/architecture/`, rules documented in `docs/architecture/ArchitectureTesting.md`):
 
-- `domain/` — entities, value objects, domain events, domain exceptions, repository interfaces. May depend only on the stdlib, Pydantic, and itself. **Must not** import `application` or `infrastructure`, or any framework/storage library (FastAPI, SQLAlchemy, Redis, MinIO).
+- `domain/` — entities, value objects, domain events, domain exceptions, repository interfaces. May depend only on the stdlib, Pydantic, and itself. **Must not** import `application` or `infrastructure`, or any framework/storage library (FastAPI, SQLAlchemy, Redis, MinIO, boto3/botocore).
 - `application/` — use-case handlers (`handlers/`), commands, queries, DTOs, authorization/tenant services. Depends on `domain` and `contracts` only, never on `infrastructure`.
 - `contracts/` — ports (interfaces) that infrastructure implements (e.g. `unit_of_work.py`, `token_service.py`, `password_hasher.py`). Must stay independent of concrete adapters.
 - `infrastructure/` — SQLAlchemy/in-memory persistence, auth (JWT, bcrypt), messaging, storage, search, time. Implements `contracts/` ports; depends inward on domain/application/contracts.

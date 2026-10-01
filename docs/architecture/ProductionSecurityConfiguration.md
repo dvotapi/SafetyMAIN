@@ -72,6 +72,9 @@ When `APP_ENV=production`, SafetyMAIN requires:
 | `JWT_ISSUER` | Configured non-empty issuer |
 | `AUTH_ENFORCEMENT` | `true` |
 | `DATABASE_URL` | Configured persistent database URL |
+| `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY` | Non-empty; production never falls back to in-memory storage (ADR-0006) |
+| `STORAGE_PRESIGN_TTL_SECONDS` | 60–604800 (checked in every environment) |
+| `STORAGE_MAX_UPLOAD_BYTES` | 1–5368709120 (checked in every environment) |
 
 Rejected placeholder secrets include values such as `secret`, `changeme`,
 `development`, `dev-secret`, `test-secret`, and the development default

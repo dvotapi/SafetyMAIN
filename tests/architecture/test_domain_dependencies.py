@@ -22,6 +22,8 @@ def test_domain_layer_does_not_depend_on_outer_layers() -> None:
             "sqlalchemy",
             "redis",
             "minio",
+            "boto3",
+            "botocore",
         ),
         rule="Domain layer must not depend on application, infrastructure, or API modules.",
     )

@@ -22,6 +22,15 @@ REFRESH_TOKEN_ROTATION_ENABLED_ENV = "REFRESH_TOKEN_ROTATION_ENABLED"
 JWT_ISSUER_ENV = "JWT_ISSUER"
 AUTH_ENFORCEMENT_ENV = "AUTH_ENFORCEMENT"
 DEFAULT_ORGANIZATION_ID_ENV = "DEFAULT_ORGANIZATION_ID"
+STORAGE_ENDPOINT_URL_ENV = "STORAGE_ENDPOINT_URL"
+STORAGE_REGION_ENV = "STORAGE_REGION"
+STORAGE_BUCKET_ENV = "STORAGE_BUCKET"
+STORAGE_ACCESS_KEY_ENV = "STORAGE_ACCESS_KEY"
+STORAGE_SECRET_KEY_ENV = "STORAGE_SECRET_KEY"
+STORAGE_PRESIGN_TTL_SECONDS_ENV = "STORAGE_PRESIGN_TTL_SECONDS"
+STORAGE_MAX_UPLOAD_BYTES_ENV = "STORAGE_MAX_UPLOAD_BYTES"
+STORAGE_EXTERNAL_ACCESS_KEY_ENV = "STORAGE_EXTERNAL_ACCESS_KEY"
+STORAGE_EXTERNAL_SECRET_KEY_ENV = "STORAGE_EXTERNAL_SECRET_KEY"
 
 DEFAULT_APP_NAME = "SafetyMAIN API"
 DEFAULT_APP_VERSION = "0.1.0"
@@ -33,6 +42,9 @@ DEFAULT_JWT_REFRESH_TOKEN_TTL_SECONDS = 604_800
 DEFAULT_JWT_REFRESH_ABSOLUTE_TTL_SECONDS = 7_776_000
 DEFAULT_REFRESH_TOKEN_ROTATION_ENABLED = True
 DEFAULT_JWT_ISSUER = "safetymain"
+DEFAULT_STORAGE_REGION = "us-east-1"
+DEFAULT_STORAGE_PRESIGN_TTL_SECONDS = 900
+DEFAULT_STORAGE_MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +68,15 @@ class AppSettings:
     jwt_issuer: str | None = DEFAULT_JWT_ISSUER
     auth_enforcement: bool = False
     default_organization_id: OrganizationId | None = None
+    storage_endpoint_url: str | None = None
+    storage_region: str = DEFAULT_STORAGE_REGION
+    storage_bucket: str | None = None
+    storage_access_key: str | None = None
+    storage_secret_key: str | None = None
+    storage_presign_ttl_seconds: int = DEFAULT_STORAGE_PRESIGN_TTL_SECONDS
+    storage_max_upload_bytes: int = DEFAULT_STORAGE_MAX_UPLOAD_BYTES
+    storage_external_access_key: str | None = None
+    storage_external_secret_key: str | None = None
 
 
 def _read_bool(raw_value: str, *, default: bool) -> bool:
@@ -78,14 +99,25 @@ def _read_optional_organization_id(raw_value: str | None) -> OrganizationId | No
     return OrganizationId(value=UUID(normalized))
 
 
-def _read_positive_int(raw_value: str, *, default: int) -> int:
+def _read_positive_int(
+    raw_value: str,
+    *,
+    default: int,
+    error_message: str = "JWT token TTL must be a positive integer.",
+) -> int:
     value = raw_value.strip()
     if not value:
         return default
     parsed = int(value)
     if parsed <= 0:
-        raise ValueError("JWT token TTL must be a positive integer.")
+        raise ValueError(error_message)
     return parsed
+
+
+def _read_optional_str(raw_value: str | None) -> str | None:
+    if raw_value is None:
+        return None
+    return raw_value.strip() or None
 
 
 def load_settings(environment: Mapping[str, str] | None = None) -> AppSettings:
@@ -156,6 +188,30 @@ def load_settings(environment: Mapping[str, str] | None = None) -> AppSettings:
         ),
         default_organization_id=_read_optional_organization_id(
             source.get(DEFAULT_ORGANIZATION_ID_ENV)
+        ),
+        storage_endpoint_url=_read_optional_str(source.get(STORAGE_ENDPOINT_URL_ENV)),
+        storage_region=(
+            source.get(STORAGE_REGION_ENV, DEFAULT_STORAGE_REGION).strip()
+            or DEFAULT_STORAGE_REGION
+        ),
+        storage_bucket=_read_optional_str(source.get(STORAGE_BUCKET_ENV)),
+        storage_access_key=_read_optional_str(source.get(STORAGE_ACCESS_KEY_ENV)),
+        storage_secret_key=_read_optional_str(source.get(STORAGE_SECRET_KEY_ENV)),
+        storage_presign_ttl_seconds=_read_positive_int(
+            source.get(STORAGE_PRESIGN_TTL_SECONDS_ENV, ""),
+            default=DEFAULT_STORAGE_PRESIGN_TTL_SECONDS,
+            error_message="STORAGE_PRESIGN_TTL_SECONDS must be a positive integer.",
+        ),
+        storage_max_upload_bytes=_read_positive_int(
+            source.get(STORAGE_MAX_UPLOAD_BYTES_ENV, ""),
+            default=DEFAULT_STORAGE_MAX_UPLOAD_BYTES,
+            error_message="STORAGE_MAX_UPLOAD_BYTES must be a positive integer.",
+        ),
+        storage_external_access_key=_read_optional_str(
+            source.get(STORAGE_EXTERNAL_ACCESS_KEY_ENV)
+        ),
+        storage_external_secret_key=_read_optional_str(
+            source.get(STORAGE_EXTERNAL_SECRET_KEY_ENV)
         ),
     )
 
