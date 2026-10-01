@@ -1,6 +1,6 @@
 # TASK-P11-001 — Object Storage and Organisational Compliance Documents
 
-Status: Proposed
+Status: In Progress (implementation plan approved 2026-10-01)
 Epic: `docs/tasks/EPIC-P11-compliance-documentation.md`
 Depends on: TASK-P11-000 (ADR-0006, ADR-0009 sections on document types)
 
@@ -236,3 +236,75 @@ planning, keep consistent with `navigation.ts`):
 3. Migration `0013` + SQLAlchemy models/mappers/repo + db tests + seed script.
 4. Application handlers + RBAC + audit + API + API tests + docs.
 5. Frontend registry + object page + forms + upload + tests + E2E.
+
+---
+
+## Approved Implementation Plan
+
+Approved by the product owner on 2026-10-01 (Phase 3). All planning
+questions below were resolved per the recommended option. Where this plan
+refines the Scope above, the plan wins.
+
+### Planning decisions
+
+| # | Topic | Decision |
+|---|---|---|
+| D1 | Seed codes | Seed exactly the Scope §2 list plus briefing types `ot_briefing_*` with `periodicity_months` (expected by P11-005). P11-008 aligns its code names during its own planning. |
+| D2 | Periods | Phase 3 proposes a table of default `review_period_months` / `validity_months` / `periodicity_months`; the product owner or the OT specialist confirms it before merge. |
+| D3 | SHA-256 | Client computes SHA-256 (`crypto.subtle`) before requesting the upload URL. `upload-url` receives `filename`, `content_type`, `size_bytes`, `sha256`. The presigned PUT signs `Content-Type`, `Content-Length`, and `x-amz-meta-sha256`. `confirm` performs `head` and compares size, MIME type, and the SHA-256 metadata. Limitation: the hash is client-asserted; server-side byte verification is future worker work (ADR-0007). Port signature is `create_upload_url(key, content_type, size_bytes, sha256)` instead of `max_bytes` (a presigned PUT cannot sign a maximum; the exact length is signed and checked against `STORAGE_MAX_UPLOAD_BYTES` before signing). |
+| D4 | Key `{version}` segment | An immutable per-upload `upload_id` (UUID): `{organization_id}/compliance_document/{document_id}/{upload_id}/{safe_filename}`. No pending-upload table; `confirm` requires the key to start with `{organization_id}/compliance_document/{document_id}/` and the object to exist. |
+| D5 | Audit event names | Keep the Scope §5 names; mark identifiers that do not match `<category>.<subject>.<action>` (`review_started`, `review_completed`, `file_attached`) with `legacy_identifier=True`, as all `risk_control` events do. |
+| D6 | File attachment | Files attach only in `draft`. `approve` therefore also requires a current file. `PATCH` is allowed only in `draft`. Changing an active document means a new edition (draft with `supersedes_document_id`). |
+| D7 | `complete-review` | Sets `next_review_at` = review completion date + `review_period_months`, unless the request provides an explicit `next_review_at`. |
+| D8 | `restore` | Returns to the status held before archiving (`status_before_archive` is stored). Reason required (Hazard precedent). |
+| D9 | `code` uniqueness | Partial unique index `(organization_id, code) WHERE status IN ('active', 'under_review')`. |
+| D10 | Permissions | `start-review` → `update`; `complete-review` → `activate`; `restore` → `archive`; `upload-url`, `confirm` → `update`; `download-url`, `versions`, `GET /document-types` → `read`. |
+| D11 | `is_review_due` | `next_review_at <= today + max(warning_thresholds_days)`; `today` is the UTC date from `ClockContract` in the handler; always `false` when the type has no `review_period_months` or `next_review_at` is null. |
+| D12 | Frontend route | `/knowledge/documents`; navigation child "Локальные акты" under "Знания", gated by `compliance_document:read`. |
+| D13 | Production rollout | Phase 1 updates `infrastructure/production/.env.example`, `compose.yml`, and `docs/infrastructure/ApplicationServerDeployment.md` (Yandex Object Storage credentials, bucket CORS). Deploy only after the bucket and keys exist. |
+
+Additional rules inferred from the Scope and confirmed with the plan:
+
+- Activation of a document whose type has `requires_approval_order` requires `approved_by_document_id` pointing to a same-organization document of type `order`.
+- `supersedes_document_id` must reference a same-organization document of the same type in `active` or `under_review`; it moves to `superseded` in the same unit of work, with its own `compliance.document.superseded` audit record.
+- References to documents of another organization fail with 422 without revealing existence.
+- Download URLs set `ResponseContentDisposition=attachment` (RFC 5987 filename) and `ResponseContentType` from stored metadata.
+- Dates use `datetime.date` / `sa.Date` (new pattern in the backend, mandated by this task).
+- Reads are not audited (Risk Control precedent).
+
+### Reference slices
+
+- Backend: Risk Control (entity, `_TRANSITIONS`, `_MutatingHandler`, `run_audited_admin_operation`, registries, repositories, migration `0012`); Hazard for `restore`.
+- Frontend: `features/risk-controls` (registry, object page, lifecycle actions, activity via `/admin/audit-events`), `features/hazards` (create form).
+
+### Phases
+
+Each phase: self-review → independent review → explicit approval. One chat per phase.
+
+1. **Storage.** `StorageContract` (replaces the placeholder), S3 and in-memory adapters, `STORAGE_*` settings incl. `STORAGE_MAX_UPLOAD_BYTES` (default 50 MB), production validation, container wiring, `boto3` dependency, MinIO + bucket bootstrap + CORS for `localhost:3100` in `docker-compose.yml`, `boto3`/`botocore` forbidden in domain/application/contracts architecture tests, production env/compose/runbook, `CLAUDE.md` MinIO commands. Verify: adapter unit tests (in-memory, signed headers without network), settings tests, `pytest tests/architecture`, `ruff`.
+2. **Domain.** `DocumentType`, `ComplianceDocument` (transitions, month arithmetic without `dateutil`, `is_review_due(as_of)`, supersede, restore), `DocumentFile`, exceptions, repository contracts, in-memory repositories, UoW. Verify: domain and contract tests.
+3. **Persistence.** Migration `0013` (`document_types`, `compliance_documents`, `document_files`; CHECK constraints; D9 index; `sa.Date`), SQLAlchemy models/mappers/repositories, idempotent `scripts/seed_document_types.py --organization-id` (no audit, `bootstrap_admin` precedent), D2 table, alembic head test update. Verify: `pytest -m db`.
+4. **Document types + document CRUD.** Permissions/roles, audit family `compliance`, error codes, operation ids; `GET /document-types`; `POST`/`GET`/list/`PATCH` documents with filters and `is_review_due`. Verify: API tests (cross-tenant 404, 409, 422, no DELETE, role matrix), OpenAPI, taxonomy tests.
+5. **Lifecycle, files, versions.** approve / activate (atomic supersede) / start-review / complete-review / archive / restore; upload-url / confirm / download-url / versions; API, persistence, and domain docs; `CLAUDE.md` aggregate list. Verify: API end-to-end tests with in-memory storage; manual dev run with MinIO (real PDF, key scheme, no bytes through the API).
+6. **Frontend registry + object page.** Feature `compliance-documents`, routes, navigation, dependency-cruiser rules, registry with URL filters, object page (status, lifecycle actions, properties, file, versions, supersedes links, activity, "Ознакомление" placeholder). Verify: component tests, `npm run verify`.
+7. **Frontend form + upload.** Create/edit form (Zod + RHF, order picker), upload dialog (SHA-256, XHR progress, confirm), E2E create → upload → activate. Verify: component tests, E2E, `npm run verify`.
+
+### Acceptance Criteria coverage
+
+| Criterion | Phases |
+|---|---|
+| Create → upload → approve → activate; backend review-due state | 4, 5, 7 |
+| Atomic supersede | 2, 5 (db test in 3) |
+| Swappable storage; in-memory unit tests; `pytest -m db`; migration `0013` | 1, 3 |
+| Architecture tests incl. `boto3` rule | 1, 4 |
+| `npm run verify`, component tests, E2E | 6, 7 |
+| API and persistence docs; `CLAUDE.md` | 5 (MinIO commands in 1) |
+
+### Known risks and limitations
+
+- Production refuses to start without `STORAGE_*` after phase 1 (D13).
+- SHA-256 is client-asserted (D3).
+- Browsers reach object storage directly: bucket CORS and a browser-reachable presign host are required.
+- `crypto.subtle.digest` reads the whole file into memory (bounded by the size limit).
+- `review_due` filtering is evaluated in Python after loading the filtered set (Risk Control `overdue_only` precedent).
+- `applicability` stays loose JSON; asset links deferred; document types are seed-only; `today` is UTC; no physical deletion.
