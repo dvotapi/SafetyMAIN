@@ -112,8 +112,19 @@ Documents are stored in Yandex Object Storage. Provision it before deploying a
 backend version that contains TASK-P11-001, otherwise startup fails validation:
 
 1. Create a bucket for SafetyMAIN (private access, no public listing or read).
-2. Create a service account with `storage.editor` scoped to that bucket and a
-   static access key for it. Put the key id and secret into
+2. Create a dedicated service account with no folder-level roles (a folder
+   role such as `storage.editor` would reach every bucket in the folder,
+   including `hr_form` buckets). Grant it `READ` and `WRITE` on this bucket
+   only, through the bucket ACL:
+
+   ```bash
+   yc storage bucket update --name <bucket> \
+     --grants grant-type=grant-type-account,grantee-id=<sa-id>,permission=permission-read \
+     --grants grant-type=grant-type-account,grantee-id=<sa-id>,permission=permission-write
+   ```
+
+   Create a static access key for it (`yc iam access-key create
+   --service-account-name <sa-name>`) and put the key id and secret into
    `STORAGE_ACCESS_KEY` / `STORAGE_SECRET_KEY`; never reuse the `hr_form`
    credential.
 3. Set `STORAGE_ENDPOINT_URL=https://storage.yandexcloud.net`,
