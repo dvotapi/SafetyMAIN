@@ -10,6 +10,8 @@ _SHA256_HEX = re.compile(r"[0-9a-f]{64}")
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x1f\x7f]")
 # RFC 5987 attr-char minus ALPHA / DIGIT and the characters ``quote`` keeps anyway.
 _RFC5987_SAFE = "!#$&+^`|"
+# SigV4 presigned URLs cannot outlive seven days.
+MAX_PRESIGN_TTL_SECONDS = 604_800
 
 
 def validate_upload_request(
@@ -22,10 +24,7 @@ def validate_upload_request(
 ) -> None:
     """Reject upload requests that must never be signed."""
 
-    if not key or key.startswith("/") or _CONTROL_CHARACTERS.search(key):
-        raise StorageRequestRejectedError("Object key is malformed.")
-    if not content_type.strip() or _CONTROL_CHARACTERS.search(content_type):
-        raise StorageRequestRejectedError("Content type is malformed.")
+    validate_object_reference(key=key, content_type=content_type)
     if size_bytes <= 0:
         raise StorageRequestRejectedError("File size must be positive.")
     if size_bytes > max_upload_bytes:
@@ -34,6 +33,15 @@ def validate_upload_request(
         raise StorageRequestRejectedError(
             "SHA-256 must be 64 lowercase hexadecimal characters."
         )
+
+
+def validate_object_reference(*, key: str, content_type: str) -> None:
+    """Reject keys and content types that must never reach a signed request."""
+
+    if not key or key.startswith("/") or _CONTROL_CHARACTERS.search(key):
+        raise StorageRequestRejectedError("Object key is malformed.")
+    if not content_type.strip() or _CONTROL_CHARACTERS.search(content_type):
+        raise StorageRequestRejectedError("Content type is malformed.")
 
 
 def ensure_owned_bucket(bucket: str, owned_bucket: str) -> None:
@@ -47,8 +55,10 @@ def resolve_ttl(ttl: timedelta | None, default_ttl_seconds: int) -> int:
     if ttl is None:
         return default_ttl_seconds
     seconds = int(ttl.total_seconds())
-    if seconds <= 0:
-        raise StorageRequestRejectedError("Presign lifetime must be positive.")
+    if not 0 < seconds <= MAX_PRESIGN_TTL_SECONDS:
+        raise StorageRequestRejectedError(
+            f"Presign lifetime must be between 1 and {MAX_PRESIGN_TTL_SECONDS} seconds."
+        )
     return seconds
 
 

@@ -25,6 +25,7 @@ def _production_settings(**overrides: object) -> AppSettings:
         "jwt_refresh_token_ttl_seconds": 604800,
         "jwt_issuer": "safetymain-prod",
         "auth_enforcement": True,
+        "storage_endpoint_url": "https://storage.yandexcloud.net",
         "storage_bucket": "safetymain-documents",
         "storage_access_key": "production-storage-access-key",
         "storage_secret_key": "production-storage-secret-key",
@@ -244,3 +245,39 @@ def test_storage_validation_errors_do_not_expose_secrets() -> None:
         )
 
     assert secret not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    "endpoint_url",
+    [None, "", "   ", "http://storage.yandexcloud.net", "https://", "storage.yandexcloud.net"],
+)
+def test_production_requires_https_storage_endpoint(endpoint_url: str | None) -> None:
+    with pytest.raises(SecurityConfigurationError, match="STORAGE_ENDPOINT_URL"):
+        validate_security_configuration(
+            _production_settings(storage_endpoint_url=endpoint_url)
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "variable"),
+    [
+        ("storage_access_key", "STORAGE_ACCESS_KEY"),
+        ("storage_secret_key", "STORAGE_SECRET_KEY"),
+    ],
+)
+def test_configured_bucket_requires_explicit_keys_outside_production(
+    field: str, variable: str
+) -> None:
+    values: dict[str, object] = {
+        "storage_bucket": "safetymain-documents",
+        "storage_access_key": "access",
+        "storage_secret_key": "secret",
+    }
+    values[field] = None
+
+    with pytest.raises(SecurityConfigurationError, match=variable):
+        validate_security_configuration(AppSettings(**values))
+
+
+def test_development_without_bucket_needs_no_storage_keys() -> None:
+    validate_security_configuration(AppSettings(storage_bucket=None))

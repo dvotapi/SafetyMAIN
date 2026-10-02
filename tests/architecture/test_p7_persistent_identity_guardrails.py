@@ -101,6 +101,7 @@ def test_production_rejects_in_memory_identity_injection() -> None:
         jwt_secret_key="production-guardrail-secret-key-32b",
         jwt_issuer="safetymain-production",
         auth_enforcement=True,
+        storage_endpoint_url="https://storage.yandexcloud.net",
         storage_bucket="safetymain-guardrail",
         storage_access_key="guardrail-access-key",
         storage_secret_key="guardrail-secret-key",

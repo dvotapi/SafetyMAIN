@@ -188,3 +188,32 @@ def test_head_propagates_other_storage_errors() -> None:
 def test_head_rejects_foreign_bucket() -> None:
     with pytest.raises(StorageRequestRejectedError):
         _storage().head("complex-hr-docs", KEY)
+
+
+@pytest.mark.parametrize(
+    ("key", "content_type"),
+    [
+        ("", "application/pdf"),
+        ("/absolute", "application/pdf"),
+        (KEY, " "),
+        (KEY, "application/pdf\r\nX-Injected: 1"),
+    ],
+)
+def test_download_url_rejects_malformed_reference(key: str, content_type: str) -> None:
+    with pytest.raises(StorageRequestRejectedError):
+        _storage().create_download_url(BUCKET, key, None, "a.pdf", content_type)
+
+
+def test_download_url_rejects_ttl_beyond_sigv4_limit() -> None:
+    with pytest.raises(StorageRequestRejectedError, match="604800"):
+        _storage().create_download_url(
+            BUCKET, KEY, timedelta(days=7, seconds=1), "a.pdf", "application/pdf"
+        )
+
+
+def test_download_url_accepts_maximum_ttl() -> None:
+    url = _storage().create_download_url(
+        BUCKET, KEY, timedelta(days=7), "a.pdf", "application/pdf"
+    )
+
+    assert _query(url)["X-Amz-Expires"] == ["604800"]

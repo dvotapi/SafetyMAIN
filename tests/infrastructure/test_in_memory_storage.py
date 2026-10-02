@@ -105,3 +105,16 @@ def test_foreign_bucket_is_rejected() -> None:
         storage.head("complex-hr-docs", KEY)
     with pytest.raises(StorageRequestRejectedError):
         storage.create_download_url("complex-hr-docs", KEY, None, "a.pdf", "application/pdf")
+
+
+def test_download_url_validates_reference_and_ttl_like_s3_adapter() -> None:
+    storage = _storage()
+
+    with pytest.raises(StorageRequestRejectedError):
+        storage.create_download_url(BUCKET, "", None, "a.pdf", "application/pdf")
+    with pytest.raises(StorageRequestRejectedError):
+        storage.create_download_url(BUCKET, KEY, None, "a.pdf", "text/plain\nX: 1")
+    with pytest.raises(StorageRequestRejectedError):
+        storage.create_download_url(
+            BUCKET, KEY, timedelta(days=8), "a.pdf", "application/pdf"
+        )

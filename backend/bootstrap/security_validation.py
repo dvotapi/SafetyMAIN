@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from urllib.parse import urlsplit
+
 from backend.bootstrap.settings import (
     DEFAULT_JWT_SECRET_KEY,
     AppSettings,
@@ -55,6 +57,7 @@ def validate_security_configuration(settings: AppSettings) -> None:
         presign_ttl_seconds=settings.storage_presign_ttl_seconds,
         max_upload_bytes=settings.storage_max_upload_bytes,
     )
+    _validate_storage_credentials(settings)
 
     if _is_production_environment(settings.app_env):
         _validate_production_security_configuration(settings)
@@ -176,6 +179,21 @@ def _validate_storage_limits(*, presign_ttl_seconds: int, max_upload_bytes: int)
         )
 
 
+def _validate_storage_credentials(settings: AppSettings) -> None:
+    # A configured bucket without explicit keys would make boto3 fall back to
+    # ambient AWS credentials (environment, profiles, instance metadata).
+    if not settings.storage_bucket:
+        return
+    for name, value in (
+        ("STORAGE_ACCESS_KEY", settings.storage_access_key),
+        ("STORAGE_SECRET_KEY", settings.storage_secret_key),
+    ):
+        if value is None or not value.strip():
+            raise SecurityConfigurationError(
+                f"{name} must be configured when STORAGE_BUCKET is set."
+            )
+
+
 def _validate_production_security_configuration(settings: AppSettings) -> None:
     _validate_production_jwt_secret(settings.jwt_secret_key)
 
@@ -208,6 +226,12 @@ def _validate_production_storage(settings: AppSettings) -> None:
             raise SecurityConfigurationError(
                 f"{name} must be configured in production for document storage."
             )
+
+    endpoint = urlsplit((settings.storage_endpoint_url or "").strip())
+    if endpoint.scheme != "https" or not endpoint.netloc:
+        raise SecurityConfigurationError(
+            "STORAGE_ENDPOINT_URL must be an https:// URL in production."
+        )
 
 
 def _validate_production_jwt_secret(jwt_secret_key: str) -> None:

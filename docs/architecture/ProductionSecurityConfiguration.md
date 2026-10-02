@@ -73,6 +73,8 @@ When `APP_ENV=production`, SafetyMAIN requires:
 | `AUTH_ENFORCEMENT` | `true` |
 | `DATABASE_URL` | Configured persistent database URL |
 | `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY` | Non-empty; production never falls back to in-memory storage (ADR-0006) |
+| `STORAGE_ENDPOINT_URL` | An `https://` URL with a host; without it boto3 would silently target AWS |
+| `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY` (any environment) | Required whenever `STORAGE_BUCKET` is set, so boto3 never falls back to ambient AWS credentials |
 | `STORAGE_PRESIGN_TTL_SECONDS` | 60–604800 (checked in every environment) |
 | `STORAGE_MAX_UPLOAD_BYTES` | 1–5368709120 (checked in every environment) |
 

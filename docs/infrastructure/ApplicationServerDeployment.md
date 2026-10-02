@@ -80,9 +80,9 @@ Object storage (section 6): `STORAGE_ENDPOINT_URL`, `STORAGE_REGION`,
 `STORAGE_PRESIGN_TTL_SECONDS` (60–604800, default 900),
 `STORAGE_MAX_UPLOAD_BYTES` (default 52428800 = 50 MB), and the read-only
 `STORAGE_EXTERNAL_ACCESS_KEY` / `STORAGE_EXTERNAL_SECRET_KEY` reserved for
-TASK-P11-008 (not required yet). `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY` and
-`STORAGE_SECRET_KEY` are mandatory in production: the backend refuses to start
-without them.
+TASK-P11-008 (not required yet). `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`,
+`STORAGE_SECRET_KEY` and an `https://` `STORAGE_ENDPOINT_URL` are mandatory in
+production: the backend refuses to start without them.
 
 Frontend build-time (same file; consumed as Compose build arguments):
 `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_ENV`.

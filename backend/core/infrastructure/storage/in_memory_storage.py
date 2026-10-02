@@ -13,6 +13,7 @@ from backend.core.infrastructure.storage.presign_rules import (
     attachment_content_disposition,
     ensure_owned_bucket,
     resolve_ttl,
+    validate_object_reference,
     validate_upload_request,
 )
 
@@ -74,6 +75,7 @@ class InMemoryStorage:
         content_type: str,
     ) -> str:
         ensure_owned_bucket(bucket, self._bucket)
+        validate_object_reference(key=key, content_type=content_type)
         return self._url(
             bucket,
             key,
