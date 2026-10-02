@@ -43,7 +43,7 @@ docker compose up -d                      # local Postgres (safetymain/safetymai
 
 Tests marked `db` are skipped unless `SAFETYMAIN_RUN_DB_TESTS=1` **and** `DATABASE_URL` is set and reachable — otherwise `tests/infrastructure/db_fixtures.py` fails loudly rather than silently skipping. CI (`.github/workflows/postgresql-tests.yml`) runs migrations then `pytest -m db` against a real Postgres 17 service, and asserts zero DB tests were skipped.
 
-Object storage (ADR-0006): `STORAGE_*` settings in `.env.example` point at the compose MinIO (images from `cgr.dev/chainguard/*`, the upstream `minio/*` images are no longer published). Without `STORAGE_BUCKET`, non-production runs use `InMemoryStorage`; production requires bucket and keys (Yandex Object Storage).
+Object storage (ADR-0006): `STORAGE_*` settings in `.env.example` point at the compose MinIO (images from `cgr.dev/chainguard/*` pinned by digest; the upstream `minio/*` images are no longer published). Without `STORAGE_BUCKET`, non-production runs use `InMemoryStorage`; production requires bucket and keys (Yandex Object Storage).
 
 Planned, not yet implemented: background worker `safetymain-worker` (ADR-0007); the P11 task that introduces it adds its commands here.
 

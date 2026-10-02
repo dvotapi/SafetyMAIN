@@ -17,9 +17,12 @@ services:
 
   # S3-compatible object storage for development (ADR-0006). The upstream
   # minio/minio and minio/mc images are no longer published anonymously;
-  # Chainguard builds both from the MinIO open-source tree.
+  # Chainguard builds both from the MinIO open-source tree. Chainguard's free
+  # tier only publishes `latest`, so both images are pinned by digest and
+  # updated deliberately (`docker buildx imagetools inspect <image>:latest`).
   minio:
-    image: cgr.dev/chainguard/minio:latest
+    # MinIO RELEASE.2026-09-22T19-25-18Z
+    image: cgr.dev/chainguard/minio@sha256:0f95aa412a12351a95bb43c3b54b66440eb0aa022bb3f3458942678a489e915b
     command: ["server", "/data", "--address", ":9000"]
     environment:
       MINIO_ROOT_USER: safetymain
@@ -33,7 +36,7 @@ services:
 
   # One-shot bucket bootstrap; retries until MinIO accepts connections.
   minio-bootstrap:
-    image: cgr.dev/chainguard/minio-client:latest
+    image: cgr.dev/chainguard/minio-client@sha256:231c5976b6145971a5440dcd99257b23840513999f87cbcb68cd6a8ba674ca51
     command: ["mb", "--ignore-existing", "local/safetymain-documents"]
     environment:
       MC_HOST_local: http://safetymain:safetymain-minio@minio:9000
