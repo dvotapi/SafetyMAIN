@@ -5,6 +5,8 @@ from typing import Protocol, Self
 
 from backend.core.domain.repositories import (
     AuditEventRepositoryContract,
+    ComplianceDocumentRepositoryContract,
+    DocumentTypeRepositoryContract,
     HazardRepositoryContract,
     RiskAssessmentRepositoryContract,
     RiskControlRepositoryContract,
@@ -55,6 +57,14 @@ class UnitOfWorkContract(Protocol):
 
     @property
     def risk_controls(self) -> RiskControlRepositoryContract:
+        ...
+
+    @property
+    def document_types(self) -> DocumentTypeRepositoryContract:
+        ...
+
+    @property
+    def compliance_documents(self) -> ComplianceDocumentRepositoryContract:
         ...
 
     @property

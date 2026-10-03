@@ -71,3 +71,15 @@ class ControlId(_UuidIdentity):
 
 class RiskControlId(_UuidIdentity):
     pass
+
+
+class DocumentTypeId(_UuidIdentity):
+    pass
+
+
+class ComplianceDocumentId(_UuidIdentity):
+    pass
+
+
+class DocumentFileId(_UuidIdentity):
+    pass

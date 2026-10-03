@@ -3,6 +3,12 @@ from __future__ import annotations
 from backend.core.infrastructure.persistence.in_memory.audit_event_repository import (
     InMemoryAuditEventRepository,
 )
+from backend.core.infrastructure.persistence.in_memory.compliance_document_repository import (
+    InMemoryComplianceDocumentRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.document_type_repository import (
+    InMemoryDocumentTypeRepository,
+)
 from backend.core.infrastructure.persistence.in_memory.hazard_repository import (
     InMemoryHazardRepository,
 )
@@ -37,6 +43,8 @@ from backend.core.infrastructure.persistence.in_memory.user_repository import (
 
 __all__ = [
     "InMemoryAuditEventRepository",
+    "InMemoryComplianceDocumentRepository",
+    "InMemoryDocumentTypeRepository",
     "InMemoryHazardRepository",
     "InMemoryRiskAssessmentRepository",
     "InMemoryRiskControlRepository",

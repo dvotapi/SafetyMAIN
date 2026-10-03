@@ -5,6 +5,8 @@ from types import TracebackType
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.repositories import (
     AuditEventRepositoryContract,
+    ComplianceDocumentRepositoryContract,
+    DocumentTypeRepositoryContract,
     HazardRepositoryContract,
     RiskAssessmentRepositoryContract,
     RiskControlRepositoryContract,
@@ -18,6 +20,12 @@ from backend.core.domain.repositories import (
 )
 from backend.core.infrastructure.persistence.in_memory.audit_event_repository import (
     InMemoryAuditEventRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.compliance_document_repository import (
+    InMemoryComplianceDocumentRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.document_type_repository import (
+    InMemoryDocumentTypeRepository,
 )
 from backend.core.infrastructure.persistence.in_memory.hazard_repository import (
     InMemoryHazardRepository,
@@ -63,6 +71,8 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         hazards: HazardRepositoryContract | None = None,
         risk_assessments: RiskAssessmentRepositoryContract | None = None,
         risk_controls: RiskControlRepositoryContract | None = None,
+        document_types: DocumentTypeRepositoryContract | None = None,
+        compliance_documents: ComplianceDocumentRepositoryContract | None = None,
         audit_events: AuditEventRepositoryContract | None = None,
         refresh_sessions: RefreshTokenSessionRepositoryContract | None = None,
     ) -> None:
@@ -75,6 +85,10 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._hazards = hazards or InMemoryHazardRepository()
         self._risk_assessments = risk_assessments or InMemoryRiskAssessmentRepository()
         self._risk_controls = risk_controls or InMemoryRiskControlRepository()
+        self._document_types = document_types or InMemoryDocumentTypeRepository()
+        self._compliance_documents = (
+            compliance_documents or InMemoryComplianceDocumentRepository()
+        )
         self._audit_events = audit_events or InMemoryAuditEventRepository()
         self._refresh_sessions = refresh_sessions or InMemoryRefreshTokenSessionRepository()
         self._knowledge_objects_snapshot: object | None = None
@@ -86,6 +100,8 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._hazards_snapshot: object | None = None
         self._risk_assessments_snapshot: object | None = None
         self._risk_controls_snapshot: object | None = None
+        self._document_types_snapshot: object | None = None
+        self._compliance_documents_snapshot: object | None = None
         self._audit_events_snapshot: object | None = None
         self._refresh_sessions_snapshot: object | None = None
         self._snapshots_taken = False
@@ -128,6 +144,14 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
     @property
     def risk_controls(self) -> RiskControlRepositoryContract:
         return self._risk_controls
+
+    @property
+    def document_types(self) -> DocumentTypeRepositoryContract:
+        return self._document_types
+
+    @property
+    def compliance_documents(self) -> ComplianceDocumentRepositoryContract:
+        return self._compliance_documents
 
     @property
     def audit_events(self) -> AuditEventRepositoryContract:
@@ -197,6 +221,10 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
             self._risk_assessments_snapshot = self._risk_assessments.snapshot()
         if hasattr(self._risk_controls, "snapshot"):
             self._risk_controls_snapshot = self._risk_controls.snapshot()
+        if hasattr(self._document_types, "snapshot"):
+            self._document_types_snapshot = self._document_types.snapshot()
+        if hasattr(self._compliance_documents, "snapshot"):
+            self._compliance_documents_snapshot = self._compliance_documents.snapshot()
         if hasattr(self._audit_events, "snapshot"):
             self._audit_events_snapshot = self._audit_events.snapshot()
         if hasattr(self._refresh_sessions, "snapshot"):
@@ -228,6 +256,13 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
             self._risk_assessments.restore(self._risk_assessments_snapshot)
         if self._risk_controls_snapshot is not None and hasattr(self._risk_controls, "restore"):
             self._risk_controls.restore(self._risk_controls_snapshot)
+        if self._document_types_snapshot is not None and hasattr(self._document_types, "restore"):
+            self._document_types.restore(self._document_types_snapshot)
+        if (
+            self._compliance_documents_snapshot is not None
+            and hasattr(self._compliance_documents, "restore")
+        ):
+            self._compliance_documents.restore(self._compliance_documents_snapshot)
         if self._audit_events_snapshot is not None and hasattr(self._audit_events, "restore"):
             self._audit_events.restore(self._audit_events_snapshot)
         if self._refresh_sessions_snapshot is not None and hasattr(self._refresh_sessions, "restore"):
@@ -244,5 +279,7 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._hazards_snapshot = None
         self._risk_assessments_snapshot = None
         self._risk_controls_snapshot = None
+        self._document_types_snapshot = None
+        self._compliance_documents_snapshot = None
         self._audit_events_snapshot = None
         self._refresh_sessions_snapshot = None

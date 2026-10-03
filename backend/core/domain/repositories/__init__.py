@@ -1,8 +1,14 @@
 from backend.core.domain.repositories.audit_event_repository import (
     AuditEventRepositoryContract,
 )
+from backend.core.domain.repositories.compliance_document_repository import (
+    ComplianceDocumentRepositoryContract,
+)
 from backend.core.domain.repositories.corrective_action_repository import (
     CorrectiveActionRepositoryContract,
+)
+from backend.core.domain.repositories.document_type_repository import (
+    DocumentTypeRepositoryContract,
 )
 from backend.core.domain.repositories.hazard_repository import HazardRepositoryContract
 from backend.core.domain.repositories.incident_repository import (
@@ -47,7 +53,9 @@ from backend.core.domain.repositories.user_repository import UserRepositoryContr
 __all__ = [
     "AssetRepositoryContract",
     "AuditEventRepositoryContract",
+    "ComplianceDocumentRepositoryContract",
     "CorrectiveActionRepositoryContract",
+    "DocumentTypeRepositoryContract",
     "EmergencyPlanRepositoryContract",
     "HazardRepositoryContract",
     "IncidentRepositoryContract",
