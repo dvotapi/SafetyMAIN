@@ -18,7 +18,9 @@ from backend.core.domain.value_objects.safety_ids import DocumentTypeId
 class ComplianceDocumentReviewDueFilter:
     """Keep only review-due documents (D11), evaluated per document type.
 
-    Documents whose type is missing from ``document_types`` are not review-due.
+    ``document_types`` must hold the type of every document the other criteria
+    keep, inactive types included (``list(organization_id, include_inactive=True)``);
+    a missing type raises ``ValueError``.
     """
 
     as_of: date

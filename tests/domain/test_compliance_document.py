@@ -5,6 +5,7 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
+from pydantic import ValidationError
 
 from backend.core.domain.entities.compliance_document import ComplianceDocument
 from backend.core.domain.exceptions.compliance_document import (
@@ -599,7 +600,7 @@ def test_supersede_rejects_replacement_from_another_organization() -> None:
     foreign = advance_to_active(
         compliance_document_draft(foreign_type, supersedes_document_id=old.id),
         foreign_type,
-    )
+    ).model_copy(update={"document_type_id": old.document_type_id})
 
     with pytest.raises(ComplianceDocumentValidationError):
         old.supersede(
@@ -701,6 +702,40 @@ def test_archived_document_is_terminal_until_restored() -> None:
         archived.approve(
             at=LATER, actor_id=archived.created_by, expected_version=archived.version
         )
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"status_before_archive": None},
+        {"archive_reason": None},
+        {"status_before_archive": ComplianceDocumentStatus.UNDER_REVIEW},
+        {"status_before_archive": ComplianceDocumentStatus.ARCHIVED},
+    ],
+)
+def test_archived_document_requires_consistent_archive_bookkeeping(
+    overrides: dict[str, Any],
+) -> None:
+    archived = _archive(compliance_document_draft())
+
+    with pytest.raises(ValidationError):
+        ComplianceDocument.model_validate({**dict(archived), **overrides})
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"status_before_archive": ComplianceDocumentStatus.DRAFT},
+        {"archive_reason": "Stale"},
+    ],
+)
+def test_document_outside_archive_has_no_archive_bookkeeping(
+    overrides: dict[str, Any],
+) -> None:
+    document = compliance_document_draft()
+
+    with pytest.raises(ValidationError):
+        ComplianceDocument.model_validate({**dict(document), **overrides})
 
 
 def test_restore_requires_archived_status() -> None:
@@ -837,6 +872,13 @@ def test_is_review_due_applies_only_to_active_and_under_review() -> None:
     assert under_review.is_review_due(as_of=as_of, document_type=document_type) is True
     for document in (archived, superseded, approved):
         assert document.is_review_due(as_of=as_of, document_type=document_type) is False
+
+
+def test_is_review_due_rejects_a_datetime_as_of() -> None:
+    document, document_type = _active_with_next_review(date(2026, 10, 1))
+
+    with pytest.raises(TypeError, match="date, not a datetime"):
+        document.is_review_due(as_of=FIXED_AT, document_type=document_type)
 
 
 def test_is_review_due_rejects_a_different_document_type() -> None:

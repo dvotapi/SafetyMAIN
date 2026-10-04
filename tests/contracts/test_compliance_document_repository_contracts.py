@@ -199,6 +199,31 @@ class ComplianceDocumentRepositoryContractSuite:
             )
         )
 
+    def test_restore_into_force_respects_code_uniqueness(
+        self, repository: ComplianceDocumentRepositoryContract
+    ) -> None:
+        document_type = make_document_type()
+        active = advance_to_active(
+            compliance_document_draft(document_type, code="ИОТ-1"), document_type
+        )
+        repository.add(active)
+        archived = _archived(active)
+        repository.save(archived, expected_version=active.version)
+        repository.add(
+            advance_to_active(
+                compliance_document_draft(document_type, code="ИОТ-1"), document_type
+            )
+        )
+        restored = archived.restore(
+            at=LATER,
+            actor_id=archived.created_by,
+            expected_version=archived.version,
+            reason="Archived by mistake",
+        )
+
+        with pytest.raises(DuplicateActiveComplianceDocumentCode):
+            repository.save(restored, expected_version=archived.version)
+
     def test_list_is_scoped_ordered_and_paginated(
         self, repository: ComplianceDocumentRepositoryContract
     ) -> None:
@@ -320,6 +345,44 @@ class ComplianceDocumentRepositoryContractSuite:
 
         assert page.items == (due,)
         assert page.total == 1
+
+
+    def test_list_review_due_filter_requires_every_listed_document_type(
+        self, repository: ComplianceDocumentRepositoryContract
+    ) -> None:
+        iot = make_document_type()
+        retired = make_document_type(
+            organization_id=iot.organization_id, code="iot_work_type", is_active=False
+        )
+        repository.add(compliance_document_draft(iot, code="ИОТ-1"))
+        repository.add(
+            compliance_document_draft(
+                iot.model_copy(update={"is_active": True, "id": retired.id}),
+                code="ИОТ-30",
+            )
+        )
+
+        with pytest.raises(ValueError, match="missing from the review-due filter"):
+            repository.list(
+                ComplianceDocumentQuery(
+                    organization_id=iot.organization_id,
+                    review_due=ComplianceDocumentReviewDueFilter(
+                        as_of=date(2026, 10, 1),
+                        document_types={iot.id: iot},
+                    ),
+                )
+            )
+        page = repository.list(
+            ComplianceDocumentQuery(
+                organization_id=iot.organization_id,
+                document_type_ids=frozenset({iot.id}),
+                review_due=ComplianceDocumentReviewDueFilter(
+                    as_of=date(2026, 10, 1),
+                    document_types={iot.id: iot},
+                ),
+            )
+        )
+        assert page.total == 0
 
 
 class TestInMemoryComplianceDocumentRepository(ComplianceDocumentRepositoryContractSuite):

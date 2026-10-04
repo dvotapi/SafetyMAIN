@@ -68,11 +68,21 @@ class InMemoryComplianceDocumentRepository(ComplianceDocumentRepositoryContract)
             ]
         if query.review_due is not None:
             review_due = query.review_due
+            missing = {
+                item.document_type_id
+                for item in items
+                if item.document_type_id not in review_due.document_types
+            }
+            if missing:
+                raise ValueError(
+                    "Document types are missing from the review-due filter: "
+                    + ", ".join(sorted(str(type_id.value) for type_id in missing))
+                    + "."
+                )
             items = [
                 item
                 for item in items
-                if item.document_type_id in review_due.document_types
-                and item.is_review_due(
+                if item.is_review_due(
                     as_of=review_due.as_of,
                     document_type=review_due.document_types[item.document_type_id],
                 )

@@ -154,6 +154,18 @@ class ComplianceDocument(BaseModel):
         )
         if self.id in references:
             raise ValueError("A compliance document cannot reference itself.")
+        if self.status is ComplianceDocumentStatus.ARCHIVED:
+            previous = self.status_before_archive
+            if previous is None or self.archive_reason is None:
+                raise ValueError(
+                    "An archived document requires its previous status and reason."
+                )
+            if ComplianceDocumentStatus.ARCHIVED.value not in _TRANSITIONS[previous.value]:
+                raise ValueError(
+                    f"A {previous.value} document cannot have been archived."
+                )
+        elif self.status_before_archive is not None or self.archive_reason is not None:
+            raise ValueError("Only archived documents carry archive details.")
         return self
 
     @property
@@ -430,7 +442,7 @@ class ComplianceDocument(BaseModel):
         return self._mutated(
             at=at,
             actor_id=actor_id,
-            status=self.status_before_archive or ComplianceDocumentStatus.DRAFT,
+            status=self.status_before_archive,
             status_before_archive=None,
             archive_reason=None,
         )
@@ -442,6 +454,8 @@ class ComplianceDocument(BaseModel):
         in force (``active`` or ``under_review``); always ``False`` when the type
         has no review period or ``next_review_at`` is not set.
         """
+        if isinstance(as_of, datetime):
+            raise TypeError("as_of must be a date, not a datetime.")
         self._assert_own_type(document_type)
         if self.status not in _IN_FORCE or self.next_review_at is None:
             return False
