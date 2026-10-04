@@ -272,6 +272,19 @@ Additional rules inferred from the Scope and confirmed with the plan:
 - Dates use `datetime.date` / `sa.Date` (new pattern in the backend, mandated by this task).
 - Reads are not audited (Risk Control precedent).
 
+### Domain decisions confirmed in phase 2
+
+Confirmed by the product owner on 2026-10-04 after the phase 2 implementation (commit `a88f1e6`). They refine D7, D11, and the Scope §3 lifecycle.
+
+| # | Topic | Decision |
+|---|---|---|
+| D14 | `is_review_due` signature | `is_review_due(as_of, document_type)`: the review period and warning thresholds live on the `DocumentType`, so the caller passes the document's type; nothing is copied into the document. |
+| D15 | Review-due statuses | Only `active` and `under_review` documents can be review-due; `draft`, `approved`, `superseded`, and `archived` never are. |
+| D16 | Reverse supersede link | The superseded edition stores `superseded_by_document_id` (Risk Control `superseded_by_id` precedent). |
+| D17 | `under_review` transitions | `under_review → superseded` is allowed (a new edition may replace a document under review); `under_review → archived` is not — complete the review first. |
+| D18 | `next_review_at` on activation | Computed as `effective_from + review_period_months` only when empty; a value set in the draft is kept. Drafts are not pre-computed. |
+| D19 | `complete-review` without a review period | When the type has no `review_period_months` and the request gives no explicit date, `next_review_at` becomes empty. |
+
 ### Reference slices
 
 - Backend: Risk Control (entity, `_TRANSITIONS`, `_MutatingHandler`, `run_audited_admin_operation`, registries, repositories, migration `0012`); Hazard for `restore`.
