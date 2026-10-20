@@ -48,11 +48,13 @@ class ComplianceDocumentModel(Base):
             "version >= 1", name="ck_compliance_documents_version_positive"
         ),
         CheckConstraint(
-            "(status = 'archived') = (status_before_archive IS NOT NULL "
-            "AND archive_reason IS NOT NULL) "
-            "AND (status_before_archive IS NULL OR status_before_archive IN ("
+            "CASE WHEN status = 'archived' THEN "
+            "status_before_archive IS NOT NULL "
+            "AND status_before_archive IN ("
             + ", ".join(f"'{v}'" for v in _ARCHIVABLE_FROM)
-            + "))",
+            + ") "
+            "AND archive_reason IS NOT NULL "
+            "ELSE status_before_archive IS NULL AND archive_reason IS NULL END",
             name="ck_compliance_documents_archive_details",
         ),
         CheckConstraint(
