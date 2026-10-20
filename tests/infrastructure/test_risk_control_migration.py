@@ -70,5 +70,8 @@ def test_0012_risk_controls_schema(migrated_engine) -> None:
     assert "uq_risk_controls_organization_id_code" in uniques
     with migrated_engine.connect() as connection:
         heads = connection.execute(text("SELECT version_num FROM alembic_version")).all()
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
     assert len(heads) == 1
-    assert heads[0][0] == "0012_risk_controls"
+    assert heads[0][0] == ScriptDirectory.from_config(Config("alembic.ini")).get_current_head()
