@@ -7,28 +7,32 @@ from sqlalchemy.orm import Session, sessionmaker
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.repositories import (
     AuditEventRepositoryContract,
+    ComplianceDocumentRepositoryContract,
+    DocumentTypeRepositoryContract,
     HazardRepositoryContract,
-    RiskAssessmentRepositoryContract,
-    RiskControlRepositoryContract,
     InvitationRepositoryContract,
     KnowledgeObjectRelationRepositoryContract,
     KnowledgeObjectRepositoryContract,
     MembershipRepositoryContract,
     OrganizationRepositoryContract,
     RefreshTokenSessionRepositoryContract,
+    RiskAssessmentRepositoryContract,
+    RiskControlRepositoryContract,
     UserRepositoryContract,
 )
 from backend.core.infrastructure.persistence.sqlalchemy.repositories import (
     SQLAlchemyAuditEventRepository,
+    SQLAlchemyComplianceDocumentRepository,
+    SQLAlchemyDocumentTypeRepository,
     SQLAlchemyHazardRepository,
-    SQLAlchemyRiskAssessmentRepository,
-    SQLAlchemyRiskControlRepository,
     SQLAlchemyInvitationRepository,
     SQLAlchemyKnowledgeObjectRelationRepository,
     SQLAlchemyKnowledgeObjectRepository,
     SQLAlchemyMembershipRepository,
     SQLAlchemyOrganizationRepository,
     SQLAlchemyRefreshTokenSessionRepository,
+    SQLAlchemyRiskAssessmentRepository,
+    SQLAlchemyRiskControlRepository,
     SQLAlchemyUserRepository,
 )
 
@@ -48,6 +52,8 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._risk_controls: SQLAlchemyRiskControlRepository | None = None
         self._audit_events: SQLAlchemyAuditEventRepository | None = None
         self._refresh_sessions: SQLAlchemyRefreshTokenSessionRepository | None = None
+        self._document_types: SQLAlchemyDocumentTypeRepository | None = None
+        self._compliance_documents: SQLAlchemyComplianceDocumentRepository | None = None
         self._committed = False
         self._rolled_back = False
 
@@ -136,6 +142,20 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
 
         return self._refresh_sessions
 
+    @property
+    def document_types(self) -> DocumentTypeRepositoryContract:
+        if self._document_types is None:
+            raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
+
+        return self._document_types
+
+    @property
+    def compliance_documents(self) -> ComplianceDocumentRepositoryContract:
+        if self._compliance_documents is None:
+            raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
+
+        return self._compliance_documents
+
     def commit(self) -> None:
         if self._committed:
             return
@@ -165,6 +185,10 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._risk_controls = SQLAlchemyRiskControlRepository(self._session)
         self._audit_events = SQLAlchemyAuditEventRepository(self._session)
         self._refresh_sessions = SQLAlchemyRefreshTokenSessionRepository(self._session)
+        self._document_types = SQLAlchemyDocumentTypeRepository(self._session)
+        self._compliance_documents = SQLAlchemyComplianceDocumentRepository(
+            self._session
+        )
         self._committed = False
         self._rolled_back = False
         return self
@@ -193,5 +217,7 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
                 self._risk_controls = None
                 self._audit_events = None
                 self._refresh_sessions = None
+                self._document_types = None
+                self._compliance_documents = None
 
         return False
