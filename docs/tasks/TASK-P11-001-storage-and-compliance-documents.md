@@ -285,6 +285,19 @@ Confirmed by the product owner on 2026-10-04 after the phase 2 implementation (c
 | D18 | `next_review_at` on activation | Computed as `effective_from + review_period_months` only when empty; a value set in the draft is kept. Drafts are not pre-computed. |
 | D19 | `complete-review` without a review period | When the type has no `review_period_months` and the request gives no explicit date, `next_review_at` becomes empty. |
 
+### Upload integrity decision after security review
+
+Raised by the automated security review of the pushed Phase 1 code on 2026-10-20: the SHA-256 is stored from client-supplied `x-amz-meta-sha256` metadata and S3 never checks it against the uploaded bytes. Options were checked against both storage backends:
+
+- MinIO (dev) verifies a signed `x-amz-checksum-sha256` header on PutObject and returns the stored checksum on HeadObject with `ChecksumMode=ENABLED`.
+- Yandex Object Storage (production) documents only `Content-MD5` for body integrity. `x-amz-checksum-*` headers and `ChecksumSHA256` in HeadObject are not documented; Yandex support confirmed this on 2026-10-20.
+
+| # | Topic | Decision |
+|---|---|---|
+| D20 | SHA-256 integrity for direct uploads | Accepted risk. The adapter keeps D3 unchanged: `x-amz-meta-sha256` is client-asserted and S3 does not verify it against the bytes. Server-side byte verification moves to the background worker (ADR-0007), which recomputes the SHA-256 of the stored object and records any mismatch. Phase 3 and later must not rely on the metadata hash as proof of file content. |
+
+Rejected for now: switching to `x-amz-checksum-sha256` (fails in production, where the header is not documented); adding `Content-MD5` (documented by Yandex, but browsers have no native MD5 and the frontend would need a library; it would also not bind the stored SHA-256). Revisit when the worker lands or if Yandex documents a SHA-256 checksum.
+
 ### Reference slices
 
 - Backend: Risk Control (entity, `_TRANSITIONS`, `_MutatingHandler`, `run_audited_admin_operation`, registries, repositories, migration `0012`); Hazard for `restore`.
