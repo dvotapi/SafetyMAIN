@@ -1,6 +1,9 @@
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.audit_event_repository import (
     SQLAlchemyAuditEventRepository,
 )
+from backend.core.infrastructure.persistence.sqlalchemy.repositories.compliance_document_repository import (
+    SQLAlchemyComplianceDocumentRepository,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.document_type_repository import (
     SQLAlchemyDocumentTypeRepository,
 )
@@ -37,6 +40,7 @@ from backend.core.infrastructure.persistence.sqlalchemy.repositories.user_reposi
 
 __all__ = [
     "SQLAlchemyAuditEventRepository",
+    "SQLAlchemyComplianceDocumentRepository",
     "SQLAlchemyDocumentTypeRepository",
     "SQLAlchemyHazardRepository",
     "SQLAlchemyRiskAssessmentRepository",
