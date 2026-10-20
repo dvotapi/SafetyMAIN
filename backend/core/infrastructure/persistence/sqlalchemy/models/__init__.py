@@ -2,14 +2,15 @@ from backend.core.infrastructure.persistence.sqlalchemy.models.audit_event_model
     AuditChainHeadModel,
     AuditEventModel,
 )
+from backend.core.infrastructure.persistence.sqlalchemy.models.compliance_document_model import (
+    ComplianceDocumentModel,
+    DocumentFileModel,
+)
+from backend.core.infrastructure.persistence.sqlalchemy.models.document_type_model import (
+    DocumentTypeModel,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.models.hazard_model import (
     HazardModel,
-)
-from backend.core.infrastructure.persistence.sqlalchemy.models.risk_assessment_model import (
-    RiskAssessmentModel,
-)
-from backend.core.infrastructure.persistence.sqlalchemy.models.risk_control_model import (
-    RiskControlModel,
 )
 from backend.core.infrastructure.persistence.sqlalchemy.models.knowledge_object_model import (
     KnowledgeObjectModel,
@@ -29,6 +30,12 @@ from backend.core.infrastructure.persistence.sqlalchemy.models.organization_mode
 from backend.core.infrastructure.persistence.sqlalchemy.models.refresh_token_session_model import (
     RefreshTokenSessionModel,
 )
+from backend.core.infrastructure.persistence.sqlalchemy.models.risk_assessment_model import (
+    RiskAssessmentModel,
+)
+from backend.core.infrastructure.persistence.sqlalchemy.models.risk_control_model import (
+    RiskControlModel,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.models.user_model import (
     UserModel,
 )
@@ -36,14 +43,17 @@ from backend.core.infrastructure.persistence.sqlalchemy.models.user_model import
 __all__ = [
     "AuditChainHeadModel",
     "AuditEventModel",
+    "ComplianceDocumentModel",
+    "DocumentFileModel",
+    "DocumentTypeModel",
     "HazardModel",
-    "RiskAssessmentModel",
-    "RiskControlModel",
     "KnowledgeObjectModel",
     "KnowledgeObjectRelationModel",
     "KnowledgeObjectVersionModel",
     "MembershipModel",
     "OrganizationModel",
     "RefreshTokenSessionModel",
+    "RiskAssessmentModel",
+    "RiskControlModel",
     "UserModel",
 ]
