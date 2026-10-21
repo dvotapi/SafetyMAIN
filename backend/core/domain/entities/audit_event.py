@@ -60,6 +60,10 @@ ALLOWED_METADATA_KEYS = frozenset(
         "document_type_id",
         "subject_kind",
         "new_version",
+        "replacement_document_id",
+        "file_id",
+        "file_size_bytes",
+        "file_sha256",
     }
 )
 

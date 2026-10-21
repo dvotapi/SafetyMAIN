@@ -27,11 +27,13 @@ class ComplianceDocumentWithContext:
     """Document plus its resolved type and backend-computed ``is_review_due``.
 
     The handler shapes this so the API mapper has everything it needs without
-    reaching into the repositories.
+    reaching into the repositories. ``document_type`` may be ``None`` when the
+    resulting document is not in force and ``is_review_due`` is trivially
+    false (lifecycle handlers skip the catalog fetch in that case).
     """
 
     document: ComplianceDocument
-    document_type: DocumentType
+    document_type: DocumentType | None
     is_review_due: bool
 
 

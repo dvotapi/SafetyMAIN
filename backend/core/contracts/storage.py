@@ -48,6 +48,11 @@ class StorageContract(Protocol):
     deletion.
     """
 
+    @property
+    def bucket(self) -> str:
+        """Name of the SafetyMAIN-owned bucket this adapter serves."""
+        ...
+
     def create_upload_url(
         self,
         key: str,

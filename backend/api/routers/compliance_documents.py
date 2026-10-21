@@ -10,10 +10,20 @@ from fastapi.responses import JSONResponse
 
 from backend.api.constants import API_V1_PREFIX
 from backend.api.dependencies import (
+    get_activate_compliance_document_handler,
+    get_approve_compliance_document_handler,
+    get_archive_compliance_document_handler,
     get_compliance_document_id,
+    get_complete_review_compliance_document_handler,
+    get_confirm_compliance_document_file_handler,
     get_create_compliance_document_handler,
+    get_create_compliance_document_upload_url_handler,
+    get_get_compliance_document_download_url_handler,
     get_get_compliance_document_handler,
+    get_list_compliance_document_files_handler,
     get_list_compliance_documents_handler,
+    get_restore_compliance_document_handler,
+    get_start_review_compliance_document_handler,
     get_update_compliance_document_handler,
     require_permission,
 )
@@ -22,6 +32,7 @@ from backend.api.mappers.compliance_documents import (
     to_compliance_document_list_response,
     to_compliance_document_response,
     to_compliance_document_response_from_context,
+    to_file_response,
     update_fields_from_request,
 )
 from backend.api.openapi import (
@@ -30,23 +41,71 @@ from backend.api.openapi import (
     success_response,
 )
 from backend.api.operation_ids import (
+    ACTIVATE_COMPLIANCE_DOCUMENT,
+    APPROVE_COMPLIANCE_DOCUMENT,
+    ARCHIVE_COMPLIANCE_DOCUMENT,
+    COMPLETE_REVIEW_COMPLIANCE_DOCUMENT,
+    CONFIRM_COMPLIANCE_DOCUMENT_FILE,
     CREATE_COMPLIANCE_DOCUMENT,
+    CREATE_COMPLIANCE_DOCUMENT_UPLOAD_URL,
     GET_COMPLIANCE_DOCUMENT,
+    GET_COMPLIANCE_DOCUMENT_DOWNLOAD_URL,
     LIST_COMPLIANCE_DOCUMENTS,
+    LIST_COMPLIANCE_DOCUMENT_FILE_VERSIONS,
+    RESTORE_COMPLIANCE_DOCUMENT,
+    START_REVIEW_COMPLIANCE_DOCUMENT,
     UPDATE_COMPLIANCE_DOCUMENT,
 )
 from backend.api.schemas.compliance_documents import (
+    ActivateComplianceDocumentRequest,
+    ApproveComplianceDocumentRequest,
+    ArchiveComplianceDocumentRequest,
+    ComplianceDocumentDownloadUrlResponse,
+    ComplianceDocumentFilesListResponse,
     ComplianceDocumentListResponse,
     ComplianceDocumentResponse,
+    ComplianceDocumentUploadUrlRequest,
+    ComplianceDocumentUploadUrlResponse,
+    CompleteReviewComplianceDocumentRequest,
+    ConfirmComplianceDocumentFileRequest,
     CreateComplianceDocumentRequest,
+    RestoreComplianceDocumentRequest,
+    StartReviewComplianceDocumentRequest,
     UpdateComplianceDocumentRequest,
 )
 from backend.api.security import TenantContext
 from backend.core.application.audit.administrative_audit_recorder import AuditContext
 from backend.core.application.authorization.policies.resource_permissions import (
+    COMPLIANCE_DOCUMENT_ACTIVATE,
+    COMPLIANCE_DOCUMENT_APPROVE,
+    COMPLIANCE_DOCUMENT_ARCHIVE,
     COMPLIANCE_DOCUMENT_CREATE,
     COMPLIANCE_DOCUMENT_READ,
     COMPLIANCE_DOCUMENT_UPDATE,
+)
+from backend.core.application.handlers.compliance_documents import (
+    ActivateComplianceDocumentHandler,
+    ApproveComplianceDocumentHandler,
+    ArchiveComplianceDocumentHandler,
+    CompleteReviewComplianceDocumentHandler,
+    ConfirmComplianceDocumentFileHandler,
+    CreateComplianceDocumentUploadUrlHandler,
+    GetComplianceDocumentDownloadUrlHandler,
+    ListComplianceDocumentFilesHandler,
+    RestoreComplianceDocumentHandler,
+    StartReviewComplianceDocumentHandler,
+)
+from backend.core.application.commands.compliance_document_files import (
+    ConfirmComplianceDocumentFileCommand,
+    CreateComplianceDocumentUploadUrlCommand,
+)
+from backend.core.application.commands.compliance_document_lifecycle import (
+    ActivateComplianceDocumentCommand,
+    ApproveComplianceDocumentCommand,
+    ArchiveComplianceDocumentCommand,
+    CompleteReviewComplianceDocumentCommand,
+    RestoreComplianceDocumentCommand,
+    StartReviewComplianceDocumentCommand,
 )
 from backend.core.application.commands.compliance_documents import (
     CreateComplianceDocumentCommand,
@@ -301,3 +360,390 @@ def _wrap_document_id(raw: object) -> object:
         return raw
     assert isinstance(raw, UUID)
     return ComplianceDocumentId(value=raw)
+
+
+@router.post(
+    "/{document_id}/approve",
+    response_model=ComplianceDocumentResponse,
+    operation_id=APPROVE_COMPLIANCE_DOCUMENT,
+    responses={
+        **success_response(
+            model=ComplianceDocumentResponse,
+            description="Compliance document approved.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def approve_compliance_document(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    request_body: ApproveComplianceDocumentRequest,
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_APPROVE))
+    ],
+    handler: Annotated[
+        ApproveComplianceDocumentHandler,
+        Depends(get_approve_compliance_document_handler),
+    ],
+) -> ComplianceDocumentResponse:
+    if tenant_context.actor_user_id is None:
+        raise UnauthenticatedError()
+    result = handler.handle(
+        ApproveComplianceDocumentCommand(
+            organization_id=tenant_context.organization_id,
+            document_id=document_id,
+            actor_id=tenant_context.actor_user_id,
+            expected_version=request_body.expected_version,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
+    return to_compliance_document_response_from_context(result)
+
+
+@router.post(
+    "/{document_id}/activate",
+    response_model=ComplianceDocumentResponse,
+    operation_id=ACTIVATE_COMPLIANCE_DOCUMENT,
+    responses={
+        **success_response(
+            model=ComplianceDocumentResponse,
+            description="Compliance document activated.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def activate_compliance_document(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    request_body: ActivateComplianceDocumentRequest,
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_ACTIVATE))
+    ],
+    handler: Annotated[
+        ActivateComplianceDocumentHandler,
+        Depends(get_activate_compliance_document_handler),
+    ],
+) -> ComplianceDocumentResponse:
+    if tenant_context.actor_user_id is None:
+        raise UnauthenticatedError()
+    result = handler.handle(
+        ActivateComplianceDocumentCommand(
+            organization_id=tenant_context.organization_id,
+            document_id=document_id,
+            actor_id=tenant_context.actor_user_id,
+            expected_version=request_body.expected_version,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
+    return to_compliance_document_response_from_context(result)
+
+
+@router.post(
+    "/{document_id}/start-review",
+    response_model=ComplianceDocumentResponse,
+    operation_id=START_REVIEW_COMPLIANCE_DOCUMENT,
+    responses={
+        **success_response(
+            model=ComplianceDocumentResponse,
+            description="Compliance document review started.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def start_review_compliance_document(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    request_body: StartReviewComplianceDocumentRequest,
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_UPDATE))
+    ],
+    handler: Annotated[
+        StartReviewComplianceDocumentHandler,
+        Depends(get_start_review_compliance_document_handler),
+    ],
+) -> ComplianceDocumentResponse:
+    if tenant_context.actor_user_id is None:
+        raise UnauthenticatedError()
+    result = handler.handle(
+        StartReviewComplianceDocumentCommand(
+            organization_id=tenant_context.organization_id,
+            document_id=document_id,
+            actor_id=tenant_context.actor_user_id,
+            expected_version=request_body.expected_version,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
+    return to_compliance_document_response_from_context(result)
+
+
+@router.post(
+    "/{document_id}/complete-review",
+    response_model=ComplianceDocumentResponse,
+    operation_id=COMPLETE_REVIEW_COMPLIANCE_DOCUMENT,
+    responses={
+        **success_response(
+            model=ComplianceDocumentResponse,
+            description="Compliance document review completed.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def complete_review_compliance_document(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    request_body: CompleteReviewComplianceDocumentRequest,
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_ACTIVATE))
+    ],
+    handler: Annotated[
+        CompleteReviewComplianceDocumentHandler,
+        Depends(get_complete_review_compliance_document_handler),
+    ],
+) -> ComplianceDocumentResponse:
+    if tenant_context.actor_user_id is None:
+        raise UnauthenticatedError()
+    result = handler.handle(
+        CompleteReviewComplianceDocumentCommand(
+            organization_id=tenant_context.organization_id,
+            document_id=document_id,
+            actor_id=tenant_context.actor_user_id,
+            expected_version=request_body.expected_version,
+            completed_on=request_body.completed_on,
+            next_review_at=request_body.next_review_at,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
+    return to_compliance_document_response_from_context(result)
+
+
+@router.post(
+    "/{document_id}/archive",
+    response_model=ComplianceDocumentResponse,
+    operation_id=ARCHIVE_COMPLIANCE_DOCUMENT,
+    responses={
+        **success_response(
+            model=ComplianceDocumentResponse,
+            description="Compliance document archived.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def archive_compliance_document(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    request_body: ArchiveComplianceDocumentRequest,
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_ARCHIVE))
+    ],
+    handler: Annotated[
+        ArchiveComplianceDocumentHandler,
+        Depends(get_archive_compliance_document_handler),
+    ],
+) -> ComplianceDocumentResponse:
+    if tenant_context.actor_user_id is None:
+        raise UnauthenticatedError()
+    result = handler.handle(
+        ArchiveComplianceDocumentCommand(
+            organization_id=tenant_context.organization_id,
+            document_id=document_id,
+            actor_id=tenant_context.actor_user_id,
+            expected_version=request_body.expected_version,
+            reason=request_body.reason,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
+    return to_compliance_document_response_from_context(result)
+
+
+@router.post(
+    "/{document_id}/restore",
+    response_model=ComplianceDocumentResponse,
+    operation_id=RESTORE_COMPLIANCE_DOCUMENT,
+    responses={
+        **success_response(
+            model=ComplianceDocumentResponse,
+            description="Compliance document restored.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def restore_compliance_document(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    request_body: RestoreComplianceDocumentRequest,
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_ARCHIVE))
+    ],
+    handler: Annotated[
+        RestoreComplianceDocumentHandler,
+        Depends(get_restore_compliance_document_handler),
+    ],
+) -> ComplianceDocumentResponse:
+    if tenant_context.actor_user_id is None:
+        raise UnauthenticatedError()
+    result = handler.handle(
+        RestoreComplianceDocumentCommand(
+            organization_id=tenant_context.organization_id,
+            document_id=document_id,
+            actor_id=tenant_context.actor_user_id,
+            expected_version=request_body.expected_version,
+            reason=request_body.reason,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
+    return to_compliance_document_response_from_context(result)
+
+
+@router.post(
+    "/{document_id}/files/upload-url",
+    response_model=ComplianceDocumentUploadUrlResponse,
+    operation_id=CREATE_COMPLIANCE_DOCUMENT_UPLOAD_URL,
+    responses={
+        **success_response(
+            model=ComplianceDocumentUploadUrlResponse,
+            description="Presigned upload URL issued.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def create_compliance_document_upload_url(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    request_body: ComplianceDocumentUploadUrlRequest,
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_UPDATE))
+    ],
+    handler: Annotated[
+        CreateComplianceDocumentUploadUrlHandler,
+        Depends(get_create_compliance_document_upload_url_handler),
+    ],
+) -> ComplianceDocumentUploadUrlResponse:
+    if tenant_context.actor_user_id is None:
+        raise UnauthenticatedError()
+    descriptor = handler.handle(
+        CreateComplianceDocumentUploadUrlCommand(
+            organization_id=tenant_context.organization_id,
+            document_id=document_id,
+            actor_id=tenant_context.actor_user_id,
+            filename=request_body.filename,
+            content_type=request_body.content_type,
+            size_bytes=request_body.size_bytes,
+            sha256=request_body.sha256,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
+    return ComplianceDocumentUploadUrlResponse(
+        upload_id=descriptor.upload_id,
+        bucket=descriptor.bucket,
+        key=descriptor.key,
+        url=descriptor.presigned.url,
+        method=descriptor.presigned.method,
+        headers=descriptor.presigned.headers,
+        expires_at=descriptor.presigned.expires_at,
+    )
+
+
+@router.post(
+    "/{document_id}/files/confirm",
+    response_model=ComplianceDocumentResponse,
+    operation_id=CONFIRM_COMPLIANCE_DOCUMENT_FILE,
+    responses={
+        **success_response(
+            model=ComplianceDocumentResponse,
+            description="Uploaded file attached to the document.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def confirm_compliance_document_file(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    request_body: ConfirmComplianceDocumentFileRequest,
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_UPDATE))
+    ],
+    handler: Annotated[
+        ConfirmComplianceDocumentFileHandler,
+        Depends(get_confirm_compliance_document_file_handler),
+    ],
+) -> ComplianceDocumentResponse:
+    if tenant_context.actor_user_id is None:
+        raise UnauthenticatedError()
+    result = handler.handle(
+        ConfirmComplianceDocumentFileCommand(
+            organization_id=tenant_context.organization_id,
+            document_id=document_id,
+            actor_id=tenant_context.actor_user_id,
+            expected_version=request_body.expected_version,
+            key=request_body.key,
+            size_bytes=request_body.size_bytes,
+            sha256=request_body.sha256,
+            content_type=request_body.content_type,
+            original_filename=request_body.original_filename,
+            audit_context=AuditContext.from_tenant(tenant_context),
+        )
+    )
+    return to_compliance_document_response_from_context(result)
+
+
+@router.get(
+    "/{document_id}/files/current/download-url",
+    response_model=ComplianceDocumentDownloadUrlResponse,
+    operation_id=GET_COMPLIANCE_DOCUMENT_DOWNLOAD_URL,
+    responses={
+        **success_response(
+            model=ComplianceDocumentDownloadUrlResponse,
+            description="Presigned download URL issued.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def get_compliance_document_download_url(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_READ))
+    ],
+    handler: Annotated[
+        GetComplianceDocumentDownloadUrlHandler,
+        Depends(get_get_compliance_document_download_url_handler),
+    ],
+) -> ComplianceDocumentDownloadUrlResponse:
+    descriptor = handler.handle(
+        GetComplianceDocumentQuery(
+            organization_id=tenant_context.organization_id,
+            document_id=document_id,
+        )
+    )
+    return ComplianceDocumentDownloadUrlResponse(
+        url=descriptor.url,
+        expires_at=descriptor.expires_at,
+        filename=descriptor.file.original_filename,
+        content_type=descriptor.file.content_type,
+        size_bytes=descriptor.file.size_bytes,
+        sha256=descriptor.file.sha256,
+    )
+
+
+@router.get(
+    "/{document_id}/files/versions",
+    response_model=ComplianceDocumentFilesListResponse,
+    operation_id=LIST_COMPLIANCE_DOCUMENT_FILE_VERSIONS,
+    responses={
+        **success_response(
+            model=ComplianceDocumentFilesListResponse,
+            description="Compliance document file versions listed.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def list_compliance_document_file_versions(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_READ))
+    ],
+    handler: Annotated[
+        ListComplianceDocumentFilesHandler,
+        Depends(get_list_compliance_document_files_handler),
+    ],
+) -> ComplianceDocumentFilesListResponse:
+    files = handler.handle(
+        GetComplianceDocumentQuery(
+            organization_id=tenant_context.organization_id,
+            document_id=document_id,
+        )
+    )
+    return ComplianceDocumentFilesListResponse(
+        items=[to_file_response(file) for file in files]
+    )

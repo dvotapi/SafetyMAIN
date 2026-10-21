@@ -97,6 +97,16 @@ LIST_COMPLIANCE_DOCUMENTS = "list_compliance_documents"
 GET_COMPLIANCE_DOCUMENT = "get_compliance_document"
 CREATE_COMPLIANCE_DOCUMENT = "create_compliance_document"
 UPDATE_COMPLIANCE_DOCUMENT = "update_compliance_document"
+APPROVE_COMPLIANCE_DOCUMENT = "approve_compliance_document"
+ACTIVATE_COMPLIANCE_DOCUMENT = "activate_compliance_document"
+START_REVIEW_COMPLIANCE_DOCUMENT = "start_review_compliance_document"
+COMPLETE_REVIEW_COMPLIANCE_DOCUMENT = "complete_review_compliance_document"
+ARCHIVE_COMPLIANCE_DOCUMENT = "archive_compliance_document"
+RESTORE_COMPLIANCE_DOCUMENT = "restore_compliance_document"
+CREATE_COMPLIANCE_DOCUMENT_UPLOAD_URL = "create_compliance_document_upload_url"
+CONFIRM_COMPLIANCE_DOCUMENT_FILE = "confirm_compliance_document_file"
+GET_COMPLIANCE_DOCUMENT_DOWNLOAD_URL = "get_compliance_document_download_url"
+LIST_COMPLIANCE_DOCUMENT_FILE_VERSIONS = "list_compliance_document_file_versions"
 
 STABLE_OPERATION_IDS: frozenset[str] = frozenset(
     {
@@ -170,6 +180,16 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         GET_COMPLIANCE_DOCUMENT,
         CREATE_COMPLIANCE_DOCUMENT,
         UPDATE_COMPLIANCE_DOCUMENT,
+        APPROVE_COMPLIANCE_DOCUMENT,
+        ACTIVATE_COMPLIANCE_DOCUMENT,
+        START_REVIEW_COMPLIANCE_DOCUMENT,
+        COMPLETE_REVIEW_COMPLIANCE_DOCUMENT,
+        ARCHIVE_COMPLIANCE_DOCUMENT,
+        RESTORE_COMPLIANCE_DOCUMENT,
+        CREATE_COMPLIANCE_DOCUMENT_UPLOAD_URL,
+        CONFIRM_COMPLIANCE_DOCUMENT_FILE,
+        GET_COMPLIANCE_DOCUMENT_DOWNLOAD_URL,
+        LIST_COMPLIANCE_DOCUMENT_FILE_VERSIONS,
         CREATE_KNOWLEDGE_OBJECT,
         SEARCH_KNOWLEDGE_OBJECTS,
         GET_KNOWLEDGE_OBJECT,

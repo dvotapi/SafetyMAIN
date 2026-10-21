@@ -32,12 +32,23 @@ from backend.core.application.handlers.archive_knowledge_object import (
 from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
 from backend.core.application.handlers.create_hazard import CreateHazardHandler
 from backend.core.application.handlers.compliance_documents import (
+    ActivateComplianceDocumentHandler,
+    ApproveComplianceDocumentHandler,
+    ArchiveComplianceDocumentHandler,
+    CompleteReviewComplianceDocumentHandler,
+    ConfirmComplianceDocumentFileHandler,
     CreateComplianceDocumentHandler,
+    CreateComplianceDocumentUploadUrlHandler,
+    GetComplianceDocumentDownloadUrlHandler,
     GetComplianceDocumentHandler,
+    ListComplianceDocumentFilesHandler,
     ListComplianceDocumentsHandler,
     ListDocumentTypesHandler,
+    RestoreComplianceDocumentHandler,
+    StartReviewComplianceDocumentHandler,
     UpdateComplianceDocumentHandler,
 )
+from backend.core.contracts.storage import StorageContract
 from backend.core.application.handlers.create_risk_assessment import CreateRiskAssessmentHandler
 from backend.core.application.handlers.create_risk_control import CreateRiskControlHandler
 from backend.core.application.handlers.get_list_risk_controls import (
@@ -1150,3 +1161,94 @@ def get_list_compliance_documents_handler(
     clock: ClockContract = Depends(get_clock),
 ) -> ListComplianceDocumentsHandler:
     return ListComplianceDocumentsHandler(uow, clock)
+
+
+def get_storage(
+    container: AppContainer = Depends(get_container),
+) -> StorageContract:
+    return container.storage
+
+
+def get_approve_compliance_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ApproveComplianceDocumentHandler:
+    return ApproveComplianceDocumentHandler(uow, clock, audit)
+
+
+def get_activate_compliance_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ActivateComplianceDocumentHandler:
+    return ActivateComplianceDocumentHandler(uow, clock, audit)
+
+
+def get_start_review_compliance_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> StartReviewComplianceDocumentHandler:
+    return StartReviewComplianceDocumentHandler(uow, clock, audit)
+
+
+def get_complete_review_compliance_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CompleteReviewComplianceDocumentHandler:
+    return CompleteReviewComplianceDocumentHandler(uow, clock, audit)
+
+
+def get_archive_compliance_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ArchiveComplianceDocumentHandler:
+    return ArchiveComplianceDocumentHandler(uow, clock, audit)
+
+
+def get_restore_compliance_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> RestoreComplianceDocumentHandler:
+    return RestoreComplianceDocumentHandler(uow, clock, audit)
+
+
+def get_create_compliance_document_upload_url_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    storage: StorageContract = Depends(get_storage),
+    settings: AppSettings = Depends(get_settings),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CreateComplianceDocumentUploadUrlHandler:
+    return CreateComplianceDocumentUploadUrlHandler(
+        uow, storage, settings.storage_max_upload_bytes, audit
+    )
+
+
+def get_confirm_compliance_document_file_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    storage: StorageContract = Depends(get_storage),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ConfirmComplianceDocumentFileHandler:
+    return ConfirmComplianceDocumentFileHandler(uow, storage, clock, audit)
+
+
+def get_get_compliance_document_download_url_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    storage: StorageContract = Depends(get_storage),
+    clock: ClockContract = Depends(get_clock),
+    settings: AppSettings = Depends(get_settings),
+) -> GetComplianceDocumentDownloadUrlHandler:
+    return GetComplianceDocumentDownloadUrlHandler(
+        uow, storage, clock, settings.storage_presign_ttl_seconds
+    )
+
+
+def get_list_compliance_document_files_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ListComplianceDocumentFilesHandler:
+    return ListComplianceDocumentFilesHandler(uow)

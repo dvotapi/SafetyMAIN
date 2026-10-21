@@ -14,6 +14,9 @@ from backend.core.application.exceptions.authorization import (
 )
 from backend.core.domain.exceptions.compliance_document import (
     ComplianceDocumentCannotBeModified,
+    ComplianceDocumentFileNotFound,
+    ComplianceDocumentFileTooLarge,
+    ComplianceDocumentFileTypeNotAllowed,
     ComplianceDocumentNotFound,
     ComplianceDocumentReasonRequired,
     ComplianceDocumentValidationError,
@@ -211,6 +214,9 @@ INVALID_COMPLIANCE_DOCUMENT_TRANSITION = "invalid_compliance_document_transition
 COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED = "compliance_document_cannot_be_modified"
 COMPLIANCE_DOCUMENT_VALIDATION_ERROR = "compliance_document_validation_error"
 COMPLIANCE_DOCUMENT_REASON_REQUIRED = "compliance_document_reason_required"
+COMPLIANCE_DOCUMENT_FILE_NOT_FOUND = "compliance_document_file_not_found"
+COMPLIANCE_DOCUMENT_FILE_TOO_LARGE = "compliance_document_file_too_large"
+COMPLIANCE_DOCUMENT_FILE_TYPE_NOT_ALLOWED = "compliance_document_file_type_not_allowed"
 
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
@@ -310,6 +316,9 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED,
         COMPLIANCE_DOCUMENT_VALIDATION_ERROR,
         COMPLIANCE_DOCUMENT_REASON_REQUIRED,
+        COMPLIANCE_DOCUMENT_FILE_NOT_FOUND,
+        COMPLIANCE_DOCUMENT_FILE_TOO_LARGE,
+        COMPLIANCE_DOCUMENT_FILE_TYPE_NOT_ALLOWED,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -401,6 +410,9 @@ DOMAIN_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
     ComplianceDocumentCannotBeModified: 422,
     ComplianceDocumentValidationError: 422,
     ComplianceDocumentReasonRequired: 422,
+    ComplianceDocumentFileNotFound: 404,
+    ComplianceDocumentFileTooLarge: 422,
+    ComplianceDocumentFileTypeNotAllowed: 422,
 }
 
 DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
@@ -488,6 +500,9 @@ DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
     ComplianceDocumentCannotBeModified: COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED,
     ComplianceDocumentValidationError: COMPLIANCE_DOCUMENT_VALIDATION_ERROR,
     ComplianceDocumentReasonRequired: COMPLIANCE_DOCUMENT_REASON_REQUIRED,
+    ComplianceDocumentFileNotFound: COMPLIANCE_DOCUMENT_FILE_NOT_FOUND,
+    ComplianceDocumentFileTooLarge: COMPLIANCE_DOCUMENT_FILE_TOO_LARGE,
+    ComplianceDocumentFileTypeNotAllowed: COMPLIANCE_DOCUMENT_FILE_TYPE_NOT_ALLOWED,
 }
 
 DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
@@ -593,6 +608,9 @@ DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     ComplianceDocumentReasonRequired: (
         "A reason is required for this compliance document action."
     ),
+    ComplianceDocumentFileNotFound: "Compliance document has no file attached.",
+    ComplianceDocumentFileTooLarge: "File size exceeds the upload limit.",
+    ComplianceDocumentFileTypeNotAllowed: "File content type is not allowed.",
 }
 
 APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {

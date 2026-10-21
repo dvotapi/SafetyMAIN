@@ -83,7 +83,7 @@ Clean Architecture layering under `backend/core/`, enforced by pytest architectu
 
 Persistence uses the Unit-of-Work pattern (`UnitOfWorkContract`, `SQLAlchemyUnitOfWork` / `InMemoryUnitOfWork`), swappable per environment — production always requires PostgreSQL and refuses in-memory identity/membership stores.
 
-Aggregates currently implemented: Organization, Membership, Invitation, User (identity), RefreshTokenSession, AuditEvent, KnowledgeObject + KnowledgeObjectRelation, Hazard, Risk, RiskAssessment, RiskControl, Incident, Inspection, CorrectiveAction, Training/Permit/EmergencyAsset. Alembic migrations live in `alembic/versions/`, one migration per schema change, named sequentially.
+Aggregates currently implemented: Organization, Membership, Invitation, User (identity), RefreshTokenSession, AuditEvent, KnowledgeObject + KnowledgeObjectRelation, Hazard, Risk, RiskAssessment, RiskControl, Incident, Inspection, CorrectiveAction, Training/Permit/EmergencyAsset, DocumentType, ComplianceDocument (ADR-0006 object storage; lifecycle `draft→approved→active↔under_review→superseded`, archive/restore; files only in `draft`). Alembic migrations live in `alembic/versions/`, one migration per schema change, named sequentially.
 
 Security model: JWT bearer auth (`AUTH_ENFORCEMENT` toggles enforced vs. compatibility mode), `SecurityContext`/`TenantContext` on every request, role-based authorization via `AuthorizationService`, and an integrity-chained audit event log (`docs/architecture/AuditEventIntegrity.md`) — every audit event is hash-chained to detect tampering (`scripts/verify_audit_integrity.py` / `tests/infrastructure/test_audit_integrity_*`). Cross-organization access to a resource must return 404, never 403 or leaked data.
 

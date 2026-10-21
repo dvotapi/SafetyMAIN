@@ -90,3 +90,26 @@ class ComplianceDocumentReasonRequired(ComplianceDocumentError):
     def __init__(self, action: str) -> None:
         self.action = action
         super().__init__(f"{action} reason is required.")
+
+
+class ComplianceDocumentFileNotFound(ComplianceDocumentError):
+    def __init__(self, document_id: ComplianceDocumentId) -> None:
+        self.document_id = document_id
+        super().__init__(
+            f"Compliance document has no current file: {document_id.value}."
+        )
+
+
+class ComplianceDocumentFileTooLarge(ComplianceDocumentError):
+    def __init__(self, *, size_bytes: int, limit_bytes: int) -> None:
+        self.size_bytes = size_bytes
+        self.limit_bytes = limit_bytes
+        super().__init__(
+            f"File size {size_bytes} exceeds the upload limit {limit_bytes}."
+        )
+
+
+class ComplianceDocumentFileTypeNotAllowed(ComplianceDocumentError):
+    def __init__(self, content_type: str) -> None:
+        self.content_type = content_type
+        super().__init__(f"File content type not allowed: {content_type}.")
