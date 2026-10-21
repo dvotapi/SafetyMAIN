@@ -1,6 +1,6 @@
 # TASK-P11-001 — Object Storage and Organisational Compliance Documents
 
-Status: In Progress (implementation plan approved 2026-10-01)
+Status: Done (completed 2026-10-21; all seven phases merged via PRs #1, #2, #3, #4, #5)
 Epic: `docs/tasks/EPIC-P11-compliance-documentation.md`
 Depends on: TASK-P11-000 (ADR-0006, ADR-0009 sections on document types)
 
