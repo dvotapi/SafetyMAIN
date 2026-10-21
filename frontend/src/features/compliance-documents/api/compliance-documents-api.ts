@@ -6,6 +6,7 @@ import {
   complianceDocumentFilesListSchema,
   complianceDocumentListSchema,
   complianceDocumentSchema,
+  complianceDocumentUploadUrlSchema,
 } from "@/features/compliance-documents/schemas/compliance-documents-response-schemas";
 import type {
   ComplianceDocumentDto,
@@ -13,6 +14,11 @@ import type {
   ComplianceDocumentFilesListDto,
   ComplianceDocumentListDto,
   ComplianceDocumentListParams,
+  ComplianceDocumentUploadUrlDto,
+  ComplianceDocumentUploadUrlRequest,
+  ConfirmComplianceDocumentFileRequest,
+  CreateComplianceDocumentRequest,
+  UpdateComplianceDocumentRequest,
 } from "@/features/compliance-documents/types/compliance-documents-dto";
 
 const BASE_PATH = "/api/v1/compliance-documents";
@@ -94,6 +100,64 @@ export async function getComplianceDocumentDownloadUrl(
   });
   return complianceDocumentDownloadUrlSchema.parse(
     requireBody(dto, "compliance document download url"),
+  );
+}
+
+export async function createComplianceDocument(
+  body: CreateComplianceDocumentRequest,
+): Promise<ComplianceDocumentDto> {
+  const dto = await apiClient.request<unknown>({
+    method: "POST",
+    path: BASE_PATH,
+    body,
+  });
+  return complianceDocumentSchema.parse(
+    requireBody(dto, "create compliance document"),
+  );
+}
+
+export async function updateComplianceDocument(
+  documentId: string,
+  body: UpdateComplianceDocumentRequest,
+): Promise<ComplianceDocumentDto> {
+  const id = assertComplianceDocumentId(documentId);
+  const dto = await apiClient.request<unknown>({
+    method: "PATCH",
+    path: `${BASE_PATH}/${id}`,
+    body,
+  });
+  return complianceDocumentSchema.parse(
+    requireBody(dto, "update compliance document"),
+  );
+}
+
+export async function createComplianceDocumentUploadUrl(
+  documentId: string,
+  body: ComplianceDocumentUploadUrlRequest,
+): Promise<ComplianceDocumentUploadUrlDto> {
+  const id = assertComplianceDocumentId(documentId);
+  const dto = await apiClient.request<unknown>({
+    method: "POST",
+    path: `${BASE_PATH}/${id}/files/upload-url`,
+    body,
+  });
+  return complianceDocumentUploadUrlSchema.parse(
+    requireBody(dto, "compliance document upload url"),
+  );
+}
+
+export async function confirmComplianceDocumentFile(
+  documentId: string,
+  body: ConfirmComplianceDocumentFileRequest,
+): Promise<ComplianceDocumentDto> {
+  const id = assertComplianceDocumentId(documentId);
+  const dto = await apiClient.request<unknown>({
+    method: "POST",
+    path: `${BASE_PATH}/${id}/files/confirm`,
+    body,
+  });
+  return complianceDocumentSchema.parse(
+    requireBody(dto, "confirm compliance document file"),
   );
 }
 
