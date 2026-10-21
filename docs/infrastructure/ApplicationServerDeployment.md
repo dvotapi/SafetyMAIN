@@ -106,6 +106,11 @@ that permits `hostssl` connections only from the application VDS address and
 rejects that role from anywhere else. The application VDS never administers the
 database server.
 
+The database must use a UTF-8 locale (e.g. `en_US.UTF-8` or `ru_RU.UTF-8`),
+not `C`/`POSIX`. Compliance-document code and title search uses `ILIKE`, and
+only a UTF-8 ctype folds Cyrillic case correctly. Verify with
+`SHOW lc_ctype;` — the value must contain `UTF-8`.
+
 ## 6. Object storage dependency
 
 Documents are stored in Yandex Object Storage. Provision it before deploying a

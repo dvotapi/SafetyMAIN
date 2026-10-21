@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 import pytest
@@ -16,7 +16,6 @@ from backend.core.domain.value_objects.compliance_enums import (
     DocumentSubjectKind,
     SafetyDomain,
 )
-from backend.core.domain.value_objects.safety_ids import ComplianceDocumentId
 from backend.core.infrastructure.persistence.sqlalchemy.mappers.compliance_document_mapper import (
     files_to_models,
 )
@@ -167,8 +166,8 @@ def test_subject_id_check_employee_without_subject(sqlalchemy_session) -> None:
         organization_id=employee_type.organization_id,
         document_type=employee_type,
     )
-    # Store initially with subject_id present (helper used ORG default: skip here).
-    # Instead, directly INSERT a row with NULL subject_id for an employee doc.
+    # _store_document inserts a valid employee row (subject_id auto-generated).
+    # Attempt to UPDATE subject_id to NULL and confirm the CHECK rejects it.
     with pytest.raises(IntegrityError) as exc_info:
         sqlalchemy_session.execute(
             text("UPDATE compliance_documents SET subject_kind='employee', subject_id=NULL WHERE id=:id"),
@@ -527,4 +526,3 @@ def test_document_type_unknown_safety_domain_rejected(sqlalchemy_session) -> Non
     sqlalchemy_session.rollback()
 
 
-_ = (ComplianceDocumentId, date, advance_to_active)  # keep imports used by helpers

@@ -14,7 +14,6 @@ from backend.core.domain.value_objects.compliance_enums import (
 )
 from scripts.seed_document_types import (
     DOCUMENT_TYPE_CATALOG,
-    DocumentTypeSeed,
     seed_document_types,
 )
 from tests.contracts.sqlalchemy_identity_seed import ensure_organization
@@ -222,5 +221,3 @@ def test_seed_is_organization_scoped(
     assert all(dt.organization_id == _seeded_organization for dt in orig_types)
 
 
-# make sure the dataclass is importable (defensive)
-_ = DocumentTypeSeed

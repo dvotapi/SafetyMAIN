@@ -161,6 +161,9 @@ class SQLAlchemyComplianceDocumentRepository(ComplianceDocumentRepositoryContrac
         where_clause = and_(*filters)
 
         if query.review_due is not None:
+            # Minor 5: is_review_due is domain logic over the DocumentType; we
+            # load the SQL-filtered set and paginate in Python. Same precedent
+            # as SQLAlchemyRiskControlRepository.overdue_only.
             review_due = query.review_due
             models = self._session.scalars(
                 select(ComplianceDocumentModel)
@@ -230,6 +233,20 @@ class SQLAlchemyComplianceDocumentRepository(ComplianceDocumentRepositoryContrac
         )
 
     def save(self, document: ComplianceDocument, *, expected_version: int) -> None:
+        # Minor 2: prefer VersionConflict over DuplicateActive when the caller
+        # also lost the version race (reviewer finding, Phase 3 cleanup).
+        existing_version = self._session.scalar(
+            select(ComplianceDocumentModel.version).where(
+                ComplianceDocumentModel.id == document.id.value,
+                ComplianceDocumentModel.organization_id == document.organization_id.value,
+            )
+        )
+        if existing_version is not None and existing_version != expected_version:
+            raise ComplianceDocumentVersionConflict(
+                document_id=document.id,
+                expected_version=expected_version,
+                actual_version=existing_version,
+            )
         self._assert_code_free_in_force(document)
         mapped = to_model(document)
         try:
@@ -297,14 +314,8 @@ class SQLAlchemyComplianceDocumentRepository(ComplianceDocumentRepositoryContrac
         for fm in new_models:
             self._session.add(fm)
         if new_models:
-            try:
-                self._session.flush()
-            except IntegrityError as error:
-                if "uq_compliance_documents_org_code_in_force" in str(error.orig):
-                    raise DuplicateActiveComplianceDocumentCode(
-                        organization_id=document.organization_id,
-                        code=document.code,
-                    ) from error
-                raise
+            # Minor 1: no in-force code uniqueness constraint applies to
+            # document_files; a plain flush is enough.
+            self._session.flush()
 
 

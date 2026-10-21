@@ -140,6 +140,4 @@ def test_edition_replacement_rolls_back_on_error(
         assert reloaded_old is not None and reloaded_new is not None
         assert reloaded_old.status is ComplianceDocumentStatus.ACTIVE
         assert reloaded_old.version == old_active.version
-        assert reloaded_new.status is ComplianceDocumentStatus.APPROVED or (
-            reloaded_new.status is ComplianceDocumentStatus.DRAFT
-        )
+        assert reloaded_new.status is ComplianceDocumentStatus.DRAFT
