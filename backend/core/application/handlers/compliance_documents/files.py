@@ -199,6 +199,16 @@ class ConfirmComplianceDocumentFileHandler:
             )
             if document_type is None:
                 raise DocumentTypeNotFound(document.document_type_id)
+            # Never trust the client-supplied bucket; a confirm against another
+            # bucket must be refused up front rather than relying on the storage
+            # adapter's own owned-bucket guard.
+            owned_bucket = self._storage.bucket
+            if command.bucket != owned_bucket:
+                raise ComplianceDocumentValidationError(
+                    "Object bucket does not belong to this application."
+                )
+            if command.content_type not in ALLOWED_CONTENT_TYPES:
+                raise ComplianceDocumentFileTypeNotAllowed(command.content_type)
             key_prefix = (
                 f"{command.organization_id.value}/compliance_document/"
                 f"{command.document_id.value}/"
@@ -207,7 +217,7 @@ class ConfirmComplianceDocumentFileHandler:
                 raise ComplianceDocumentValidationError(
                     "Object key does not belong to this document."
                 )
-            info = self._storage.head(command.bucket, command.key)
+            info = self._storage.head(owned_bucket, command.key)
             if info is None:
                 raise ComplianceDocumentValidationError(
                     "The uploaded object was not found in storage."
@@ -227,7 +237,7 @@ class ConfirmComplianceDocumentFileHandler:
                     "The stored object SHA-256 does not match the confirmation."
                 )
             file = DocumentFile(
-                bucket=command.bucket,
+                bucket=owned_bucket,
                 key=command.key,
                 size_bytes=command.size_bytes,
                 content_type=command.content_type,

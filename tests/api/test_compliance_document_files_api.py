@@ -384,6 +384,61 @@ def test_confirm_rejects_when_object_missing(
     )
 
 
+def test_confirm_rejects_foreign_bucket(enforced_auth_settings: AppSettings) -> None:
+    ctx = _build_client(enforced_auth_settings, role=Role.admin())
+    headers = _headers(ctx["organization_id"], ctx["token"])
+    document_id = _create_draft(ctx)
+    key = (
+        f"{ctx['organization_id'].value}/compliance_document/{document_id}/"
+        f"{uuid4()}/file.pdf"
+    )
+    response = ctx["client"].post(
+        f"/api/v1/compliance-documents/{document_id}/files/confirm",
+        headers=headers,
+        json={
+            "expected_version": 1,
+            "bucket": "attacker-bucket",
+            "key": key,
+            "size_bytes": 1024,
+            "sha256": SHA256_HEX,
+            "content_type": "application/pdf",
+            "original_filename": "file.pdf",
+        },
+    )
+    assert_error_envelope(
+        response, status_code=422, code="compliance_document_validation_error"
+    )
+
+
+def test_confirm_rechecks_mime_allowlist(enforced_auth_settings: AppSettings) -> None:
+    ctx = _build_client(enforced_auth_settings, role=Role.admin())
+    headers = _headers(ctx["organization_id"], ctx["token"])
+    document_id = _create_draft(ctx)
+    key = (
+        f"{ctx['organization_id'].value}/compliance_document/{document_id}/"
+        f"{uuid4()}/file.zip"
+    )
+    ctx["storage"].store_object(
+        key, size_bytes=1024, content_type="application/zip", sha256=SHA256_HEX
+    )
+    response = ctx["client"].post(
+        f"/api/v1/compliance-documents/{document_id}/files/confirm",
+        headers=headers,
+        json={
+            "expected_version": 1,
+            "bucket": "test-bucket",
+            "key": key,
+            "size_bytes": 1024,
+            "sha256": SHA256_HEX,
+            "content_type": "application/zip",
+            "original_filename": "file.zip",
+        },
+    )
+    assert_error_envelope(
+        response, status_code=422, code="compliance_document_file_type_not_allowed"
+    )
+
+
 def test_download_url_404_when_no_file(enforced_auth_settings: AppSettings) -> None:
     ctx = _build_client(enforced_auth_settings, role=Role.admin())
     headers = _headers(ctx["organization_id"], ctx["token"])
