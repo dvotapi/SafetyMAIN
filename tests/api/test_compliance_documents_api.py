@@ -451,6 +451,46 @@ def test_list_review_due_filter_uses_backend_clock(
     assert "CD-FAR" not in codes
 
 
+def test_list_filters_by_safety_domain(
+    enforced_auth_settings: AppSettings,
+) -> None:
+    """`safety_domain` resolves to matching type ids in the handler."""
+    ctx = _build_client(enforced_auth_settings, role=Role.admin())
+    fire_type = DocumentType.create(
+        organization_id=ctx["organization_id"],
+        code="fire_regulation",
+        title_ru="Пожарный регламент",
+        safety_domain=SafetyDomain.FIRE,
+        subject_kind=DocumentSubjectKind.ORGANIZATION,
+        review_period_months=12,
+        created_at=datetime.now(UTC),
+    )
+    ctx["document_types"].add(fire_type)
+    headers = _headers(ctx["organization_id"], ctx["token"])
+    ctx["client"].post(
+        "/api/v1/compliance-documents",
+        headers=headers,
+        json=_create_payload(
+            document_type_id=ctx["document_type"].id.value, code="CD-OCC"
+        ),
+    )
+    ctx["client"].post(
+        "/api/v1/compliance-documents",
+        headers=headers,
+        json=_create_payload(
+            document_type_id=fire_type.id.value, code="CD-FIRE"
+        ),
+    )
+    response = ctx["client"].get(
+        "/api/v1/compliance-documents",
+        headers=headers,
+        params={"safety_domain": "fire"},
+    )
+    assert response.status_code == 200
+    codes = {item["code"] for item in response.json()["items"]}
+    assert codes == {"CD-FIRE"}
+
+
 def test_no_delete_route(enforced_auth_settings: AppSettings) -> None:
     ctx = _build_client(enforced_auth_settings, role=Role.admin())
     headers = _headers(ctx["organization_id"], ctx["token"])

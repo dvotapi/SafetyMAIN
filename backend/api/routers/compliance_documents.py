@@ -52,6 +52,7 @@ from backend.core.application.commands.compliance_documents import (
     CreateComplianceDocumentCommand,
     UpdateComplianceDocumentCommand,
 )
+from backend.core.application.exceptions.authentication import UnauthenticatedError
 from backend.core.application.handlers.compliance_documents import (
     CreateComplianceDocumentHandler,
     GetComplianceDocumentHandler,
@@ -66,6 +67,7 @@ from backend.core.domain.value_objects.compliance_enums import (
     ComplianceDocumentSource,
     ComplianceDocumentStatus,
     DocumentSubjectKind,
+    SafetyDomain,
 )
 from backend.core.domain.value_objects.safety_ids import (
     ComplianceDocumentId,
@@ -120,7 +122,8 @@ def create_compliance_document(
         Depends(get_create_compliance_document_handler),
     ],
 ) -> JSONResponse:
-    assert tenant_context.actor_user_id is not None
+    if tenant_context.actor_user_id is None:
+        raise UnauthenticatedError()
     document = handler.handle(
         CreateComplianceDocumentCommand(
             organization_id=tenant_context.organization_id,
@@ -181,6 +184,7 @@ def list_compliance_documents(
     document_type_id: Annotated[list[UUID] | None, Query()] = None,
     status_filter: Annotated[str | None, Query(alias="status")] = None,
     subject_kind: str | None = None,
+    safety_domain: str | None = None,
     review_due: bool | None = None,
     include_archived: bool = False,
     search: str | None = None,
@@ -196,6 +200,9 @@ def list_compliance_documents(
             status=_parse_enum_param(status_filter, ComplianceDocumentStatus, "status"),
             subject_kind=_parse_enum_param(
                 subject_kind, DocumentSubjectKind, "subject_kind"
+            ),
+            safety_domain=_parse_enum_param(
+                safety_domain, SafetyDomain, "safety_domain"
             ),
             review_due=review_due,
             include_archived=include_archived,
@@ -260,7 +267,8 @@ def update_compliance_document(
         Depends(get_update_compliance_document_handler),
     ],
 ) -> ComplianceDocumentResponse:
-    assert tenant_context.actor_user_id is not None
+    if tenant_context.actor_user_id is None:
+        raise UnauthenticatedError()
     nullable_kwargs = update_fields_from_request(request_body)
     approved_by_raw = nullable_kwargs.pop("approved_by_document_id")
     supersedes_raw = nullable_kwargs.pop("supersedes_document_id")

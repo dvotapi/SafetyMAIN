@@ -6,6 +6,7 @@ from backend.core.domain.value_objects import OrganizationId
 from backend.core.domain.value_objects.compliance_enums import (
     ComplianceDocumentStatus,
     DocumentSubjectKind,
+    SafetyDomain,
 )
 from backend.core.domain.value_objects.safety_ids import (
     ComplianceDocumentId,
@@ -31,6 +32,7 @@ class ListComplianceDocumentsQuery:
     document_type_ids: tuple[DocumentTypeId, ...] = field(default_factory=tuple)
     status: ComplianceDocumentStatus | None = None
     subject_kind: DocumentSubjectKind | None = None
+    safety_domain: SafetyDomain | None = None
     review_due: bool | None = None
     search: str | None = None
     include_archived: bool = False

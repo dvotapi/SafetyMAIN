@@ -104,14 +104,30 @@ class ListComplianceDocumentsHandler:
             review_due_filter = ComplianceDocumentReviewDueFilter(
                 as_of=today, document_types=type_map
             )
+        type_id_filter: frozenset[DocumentTypeId] | None = (
+            frozenset(query.document_type_ids) if query.document_type_ids else None
+        )
+        if query.safety_domain is not None:
+            # Resolve the safety domain through the type map here so the domain
+            # repository stays unaware of DocumentType.
+            domain_ids = frozenset(
+                type_id
+                for type_id, document_type in type_map.items()
+                if document_type.safety_domain is query.safety_domain
+            )
+            type_id_filter = (
+                domain_ids
+                if type_id_filter is None
+                else type_id_filter & domain_ids
+            )
+            if not type_id_filter:
+                return ComplianceDocumentPageWithContext(
+                    items=(), total=0, offset=query.offset, limit=query.limit
+                )
         page: ComplianceDocumentPage = self._unit_of_work.compliance_documents.list(
             ComplianceDocumentQuery(
                 organization_id=query.organization_id,
-                document_type_ids=(
-                    frozenset(query.document_type_ids)
-                    if query.document_type_ids
-                    else None
-                ),
+                document_type_ids=type_id_filter,
                 status=query.status,
                 subject_kind=query.subject_kind,
                 review_due=review_due_filter,
