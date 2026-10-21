@@ -491,6 +491,131 @@ def test_restore_only_from_archived(enforced_auth_settings: AppSettings) -> None
     )
 
 
+def test_supersede_from_under_review_edition(
+    enforced_auth_settings: AppSettings,
+) -> None:
+    """D17: activating a replacement must atomically supersede an under-review predecessor."""
+    ctx = _build_client(enforced_auth_settings, role=Role.admin())
+    headers = _headers(ctx["organization_id"], ctx["token"])
+
+    first = _seed_draft_with_file(ctx, code="CD-UR-01")
+    assert _approve_api(ctx["client"], headers, first.id.value, 2).status_code == 200
+    assert _activate_api(ctx["client"], headers, first.id.value, 3).status_code == 200
+    started = ctx["client"].post(
+        f"/api/v1/compliance-documents/{first.id.value}/start-review",
+        headers=headers,
+        json={"expected_version": 4},
+    )
+    assert started.status_code == 200
+    assert started.json()["status"] == "under_review"
+
+    second = _seed_draft_with_file(
+        ctx, code="CD-UR-02", supersedes_document_id=first.id
+    )
+    assert _approve_api(ctx["client"], headers, second.id.value, 2).status_code == 200
+    activate = _activate_api(ctx["client"], headers, second.id.value, 3)
+    assert activate.status_code == 200, activate.json()
+    assert activate.json()["status"] == "active"
+
+    old = ctx["client"].get(
+        f"/api/v1/compliance-documents/{first.id.value}", headers=headers
+    )
+    assert old.status_code == 200
+    assert old.json()["status"] == "superseded"
+    assert old.json()["superseded_by_document_id"] == str(second.id.value)
+
+
+def _seed_approved(ctx: dict[str, Any]) -> ComplianceDocument:
+    """Draft -> approved via API, ready for activate/complete-review tests."""
+    headers = _headers(ctx["organization_id"], ctx["token"])
+    document = _seed_draft_with_file(ctx)
+    assert _approve_api(ctx["client"], headers, document.id.value, 2).status_code == 200
+    return document
+
+
+def _seed_active(ctx: dict[str, Any]) -> ComplianceDocument:
+    headers = _headers(ctx["organization_id"], ctx["token"])
+    document = _seed_approved(ctx)
+    assert _activate_api(ctx["client"], headers, document.id.value, 3).status_code == 200
+    return document
+
+
+def _seed_under_review(ctx: dict[str, Any]) -> ComplianceDocument:
+    headers = _headers(ctx["organization_id"], ctx["token"])
+    document = _seed_active(ctx)
+    started = ctx["client"].post(
+        f"/api/v1/compliance-documents/{document.id.value}/start-review",
+        headers=headers,
+        json={"expected_version": 4},
+    )
+    assert started.status_code == 200
+    return document
+
+
+def test_role_matrix_activate_complete_review_restore(
+    enforced_auth_settings: AppSettings,
+) -> None:
+    """Non-admin roles cannot drive activate / complete-review / restore."""
+    for index, role in enumerate((Role.member(), Role.auditor())):
+        # Activate (approved doc, no permission for non-admin).
+        ctx = _build_client(enforced_auth_settings, role=role)
+        # Set up fixtures via raw entities since member/auditor can't drive the admin flow.
+        now = datetime.now(UTC)
+        approved = ComplianceDocument.create(
+            organization_id=ctx["organization_id"],
+            document_type=ctx["document_type"],
+            code=f"CD-APR-{index}",
+            title="Approved",
+            created_by=ctx["user_id"],
+            created_at=now,
+            effective_from=now.date(),
+        )
+        approved = approved.attach_file(
+            file=_file(uploaded_by=ctx["user_id"]),
+            at=now,
+            actor_id=ctx["user_id"],
+            expected_version=1,
+        ).model_copy(
+            update={"status": ComplianceDocumentStatus.APPROVED, "version": 3}
+        )
+        ctx["compliance_documents"].add(approved)
+        headers = _headers(ctx["organization_id"], ctx["token"])
+        assert _activate_api(
+            ctx["client"], headers, approved.id.value, 3
+        ).status_code == 403
+
+        # Complete-review (under_review doc).
+        under = approved.model_copy(
+            update={"status": ComplianceDocumentStatus.UNDER_REVIEW, "version": 4}
+        )
+        under = under.model_copy(
+            update={"id": ComplianceDocumentId(value=uuid4())}
+        )
+        ctx["compliance_documents"].add(under)
+        assert ctx["client"].post(
+            f"/api/v1/compliance-documents/{under.id.value}/complete-review",
+            headers=headers,
+            json={"expected_version": 4, "completed_on": "2026-11-01"},
+        ).status_code == 403
+
+        # Restore (archived doc).
+        archived = approved.model_copy(
+            update={
+                "id": ComplianceDocumentId(value=uuid4()),
+                "status": ComplianceDocumentStatus.ARCHIVED,
+                "status_before_archive": ComplianceDocumentStatus.APPROVED,
+                "archive_reason": "x",
+                "version": 5,
+            }
+        )
+        ctx["compliance_documents"].add(archived)
+        assert ctx["client"].post(
+            f"/api/v1/compliance-documents/{archived.id.value}/restore",
+            headers=headers,
+            json={"expected_version": 5, "reason": "need back"},
+        ).status_code == 403
+
+
 def test_approve_on_unknown_document_returns_404(
     enforced_auth_settings: AppSettings,
 ) -> None:

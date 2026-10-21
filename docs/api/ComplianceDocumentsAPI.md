@@ -159,7 +159,6 @@ Request:
 ```json
 {
   "expected_version": 1,
-  "bucket": "...",
   "key": "...",
   "size_bytes": 2048,
   "sha256": "<64 hex>",
@@ -168,13 +167,20 @@ Request:
 }
 ```
 
-Validation (`compliance_document_validation_error` for any mismatch):
+The bucket is implicit — the server names its own owned bucket; `key` must
+start with `<org>/compliance_document/<document_id>/`. Any `bucket` field in
+the request is rejected by schema validation.
 
-- `key` must start with `<org>/compliance_document/<document_id>/`.
-- `storage.head(bucket, key)` must find the object.
-- `size_bytes` and `content_type` must match the stored object.
-- `sha256` is compared when storage returned it; a missing SHA from storage is an
-  accepted risk (D20) and does not fail confirmation.
+Validation (`compliance_document_validation_error` for any mismatch, or
+`compliance_document_file_type_not_allowed` for a disallowed `content_type`):
+
+- `storage.head(key)` must find the object.
+- `size_bytes` and `content_type` must match the stored object. A stored
+  object without a recorded content type is refused — the upload URL pins
+  `Content-Type` via a signed header, so an absent value means the client
+  bypassed it.
+- `sha256` is compared when storage returned it; a missing SHA from storage is
+  an accepted risk (D20) and does not fail confirmation.
 
 On success the file is attached as the current file and the document's `version` bumps.
 Audit: `compliance.document.file_attached` (legacy identifier per D5).

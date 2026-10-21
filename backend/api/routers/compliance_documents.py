@@ -622,6 +622,7 @@ def create_compliance_document_upload_url(
             content_type=request_body.content_type,
             size_bytes=request_body.size_bytes,
             sha256=request_body.sha256,
+            audit_context=AuditContext.from_tenant(tenant_context),
         )
     )
     return ComplianceDocumentUploadUrlResponse(
@@ -666,7 +667,6 @@ def confirm_compliance_document_file(
             document_id=document_id,
             actor_id=tenant_context.actor_user_id,
             expected_version=request_body.expected_version,
-            bucket=request_body.bucket,
             key=request_body.key,
             size_bytes=request_body.size_bytes,
             sha256=request_body.sha256,
@@ -708,7 +708,7 @@ def get_compliance_document_download_url(
     )
     return ComplianceDocumentDownloadUrlResponse(
         url=descriptor.url,
-        expires_at=descriptor.expires_at,  # type: ignore[arg-type]
+        expires_at=descriptor.expires_at,
         filename=descriptor.file.original_filename,
         content_type=descriptor.file.content_type,
         size_bytes=descriptor.file.size_bytes,

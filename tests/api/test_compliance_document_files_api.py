@@ -234,7 +234,6 @@ def test_full_upload_confirm_download_versions_flow(
         headers=headers,
         json={
             "expected_version": 1,
-            "bucket": body["bucket"],
             "key": body["key"],
             "size_bytes": 2048,
             "sha256": SHA256_HEX,
@@ -343,7 +342,6 @@ def test_confirm_rejects_mismatched_key_prefix(
         headers=headers,
         json={
             "expected_version": 1,
-            "bucket": "test-bucket",
             "key": "other/path/file.pdf",
             "size_bytes": 1024,
             "sha256": SHA256_HEX,
@@ -371,7 +369,6 @@ def test_confirm_rejects_when_object_missing(
         headers=headers,
         json={
             "expected_version": 1,
-            "bucket": "test-bucket",
             "key": missing_key,
             "size_bytes": 1024,
             "sha256": SHA256_HEX,
@@ -384,7 +381,27 @@ def test_confirm_rejects_when_object_missing(
     )
 
 
-def test_confirm_rejects_foreign_bucket(enforced_auth_settings: AppSettings) -> None:
+def test_upload_url_preserves_unicode_in_key(
+    enforced_auth_settings: AppSettings,
+) -> None:
+    """Cyrillic filenames keep their letters in the storage key, not just `_`."""
+    ctx = _build_client(enforced_auth_settings, role=Role.admin())
+    headers = _headers(ctx["organization_id"], ctx["token"])
+    document_id = _create_draft(ctx)
+    response = ctx["client"].post(
+        f"/api/v1/compliance-documents/{document_id}/files/upload-url",
+        headers=headers,
+        json=_upload_payload(filename="инструкция.pdf"),
+    )
+    assert response.status_code == 200
+    key = response.json()["key"]
+    assert key.endswith(".pdf")
+    # The sanitised tail must still carry the Cyrillic word (not just `_.pdf`).
+    assert "инструкция" in key
+
+
+def test_confirm_rejects_bucket_field(enforced_auth_settings: AppSettings) -> None:
+    """The schema forbids a bucket field — the server names its own owned bucket."""
     ctx = _build_client(enforced_auth_settings, role=Role.admin())
     headers = _headers(ctx["organization_id"], ctx["token"])
     document_id = _create_draft(ctx)
@@ -405,9 +422,7 @@ def test_confirm_rejects_foreign_bucket(enforced_auth_settings: AppSettings) -> 
             "original_filename": "file.pdf",
         },
     )
-    assert_error_envelope(
-        response, status_code=422, code="compliance_document_validation_error"
-    )
+    assert response.status_code == 422
 
 
 def test_confirm_rechecks_mime_allowlist(enforced_auth_settings: AppSettings) -> None:
@@ -426,7 +441,6 @@ def test_confirm_rechecks_mime_allowlist(enforced_auth_settings: AppSettings) ->
         headers=headers,
         json={
             "expected_version": 1,
-            "bucket": "test-bucket",
             "key": key,
             "size_bytes": 1024,
             "sha256": SHA256_HEX,
@@ -468,7 +482,6 @@ def test_cross_tenant_file_endpoints_return_404(
             headers=headers_b,
             json=_upload_payload() if path.endswith("upload-url") else {
                 "expected_version": 1,
-                "bucket": "test-bucket",
                 "key": "x/y/z",
                 "size_bytes": 1,
                 "sha256": SHA256_HEX,
@@ -513,7 +526,6 @@ def test_auditor_can_read_files_but_not_write(
         headers=admin_headers,
         json={
             "expected_version": 1,
-            "bucket": upload.json()["bucket"],
             "key": key,
             "size_bytes": 2048,
             "sha256": SHA256_HEX,

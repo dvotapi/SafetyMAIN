@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 from backend.core.application.audit.administrative_audit_recorder import (
     AdministrativeAuditRecorder,
     AuditRecordSpec,
 )
+from backend.core.application.audit.failure_codes import AUDITABLE_ADMIN_FAILURES
 from backend.core.application.audit.handler_support import (
     require_audit_context,
     run_audited_admin_operation,
@@ -57,7 +58,9 @@ ALLOWED_CONTENT_TYPES: frozenset[str] = frozenset(
     }
 )
 
-_SAFE_FILENAME = re.compile(r"[^A-Za-z0-9._-]+")
+# Keep unicode letters/digits so Cyrillic / CJK filenames stay legible in the
+# bucket; strip only characters that steer the key or break storage drivers.
+_SAFE_FILENAME = re.compile(r"[^\w.\-]+", re.UNICODE)
 
 
 def _sanitize_filename(filename: str) -> str:
@@ -105,7 +108,10 @@ class CreateComplianceDocumentUploadUrlHandler:
     """Issue a presigned PUT for the direct upload of a draft document's file.
 
     The handler validates the request but writes nothing to persistent state;
-    the file lands on the aggregate only after ``confirm``.
+    the file lands on the aggregate only after ``confirm``. Known failures
+    (bad MIME, oversize, non-draft state, duplicate rejection from storage)
+    are recorded in the audit chain via ``FILE_ATTACHED``; a successful URL
+    issuance writes no audit event — ``confirm`` does.
     """
 
     def __init__(
@@ -113,12 +119,32 @@ class CreateComplianceDocumentUploadUrlHandler:
         unit_of_work: UnitOfWorkContract,
         storage: StorageContract,
         max_upload_bytes: int,
+        audit: AdministrativeAuditRecorder,
     ) -> None:
         self._unit_of_work = unit_of_work
         self._storage = storage
         self._max_upload_bytes = max_upload_bytes
+        self._audit = audit
 
     def handle(
+        self, command: CreateComplianceDocumentUploadUrlCommand
+    ) -> ComplianceDocumentUploadDescriptor:
+        context = require_audit_context(command.audit_context)
+        failure_spec = AuditRecordSpec(
+            action=AuditAction.COMPLIANCE_DOCUMENT_FILE_ATTACHED,
+            context=context,
+            resource_type=AuditResourceType.COMPLIANCE_DOCUMENT,
+            resource_id=command.document_id.value,
+            target_organization_id=command.organization_id,
+        )
+        try:
+            return self._issue(command)
+        except Exception as error:
+            if type(error) in AUDITABLE_ADMIN_FAILURES:
+                self._audit.record_known_failure(failure_spec, error)
+            raise
+
+    def _issue(
         self, command: CreateComplianceDocumentUploadUrlCommand
     ) -> ComplianceDocumentUploadDescriptor:
         document = self._unit_of_work.compliance_documents.get(
@@ -199,14 +225,9 @@ class ConfirmComplianceDocumentFileHandler:
             )
             if document_type is None:
                 raise DocumentTypeNotFound(document.document_type_id)
-            # Never trust the client-supplied bucket; a confirm against another
-            # bucket must be refused up front rather than relying on the storage
-            # adapter's own owned-bucket guard.
+            # Bucket is implicit — the server names the owned one; the client
+            # cannot steer confirmation at another bucket.
             owned_bucket = self._storage.bucket
-            if command.bucket != owned_bucket:
-                raise ComplianceDocumentValidationError(
-                    "Object bucket does not belong to this application."
-                )
             if command.content_type not in ALLOWED_CONTENT_TYPES:
                 raise ComplianceDocumentFileTypeNotAllowed(command.content_type)
             key_prefix = (
@@ -226,7 +247,14 @@ class ConfirmComplianceDocumentFileHandler:
                 raise ComplianceDocumentValidationError(
                     "The stored object size does not match the confirmation."
                 )
-            if info.content_type is not None and info.content_type != command.content_type:
+            # The upload URL pins Content-Type via the signed header; a stored
+            # object without a recorded content type means the uploader bypassed
+            # that header, so refuse rather than trust the client's claim.
+            if info.content_type is None:
+                raise ComplianceDocumentValidationError(
+                    "The stored object has no content type."
+                )
+            if info.content_type != command.content_type:
                 raise ComplianceDocumentValidationError(
                     "The stored object content type does not match the confirmation."
                 )
@@ -300,7 +328,7 @@ class ConfirmComplianceDocumentFileHandler:
 @dataclass(frozen=True, slots=True)
 class ComplianceDocumentDownloadDescriptor:
     url: str
-    expires_at: object
+    expires_at: datetime
     file: DocumentFile
 
 

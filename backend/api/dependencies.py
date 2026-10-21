@@ -1221,9 +1221,10 @@ def get_create_compliance_document_upload_url_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
     storage: StorageContract = Depends(get_storage),
     settings: AppSettings = Depends(get_settings),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> CreateComplianceDocumentUploadUrlHandler:
     return CreateComplianceDocumentUploadUrlHandler(
-        uow, storage, settings.storage_max_upload_bytes
+        uow, storage, settings.storage_max_upload_bytes, audit
     )
 
 

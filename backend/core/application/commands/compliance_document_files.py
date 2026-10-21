@@ -16,6 +16,7 @@ class CreateComplianceDocumentUploadUrlCommand:
     content_type: str
     size_bytes: int
     sha256: str
+    audit_context: AuditContext | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,7 +25,6 @@ class ConfirmComplianceDocumentFileCommand:
     document_id: ComplianceDocumentId
     actor_id: UserId
     expected_version: int
-    bucket: str
     key: str
     size_bytes: int
     sha256: str

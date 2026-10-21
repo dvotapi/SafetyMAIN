@@ -201,10 +201,12 @@ class ComplianceDocumentUploadUrlResponse(BaseModel):
 
 
 class ConfirmComplianceDocumentFileRequest(BaseModel):
+    """Confirm an uploaded object. The server knows its own bucket and never
+    accepts it from the client (bucket is implicit from ``key``'s prefix)."""
+
     model_config = ConfigDict(extra="forbid")
 
     expected_version: int = Field(ge=1)
-    bucket: str = Field(min_length=1)
     key: str = Field(min_length=1)
     size_bytes: int = Field(ge=1)
     sha256: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")

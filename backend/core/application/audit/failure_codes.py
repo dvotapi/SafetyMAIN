@@ -45,6 +45,8 @@ from backend.core.domain.exceptions.risk_assessment import (
 )
 from backend.core.domain.exceptions.compliance_document import (
     ComplianceDocumentCannotBeModified,
+    ComplianceDocumentFileTooLarge,
+    ComplianceDocumentFileTypeNotAllowed,
     ComplianceDocumentVersionConflict,
     DuplicateActiveComplianceDocumentCode,
     InvalidComplianceDocumentTransition,
@@ -101,6 +103,8 @@ DUPLICATE_COMPLIANCE_DOCUMENT_CODE = "duplicate_compliance_document_code"
 COMPLIANCE_DOCUMENT_VERSION_CONFLICT = "compliance_document_version_conflict"
 INVALID_COMPLIANCE_DOCUMENT_TRANSITION = "invalid_compliance_document_transition"
 COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED = "compliance_document_cannot_be_modified"
+COMPLIANCE_DOCUMENT_FILE_TOO_LARGE = "compliance_document_file_too_large"
+COMPLIANCE_DOCUMENT_FILE_TYPE_NOT_ALLOWED = "compliance_document_file_type_not_allowed"
 
 AUDITABLE_ADMIN_FAILURES: dict[type[Exception], str] = {
     DuplicateUserEmail: DUPLICATE_USER_EMAIL,
@@ -147,4 +151,6 @@ AUDITABLE_ADMIN_FAILURES: dict[type[Exception], str] = {
     ComplianceDocumentVersionConflict: COMPLIANCE_DOCUMENT_VERSION_CONFLICT,
     InvalidComplianceDocumentTransition: INVALID_COMPLIANCE_DOCUMENT_TRANSITION,
     ComplianceDocumentCannotBeModified: COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED,
+    ComplianceDocumentFileTooLarge: COMPLIANCE_DOCUMENT_FILE_TOO_LARGE,
+    ComplianceDocumentFileTypeNotAllowed: COMPLIANCE_DOCUMENT_FILE_TYPE_NOT_ALLOWED,
 }
