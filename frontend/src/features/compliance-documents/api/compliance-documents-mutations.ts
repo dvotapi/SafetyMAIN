@@ -22,6 +22,7 @@ import { useOrganization } from "@/hooks/auth";
 function useLifecycleMutation<TDto>(
   documentId: string,
   commandFn: (id: string, body: TDto) => Promise<ComplianceDocumentDto>,
+  options: { refreshSupersededEdition?: boolean } = {},
 ) {
   const queryClient = useQueryClient();
   const { organizationId } = useOrganization();
@@ -35,9 +36,10 @@ function useLifecycleMutation<TDto>(
       void queryClient.invalidateQueries({
         queryKey: complianceDocumentKeys.lists(organizationId),
       });
-      // Activation may atomically supersede another document — refresh its
-      // detail cache too when the server attached the reverse link.
-      if (document.supersedes_document_id) {
+      // Only activation atomically supersedes a previous edition; other
+      // lifecycle actions never touch another document, so skip the extra
+      // refetch there.
+      if (options.refreshSupersededEdition && document.supersedes_document_id) {
         void queryClient.invalidateQueries({
           queryKey: complianceDocumentKeys.detail(
             organizationId,
@@ -60,6 +62,7 @@ export function useActivateComplianceDocumentMutation(documentId: string) {
   return useLifecycleMutation<VersionedRequestDto>(
     documentId,
     activateComplianceDocument,
+    { refreshSupersededEdition: true },
   );
 }
 

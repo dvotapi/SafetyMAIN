@@ -39,17 +39,7 @@ import {
 import { shouldShowReviewDueWarning } from "@/features/compliance-documents/utils/status";
 import { useAuth } from "@/hooks/auth";
 import { toUserSafeMessage } from "@/services/api/errors";
-
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
-      new Date(value),
-    );
-  } catch {
-    return value;
-  }
-}
+import { formatDateOnly } from "@/utils/format-date";
 
 export function ComplianceDocumentRegistryPage() {
   const { hasPermission } = useAuth();
@@ -164,7 +154,7 @@ export function ComplianceDocumentRegistryPage() {
                 flexWrap: "wrap",
               }}
             >
-              <span>{formatDate(row.original.next_review_at)}</span>
+              <span>{formatDateOnly(row.original.next_review_at)}</span>
               {warn ? <StatusBadge status="overdue" label="Пересмотр" /> : null}
             </div>
           );
@@ -174,7 +164,7 @@ export function ComplianceDocumentRegistryPage() {
         id: "updatedAt",
         header: "Обновлено",
         enableSorting: false,
-        cell: ({ row }) => formatDate(row.original.updated_at),
+        cell: ({ row }) => formatDateOnly(row.original.updated_at),
       },
     ],
     [typeTitleById],

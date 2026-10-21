@@ -14,8 +14,11 @@ import {
   Label,
 } from "@/components";
 
-function toIsoDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+function toLocalIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function CompleteReviewDialog({
@@ -41,7 +44,7 @@ export function CompleteReviewDialog({
   useEffect(() => {
     if (open) {
       lastFocusedRef.current = document.activeElement as HTMLElement | null;
-      setCompletedOn(toIsoDate(new Date()));
+      setCompletedOn(toLocalIsoDate(new Date()));
       setNextReviewAt("");
     }
   }, [open]);

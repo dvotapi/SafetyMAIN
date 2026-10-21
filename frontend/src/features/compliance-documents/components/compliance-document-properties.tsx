@@ -11,17 +11,7 @@ import {
   documentSubjectKindLabel,
   safetyDomainLabel,
 } from "@/features/compliance-documents/utils/status";
-
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
-      new Date(value),
-    );
-  } catch {
-    return value;
-  }
-}
+import { formatDateOnly } from "@/utils/format-date";
 
 export function ComplianceDocumentProperties({
   document,
@@ -47,14 +37,14 @@ export function ComplianceDocumentProperties({
         label="Субъект"
         value={documentSubjectKindLabel(document.subject_kind)}
       />
-      <KeyValue label="Издан" value={formatDate(document.issued_at)} />
+      <KeyValue label="Издан" value={formatDateOnly(document.issued_at)} />
       <KeyValue
         label="Действует с"
-        value={formatDate(document.effective_from)}
+        value={formatDateOnly(document.effective_from)}
       />
       <KeyValue
         label="Следующий пересмотр"
-        value={formatDate(document.next_review_at)}
+        value={formatDateOnly(document.next_review_at)}
       />
       <KeyValue
         label="Источник"

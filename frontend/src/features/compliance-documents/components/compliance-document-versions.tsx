@@ -3,17 +3,7 @@
 import { Card, Heading, LoadingState, Text } from "@/components";
 
 import type { DocumentFileDto } from "@/features/compliance-documents/types/compliance-documents-dto";
-
-function formatDate(value: string): string {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
+import { formatDateTime } from "@/utils/format-date";
 
 export function ComplianceDocumentVersions({
   items,
@@ -44,7 +34,7 @@ export function ComplianceDocumentVersions({
               >
                 <Text as="span">{file.original_filename}</Text>
                 <Text as="span" tone="muted" variant="caption">
-                  {formatDate(file.uploaded_at)} · {file.content_type} ·{" "}
+                  {formatDateTime(file.uploaded_at)} · {file.content_type} ·{" "}
                   {file.size_bytes} Б
                 </Text>
               </li>

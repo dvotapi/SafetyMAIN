@@ -33,9 +33,11 @@ export function ComplianceDocumentFilePreview({
     setError(null);
     try {
       const descriptor = await getComplianceDocumentDownloadUrl(documentId);
-      // Presigned URL responses carry Content-Disposition: attachment —
-      // navigating to the URL triggers the browser's own download.
-      window.location.href = descriptor.url;
+      // The signed URL forces Content-Disposition: attachment, so a browser
+      // tab opened at it starts a download and auto-closes without taking the
+      // user off the SPA. If the signature has expired, the user lands on
+      // S3's error page in that disposable tab, not on top of the registry.
+      window.open(descriptor.url, "_blank", "noopener,noreferrer");
     } catch (cause) {
       setError(toUserSafeMessage(cause));
     } finally {

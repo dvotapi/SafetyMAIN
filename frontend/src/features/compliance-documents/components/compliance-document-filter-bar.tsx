@@ -44,9 +44,9 @@ export function ComplianceDocumentFilterBar({
     label: type.title_ru,
   }));
 
-  const activeTypeTitles = state.documentTypeIds
-    .map((id) => documentTypes.find((t) => t.id === id)?.title_ru)
-    .filter((v): v is string => Boolean(v));
+  const typeTitleById = new Map(
+    documentTypes.map((type) => [type.id, type.title_ru] as const),
+  );
 
   return (
     <FilterBar>
@@ -150,16 +150,14 @@ export function ComplianceDocumentFilterBar({
           onRemove={() => onChange({ safetyDomain: "", page: 1 })}
         />
       ) : null}
-      {activeTypeTitles.map((title, index) => (
+      {state.documentTypeIds.map((id) => (
         <FilterChip
-          key={state.documentTypeIds[index]}
+          key={id}
           label="Тип"
-          value={title}
+          value={typeTitleById.get(id) ?? id}
           onRemove={() =>
             onChange({
-              documentTypeIds: state.documentTypeIds.filter(
-                (id) => id !== state.documentTypeIds[index],
-              ),
+              documentTypeIds: state.documentTypeIds.filter((v) => v !== id),
               page: 1,
             })
           }
