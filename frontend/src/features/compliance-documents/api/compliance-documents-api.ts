@@ -1,5 +1,6 @@
 import { apiClient } from "@/services/api/client";
 
+import { assertComplianceDocumentId } from "@/features/compliance-documents/api/compliance-documents-id";
 import {
   complianceDocumentDownloadUrlSchema,
   complianceDocumentFilesListSchema,
@@ -70,9 +71,10 @@ export async function getComplianceDocument(
   documentId: string,
   signal?: AbortSignal,
 ): Promise<ComplianceDocumentDto> {
+  const id = assertComplianceDocumentId(documentId);
   const dto = await apiClient.request<unknown>({
     method: "GET",
-    path: `${BASE_PATH}/${documentId}`,
+    path: `${BASE_PATH}/${id}`,
     ...(signal ? { signal } : {}),
   });
   return complianceDocumentSchema.parse(
@@ -84,9 +86,10 @@ export async function getComplianceDocumentDownloadUrl(
   documentId: string,
   signal?: AbortSignal,
 ): Promise<ComplianceDocumentDownloadUrlDto> {
+  const id = assertComplianceDocumentId(documentId);
   const dto = await apiClient.request<unknown>({
     method: "GET",
-    path: `${BASE_PATH}/${documentId}/files/current/download-url`,
+    path: `${BASE_PATH}/${id}/files/current/download-url`,
     ...(signal ? { signal } : {}),
   });
   return complianceDocumentDownloadUrlSchema.parse(
@@ -98,9 +101,10 @@ export async function listComplianceDocumentFileVersions(
   documentId: string,
   signal?: AbortSignal,
 ): Promise<ComplianceDocumentFilesListDto> {
+  const id = assertComplianceDocumentId(documentId);
   const dto = await apiClient.request<unknown>({
     method: "GET",
-    path: `${BASE_PATH}/${documentId}/files/versions`,
+    path: `${BASE_PATH}/${id}/files/versions`,
     ...(signal ? { signal } : {}),
   });
   return complianceDocumentFilesListSchema.parse(
