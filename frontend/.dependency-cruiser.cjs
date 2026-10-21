@@ -50,6 +50,26 @@ module.exports = {
       },
     },
     {
+      name: "compliance-document-api-no-components",
+      severity: "error",
+      comment:
+        "Compliance Document API modules must not import React components.",
+      from: { path: "^src/features/compliance-documents/api" },
+      to: {
+        path: "^src/components|^src/features/compliance-documents/components|^src/features/compliance-documents/pages",
+      },
+    },
+    {
+      name: "compliance-document-presentation-no-fetch",
+      severity: "error",
+      comment:
+        "Compliance Document presentation must go through the feature API layer, never the raw client.",
+      from: {
+        path: "^src/features/compliance-documents/(components|pages)",
+      },
+      to: { path: "^src/services/api/client" },
+    },
+    {
       name: "risk-control-presentation-no-fetch",
       severity: "error",
       comment:

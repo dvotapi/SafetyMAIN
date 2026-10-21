@@ -2,6 +2,7 @@ export type NavSectionId =
   | "overview"
   | "safety"
   | "people"
+  | "compliance"
   | "knowledge"
   | "analytics"
   | "administration";
@@ -63,6 +64,21 @@ export const primaryNavigation: NavSection[] = [
     label: "Персонал",
     href: "/people",
     icon: "users",
+  },
+  {
+    id: "compliance",
+    label: "Соответствие",
+    href: "/compliance-documents",
+    icon: "file-check",
+    requiredPermission: "compliance_document:read",
+    children: [
+      {
+        id: "compliance-documents",
+        label: "Документы",
+        href: "/compliance-documents",
+        requiredPermission: "compliance_document:read",
+      },
+    ],
   },
   {
     id: "knowledge",
