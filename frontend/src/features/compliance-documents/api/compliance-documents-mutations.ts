@@ -3,6 +3,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
+  confirmComplianceDocumentFile,
+  createComplianceDocument,
+  createComplianceDocumentUploadUrl,
+  updateComplianceDocument,
+} from "@/features/compliance-documents/api/compliance-documents-api";
+import {
   activateComplianceDocument,
   approveComplianceDocument,
   archiveComplianceDocument,
@@ -13,8 +19,12 @@ import {
 import { complianceDocumentKeys } from "@/features/compliance-documents/api/compliance-documents-query-keys";
 import type {
   ComplianceDocumentDto,
+  ComplianceDocumentUploadUrlRequest,
   CompleteReviewRequestDto,
+  ConfirmComplianceDocumentFileRequest,
+  CreateComplianceDocumentRequest,
   ReasonRequestDto,
+  UpdateComplianceDocumentRequest,
   VersionedRequestDto,
 } from "@/features/compliance-documents/types/compliance-documents-dto";
 import { useOrganization } from "@/hooks/auth";
@@ -87,6 +97,75 @@ export function useArchiveComplianceDocumentMutation(documentId: string) {
     documentId,
     archiveComplianceDocument,
   );
+}
+
+export function useCreateComplianceDocumentMutation() {
+  const queryClient = useQueryClient();
+  const { organizationId } = useOrganization();
+  return useMutation({
+    mutationFn: (body: CreateComplianceDocumentRequest) =>
+      createComplianceDocument(body),
+    onSuccess: (document) => {
+      queryClient.setQueryData(
+        complianceDocumentKeys.detail(organizationId, document.id),
+        document,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: complianceDocumentKeys.lists(organizationId),
+      });
+    },
+  });
+}
+
+export function useUpdateComplianceDocumentMutation(documentId: string) {
+  const queryClient = useQueryClient();
+  const { organizationId } = useOrganization();
+  return useMutation({
+    mutationFn: (body: UpdateComplianceDocumentRequest) =>
+      updateComplianceDocument(documentId, body),
+    onSuccess: (document) => {
+      queryClient.setQueryData(
+        complianceDocumentKeys.detail(organizationId, document.id),
+        document,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: complianceDocumentKeys.lists(organizationId),
+      });
+    },
+  });
+}
+
+export function useCreateComplianceDocumentUploadUrlMutation(
+  documentId: string,
+) {
+  return useMutation({
+    mutationFn: (body: ComplianceDocumentUploadUrlRequest) =>
+      createComplianceDocumentUploadUrl(documentId, body),
+  });
+}
+
+export function useConfirmComplianceDocumentFileMutation(documentId: string) {
+  const queryClient = useQueryClient();
+  const { organizationId } = useOrganization();
+  return useMutation({
+    mutationFn: (body: ConfirmComplianceDocumentFileRequest) =>
+      confirmComplianceDocumentFile(documentId, body),
+    onSuccess: (document) => {
+      queryClient.setQueryData(
+        complianceDocumentKeys.detail(organizationId, document.id),
+        document,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: complianceDocumentKeys.fileVersions(
+          organizationId,
+          document.id,
+        ),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: complianceDocumentKeys.lists(organizationId),
+      });
+    },
+  });
 }
 
 export function useRestoreComplianceDocumentMutation(documentId: string) {

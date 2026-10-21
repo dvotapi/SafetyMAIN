@@ -18,7 +18,11 @@ import {
   Text,
   type DataTableColumnDef,
 } from "@/components";
-import { PageContainer, PageHeader } from "@/components/patterns/Page";
+import {
+  PageActions,
+  PageContainer,
+  PageHeader,
+} from "@/components/patterns/Page";
 
 import {
   useComplianceDocumentListQuery,
@@ -205,6 +209,19 @@ export function ComplianceDocumentRegistryPage() {
             организации. Порядок задаёт сервер.
           </Text>
         }
+        actions={
+          capabilities.canCreate ? (
+            <PageActions>
+              <Button
+                asChild
+                variant="primary"
+                data-testid="compliance-document-create-link"
+              >
+                <Link href="/compliance-documents/new">Создать</Link>
+              </Button>
+            </PageActions>
+          ) : null
+        }
       />
 
       <RegistryToolbar
@@ -251,7 +268,14 @@ export function ComplianceDocumentRegistryPage() {
       ) : empty ? (
         <EmptyState
           title="Документов пока нет"
-          description="Создание документов станет доступно в следующем этапе."
+          description="Создайте первый документ в статусе «Черновик»."
+          action={
+            capabilities.canCreate ? (
+              <Button asChild variant="primary">
+                <Link href="/compliance-documents/new">Создать</Link>
+              </Button>
+            ) : undefined
+          }
         />
       ) : filteredEmpty ? (
         <EmptyState

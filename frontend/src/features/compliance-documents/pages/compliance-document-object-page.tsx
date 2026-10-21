@@ -41,6 +41,7 @@ import {
 import { ComplianceDocumentProperties } from "@/features/compliance-documents/components/compliance-document-properties";
 import { ComplianceDocumentReasonDialog } from "@/features/compliance-documents/components/compliance-document-reason-dialog";
 import { ComplianceDocumentStatusBadge } from "@/features/compliance-documents/components/compliance-document-status-badge";
+import { ComplianceDocumentUploadDialog } from "@/features/compliance-documents/components/compliance-document-upload-dialog";
 import { ComplianceDocumentVersions } from "@/features/compliance-documents/components/compliance-document-versions";
 import { mapComplianceDocumentCapabilities } from "@/features/compliance-documents/hooks/use-compliance-document-permissions";
 import { shouldShowReviewDueWarning } from "@/features/compliance-documents/utils/status";
@@ -76,6 +77,7 @@ export function ComplianceDocumentObjectPage({
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [completeReviewOpen, setCompleteReviewOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   const approveMutation = useApproveComplianceDocumentMutation(documentId);
   const activateMutation = useActivateComplianceDocumentMutation(documentId);
@@ -227,9 +229,36 @@ export function ComplianceDocumentObjectPage({
           </Text>
         }
         actions={
-          <Button asChild variant="ghost">
-            <Link href="/compliance-documents">К реестру</Link>
-          </Button>
+          <div
+            style={{
+              display: "flex",
+              gap: "var(--sm-space-2)",
+              flexWrap: "wrap",
+            }}
+          >
+            {document.status === "draft" && capabilities.canUpdate ? (
+              <>
+                <Button asChild variant="secondary">
+                  <Link
+                    href={`/compliance-documents/${document.id}/edit`}
+                    data-testid="compliance-document-edit-link"
+                  >
+                    Редактировать
+                  </Link>
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setUploadOpen(true)}
+                  data-testid="compliance-document-upload-trigger"
+                >
+                  Загрузить файл
+                </Button>
+              </>
+            ) : null}
+            <Button asChild variant="ghost">
+              <Link href="/compliance-documents">К реестру</Link>
+            </Button>
+          </div>
         }
       />
 
@@ -375,6 +404,12 @@ export function ComplianceDocumentObjectPage({
           );
           if (ok) setRestoreOpen(false);
         }}
+      />
+
+      <ComplianceDocumentUploadDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        document={document}
       />
 
       <CompleteReviewDialog

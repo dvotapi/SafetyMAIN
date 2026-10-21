@@ -158,6 +158,16 @@ export const complianceDocumentFilesListSchema = z
   })
   .passthrough();
 
+export const complianceDocumentUploadUrlSchema = z.object({
+  upload_id: z.string(),
+  bucket: z.string(),
+  key: z.string(),
+  url: z.string().url(),
+  method: z.string(),
+  headers: z.record(z.string(), z.string()),
+  expires_at: z.string(),
+});
+
 export type ComplianceDocumentDto = z.infer<typeof complianceDocumentSchema>;
 export type ComplianceDocumentListDto = z.infer<
   typeof complianceDocumentListSchema
@@ -170,6 +180,9 @@ export type ComplianceDocumentDownloadUrlDto = z.infer<
 >;
 export type ComplianceDocumentFilesListDto = z.infer<
   typeof complianceDocumentFilesListSchema
+>;
+export type ComplianceDocumentUploadUrlDto = z.infer<
+  typeof complianceDocumentUploadUrlSchema
 >;
 export type ComplianceDocumentStatus = z.infer<
   typeof complianceDocumentStatusSchema

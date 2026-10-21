@@ -13,6 +13,7 @@ export type {
   ComplianceDocumentFilesListDto,
   ComplianceDocumentSource,
   ComplianceDocumentStatus,
+  ComplianceDocumentUploadUrlDto,
   DocumentApplicability,
   DocumentFileDto,
   DocumentSubjectKind,
@@ -70,3 +71,54 @@ export const COMPLIANCE_DOCUMENT_STATUSES: readonly ComplianceDocumentStatus[] =
 
 export const COMPLIANCE_DOCUMENT_SOURCES: readonly ComplianceDocumentSource[] =
   ["manual", "generated", "hr_form"];
+
+export interface DocumentApplicabilityPayload {
+  positions: string[];
+  work_types: string[];
+  departments: string[];
+  asset_ids: string[];
+}
+
+export interface CreateComplianceDocumentRequest {
+  document_type_id: string;
+  code: string;
+  title: string;
+  subject_id?: string | null;
+  issued_at?: string | null;
+  effective_from?: string | null;
+  next_review_at?: string | null;
+  approved_by_document_id?: string | null;
+  supersedes_document_id?: string | null;
+  applicability?: DocumentApplicabilityPayload;
+  source?: ComplianceDocumentSource;
+  notes?: string;
+}
+
+export interface UpdateComplianceDocumentRequest {
+  expected_version: number;
+  code?: string;
+  title?: string;
+  issued_at?: string | null;
+  effective_from?: string | null;
+  next_review_at?: string | null;
+  approved_by_document_id?: string | null;
+  supersedes_document_id?: string | null;
+  applicability?: DocumentApplicabilityPayload;
+  notes?: string | null;
+}
+
+export interface ComplianceDocumentUploadUrlRequest {
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  sha256: string;
+}
+
+export interface ConfirmComplianceDocumentFileRequest {
+  expected_version: number;
+  key: string;
+  size_bytes: number;
+  sha256: string;
+  content_type: string;
+  original_filename: string;
+}
