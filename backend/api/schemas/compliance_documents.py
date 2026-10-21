@@ -139,6 +139,96 @@ class CreateComplianceDocumentRequest(BaseModel):
     notes: str = ""
 
 
+class ApproveComplianceDocumentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_version: int = Field(ge=1)
+
+
+class ActivateComplianceDocumentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_version: int = Field(ge=1)
+
+
+class StartReviewComplianceDocumentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_version: int = Field(ge=1)
+
+
+class CompleteReviewComplianceDocumentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_version: int = Field(ge=1)
+    completed_on: date
+    next_review_at: date | None = None
+
+
+class ArchiveComplianceDocumentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_version: int = Field(ge=1)
+    reason: str = Field(min_length=1)
+
+
+class RestoreComplianceDocumentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_version: int = Field(ge=1)
+    reason: str = Field(min_length=1)
+
+
+class ComplianceDocumentUploadUrlRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    filename: str = Field(min_length=1, max_length=255)
+    content_type: str = Field(min_length=1, max_length=255)
+    size_bytes: int = Field(ge=1)
+    sha256: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+
+
+class ComplianceDocumentUploadUrlResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    upload_id: str
+    bucket: str
+    key: str
+    url: str
+    method: str
+    headers: dict[str, str]
+    expires_at: datetime
+
+
+class ConfirmComplianceDocumentFileRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_version: int = Field(ge=1)
+    bucket: str = Field(min_length=1)
+    key: str = Field(min_length=1)
+    size_bytes: int = Field(ge=1)
+    sha256: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    content_type: str = Field(min_length=1)
+    original_filename: str = Field(min_length=1, max_length=255)
+
+
+class ComplianceDocumentDownloadUrlResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    url: str
+    expires_at: datetime
+    filename: str
+    content_type: str
+    size_bytes: int
+    sha256: str
+
+
+class ComplianceDocumentFilesListResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    items: list[DocumentFileResponse]
+
+
 class UpdateComplianceDocumentRequest(BaseModel):
     """Partial update of a draft document; omitted fields keep their value.
 

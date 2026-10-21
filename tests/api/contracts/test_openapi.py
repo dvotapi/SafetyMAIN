@@ -47,6 +47,16 @@ EXPECTED_PATHS: dict[str, set[str]] = {
     "/api/v1/document-types": {"get"},
     "/api/v1/compliance-documents": {"get", "post"},
     "/api/v1/compliance-documents/{document_id}": {"get", "patch"},
+    "/api/v1/compliance-documents/{document_id}/approve": {"post"},
+    "/api/v1/compliance-documents/{document_id}/activate": {"post"},
+    "/api/v1/compliance-documents/{document_id}/start-review": {"post"},
+    "/api/v1/compliance-documents/{document_id}/complete-review": {"post"},
+    "/api/v1/compliance-documents/{document_id}/archive": {"post"},
+    "/api/v1/compliance-documents/{document_id}/restore": {"post"},
+    "/api/v1/compliance-documents/{document_id}/files/upload-url": {"post"},
+    "/api/v1/compliance-documents/{document_id}/files/confirm": {"post"},
+    "/api/v1/compliance-documents/{document_id}/files/current/download-url": {"get"},
+    "/api/v1/compliance-documents/{document_id}/files/versions": {"get"},
 }
 
 
