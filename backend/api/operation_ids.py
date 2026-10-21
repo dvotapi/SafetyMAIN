@@ -92,6 +92,12 @@ ARCHIVE_RISK_CONTROL = "archive_risk_control"
 CANCEL_RISK_CONTROL = "cancel_risk_control"
 MATERIALIZE_RISK_ASSESSMENT_CONTROLS = "materialize_risk_assessment_controls"
 
+LIST_DOCUMENT_TYPES = "list_document_types"
+LIST_COMPLIANCE_DOCUMENTS = "list_compliance_documents"
+GET_COMPLIANCE_DOCUMENT = "get_compliance_document"
+CREATE_COMPLIANCE_DOCUMENT = "create_compliance_document"
+UPDATE_COMPLIANCE_DOCUMENT = "update_compliance_document"
+
 STABLE_OPERATION_IDS: frozenset[str] = frozenset(
     {
         HEALTH,
@@ -159,6 +165,11 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         ARCHIVE_RISK_CONTROL,
         CANCEL_RISK_CONTROL,
         MATERIALIZE_RISK_ASSESSMENT_CONTROLS,
+        LIST_DOCUMENT_TYPES,
+        LIST_COMPLIANCE_DOCUMENTS,
+        GET_COMPLIANCE_DOCUMENT,
+        CREATE_COMPLIANCE_DOCUMENT,
+        UPDATE_COMPLIANCE_DOCUMENT,
         CREATE_KNOWLEDGE_OBJECT,
         SEARCH_KNOWLEDGE_OBJECTS,
         GET_KNOWLEDGE_OBJECT,

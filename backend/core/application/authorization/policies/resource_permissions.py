@@ -74,3 +74,21 @@ RISK_CONTROL_CANCEL = Permission.from_system_permission(
 RISK_CONTROL_MATERIALIZE = Permission.from_system_permission(
     SystemPermission.RISK_CONTROL_MATERIALIZE
 )
+COMPLIANCE_DOCUMENT_READ = Permission.from_system_permission(
+    SystemPermission.COMPLIANCE_DOCUMENT_READ
+)
+COMPLIANCE_DOCUMENT_CREATE = Permission.from_system_permission(
+    SystemPermission.COMPLIANCE_DOCUMENT_CREATE
+)
+COMPLIANCE_DOCUMENT_UPDATE = Permission.from_system_permission(
+    SystemPermission.COMPLIANCE_DOCUMENT_UPDATE
+)
+COMPLIANCE_DOCUMENT_APPROVE = Permission.from_system_permission(
+    SystemPermission.COMPLIANCE_DOCUMENT_APPROVE
+)
+COMPLIANCE_DOCUMENT_ACTIVATE = Permission.from_system_permission(
+    SystemPermission.COMPLIANCE_DOCUMENT_ACTIVATE
+)
+COMPLIANCE_DOCUMENT_ARCHIVE = Permission.from_system_permission(
+    SystemPermission.COMPLIANCE_DOCUMENT_ARCHIVE
+)

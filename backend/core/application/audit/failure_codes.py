@@ -43,6 +43,12 @@ from backend.core.domain.exceptions.risk_assessment import (
     RiskAssessmentHazardNotActive,
     RiskAssessmentVersionConflict,
 )
+from backend.core.domain.exceptions.compliance_document import (
+    ComplianceDocumentCannotBeModified,
+    ComplianceDocumentVersionConflict,
+    DuplicateActiveComplianceDocumentCode,
+    InvalidComplianceDocumentTransition,
+)
 from backend.core.domain.exceptions.risk_control import (
     DuplicateRiskControlCode,
     InvalidRiskControlTransition,
@@ -91,6 +97,10 @@ RISK_CONTROL_VERSION_CONFLICT = "risk_control_version_conflict"
 RISK_CONTROL_ALREADY_MATERIALIZED = "risk_control_already_materialized"
 INVALID_RISK_CONTROL_TRANSITION = "invalid_risk_control_transition"
 RISK_CONTROL_CANNOT_BE_MODIFIED = "risk_control_cannot_be_modified"
+DUPLICATE_COMPLIANCE_DOCUMENT_CODE = "duplicate_compliance_document_code"
+COMPLIANCE_DOCUMENT_VERSION_CONFLICT = "compliance_document_version_conflict"
+INVALID_COMPLIANCE_DOCUMENT_TRANSITION = "invalid_compliance_document_transition"
+COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED = "compliance_document_cannot_be_modified"
 
 AUDITABLE_ADMIN_FAILURES: dict[type[Exception], str] = {
     DuplicateUserEmail: DUPLICATE_USER_EMAIL,
@@ -133,4 +143,8 @@ AUDITABLE_ADMIN_FAILURES: dict[type[Exception], str] = {
     RiskControlAlreadyMaterialized: RISK_CONTROL_ALREADY_MATERIALIZED,
     InvalidRiskControlTransition: INVALID_RISK_CONTROL_TRANSITION,
     RiskControlCannotBeModified: RISK_CONTROL_CANNOT_BE_MODIFIED,
+    DuplicateActiveComplianceDocumentCode: DUPLICATE_COMPLIANCE_DOCUMENT_CODE,
+    ComplianceDocumentVersionConflict: COMPLIANCE_DOCUMENT_VERSION_CONFLICT,
+    InvalidComplianceDocumentTransition: INVALID_COMPLIANCE_DOCUMENT_TRANSITION,
+    ComplianceDocumentCannotBeModified: COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED,
 }

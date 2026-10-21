@@ -55,6 +55,11 @@ ALLOWED_METADATA_KEYS = frozenset(
         "source_control_reference",
         "expected_version",
         "resulting_version",
+        "document_id",
+        "document_code",
+        "document_type_id",
+        "subject_kind",
+        "new_version",
     }
 )
 
