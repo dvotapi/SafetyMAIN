@@ -41,7 +41,7 @@ def test_registry_contains_every_published_audit_action() -> None:
 
 
 def test_registry_has_expected_published_descriptors() -> None:
-    assert len(SECURITY_EVENT_REGISTRY) == 56
+    assert len(SECURITY_EVENT_REGISTRY) == 66
     assert len(ADMINISTRATIVE_SECURITY_EVENT_DESCRIPTORS) == 16
     assert len(AUTHORIZATION_SECURITY_EVENT_DESCRIPTORS) == 1
     assert len(AUTHENTICATION_SECURITY_EVENT_DESCRIPTORS) == 7

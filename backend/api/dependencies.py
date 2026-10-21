@@ -31,6 +31,13 @@ from backend.core.application.handlers.archive_knowledge_object import (
 )
 from backend.core.application.handlers.authenticate_user import AuthenticateUserHandler
 from backend.core.application.handlers.create_hazard import CreateHazardHandler
+from backend.core.application.handlers.compliance_documents import (
+    CreateComplianceDocumentHandler,
+    GetComplianceDocumentHandler,
+    ListComplianceDocumentsHandler,
+    ListDocumentTypesHandler,
+    UpdateComplianceDocumentHandler,
+)
 from backend.core.application.handlers.create_risk_assessment import CreateRiskAssessmentHandler
 from backend.core.application.handlers.create_risk_control import CreateRiskControlHandler
 from backend.core.application.handlers.get_list_risk_controls import (
@@ -179,7 +186,13 @@ from backend.core.domain.value_objects import (
 )
 from backend.core.domain.value_objects.audit_event_id import AuditEventId
 from backend.core.domain.value_objects.permission import SystemPermission
-from backend.core.domain.value_objects.safety_ids import HazardId, RiskAssessmentId, RiskControlId
+from backend.core.domain.value_objects.safety_ids import (
+    ComplianceDocumentId,
+    DocumentTypeId,
+    HazardId,
+    RiskAssessmentId,
+    RiskControlId,
+)
 from backend.core.infrastructure.time.utc_clock import UtcClock
 
 
@@ -1083,3 +1096,57 @@ def get_materialize_risk_controls_handler(
     audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
 ) -> MaterializeRiskAssessmentControlsHandler:
     return MaterializeRiskAssessmentControlsHandler(uow, clock, audit)
+
+
+def get_document_type_id(
+    document_type_id: Annotated[UUID, Path()],
+) -> DocumentTypeId:
+    try:
+        return DocumentTypeId(value=document_type_id)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
+def get_compliance_document_id(
+    document_id: Annotated[UUID, Path()],
+) -> ComplianceDocumentId:
+    try:
+        return ComplianceDocumentId(value=document_id)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
+def get_list_document_types_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+) -> ListDocumentTypesHandler:
+    return ListDocumentTypesHandler(uow)
+
+
+def get_create_compliance_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CreateComplianceDocumentHandler:
+    return CreateComplianceDocumentHandler(uow, clock, audit)
+
+
+def get_update_compliance_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> UpdateComplianceDocumentHandler:
+    return UpdateComplianceDocumentHandler(uow, clock, audit)
+
+
+def get_get_compliance_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> GetComplianceDocumentHandler:
+    return GetComplianceDocumentHandler(uow, clock)
+
+
+def get_list_compliance_documents_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> ListComplianceDocumentsHandler:
+    return ListComplianceDocumentsHandler(uow, clock)

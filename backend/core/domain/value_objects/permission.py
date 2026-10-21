@@ -45,6 +45,12 @@ class SystemPermission(str, Enum):
     RISK_CONTROL_ARCHIVE = "risk_control:archive"
     RISK_CONTROL_CANCEL = "risk_control:cancel"
     RISK_CONTROL_MATERIALIZE = "risk_control:materialize"
+    COMPLIANCE_DOCUMENT_READ = "compliance_document:read"
+    COMPLIANCE_DOCUMENT_CREATE = "compliance_document:create"
+    COMPLIANCE_DOCUMENT_UPDATE = "compliance_document:update"
+    COMPLIANCE_DOCUMENT_APPROVE = "compliance_document:approve"
+    COMPLIANCE_DOCUMENT_ACTIVATE = "compliance_document:activate"
+    COMPLIANCE_DOCUMENT_ARCHIVE = "compliance_document:archive"
 
 
 class Permission(BaseModel):

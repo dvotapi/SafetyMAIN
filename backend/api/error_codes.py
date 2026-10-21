@@ -12,6 +12,17 @@ from backend.core.application.exceptions.authorization import (
     OrganizationContextMismatchError,
     PermissionDeniedError,
 )
+from backend.core.domain.exceptions.compliance_document import (
+    ComplianceDocumentCannotBeModified,
+    ComplianceDocumentNotFound,
+    ComplianceDocumentReasonRequired,
+    ComplianceDocumentValidationError,
+    ComplianceDocumentVersionConflict,
+    DocumentTypeNotFound,
+    DuplicateActiveComplianceDocumentCode,
+    DuplicateDocumentTypeCode,
+    InvalidComplianceDocumentTransition,
+)
 from backend.core.domain.exceptions.risk_control import (
     DuplicateRiskControlCode,
     InvalidRiskControlTransition,
@@ -191,6 +202,16 @@ RISK_CONTROL_VALIDATION_ERROR = "risk_control_validation_error"
 RISK_CONTROL_CANNOT_BE_MODIFIED = "risk_control_cannot_be_modified"
 RISK_CONTROL_REASON_REQUIRED = "risk_control_reason_required"
 
+DOCUMENT_TYPE_NOT_FOUND = "document_type_not_found"
+DUPLICATE_DOCUMENT_TYPE_CODE = "duplicate_document_type_code"
+COMPLIANCE_DOCUMENT_NOT_FOUND = "compliance_document_not_found"
+DUPLICATE_COMPLIANCE_DOCUMENT_CODE = "duplicate_compliance_document_code"
+COMPLIANCE_DOCUMENT_VERSION_CONFLICT = "compliance_document_version_conflict"
+INVALID_COMPLIANCE_DOCUMENT_TRANSITION = "invalid_compliance_document_transition"
+COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED = "compliance_document_cannot_be_modified"
+COMPLIANCE_DOCUMENT_VALIDATION_ERROR = "compliance_document_validation_error"
+COMPLIANCE_DOCUMENT_REASON_REQUIRED = "compliance_document_reason_required"
+
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
 SERVICE_NOT_READY = "service_not_ready"
@@ -280,6 +301,15 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         RISK_CONTROL_VALIDATION_ERROR,
         RISK_CONTROL_CANNOT_BE_MODIFIED,
         RISK_CONTROL_REASON_REQUIRED,
+        DOCUMENT_TYPE_NOT_FOUND,
+        DUPLICATE_DOCUMENT_TYPE_CODE,
+        COMPLIANCE_DOCUMENT_NOT_FOUND,
+        DUPLICATE_COMPLIANCE_DOCUMENT_CODE,
+        COMPLIANCE_DOCUMENT_VERSION_CONFLICT,
+        INVALID_COMPLIANCE_DOCUMENT_TRANSITION,
+        COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED,
+        COMPLIANCE_DOCUMENT_VALIDATION_ERROR,
+        COMPLIANCE_DOCUMENT_REASON_REQUIRED,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -362,6 +392,15 @@ DOMAIN_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
     RiskControlValidationError: 422,
     RiskControlCannotBeModified: 422,
     RiskControlReasonRequired: 422,
+    DocumentTypeNotFound: 404,
+    DuplicateDocumentTypeCode: 409,
+    ComplianceDocumentNotFound: 404,
+    DuplicateActiveComplianceDocumentCode: 409,
+    ComplianceDocumentVersionConflict: 409,
+    InvalidComplianceDocumentTransition: 422,
+    ComplianceDocumentCannotBeModified: 422,
+    ComplianceDocumentValidationError: 422,
+    ComplianceDocumentReasonRequired: 422,
 }
 
 DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
@@ -440,6 +479,15 @@ DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
     RiskControlValidationError: RISK_CONTROL_VALIDATION_ERROR,
     RiskControlCannotBeModified: RISK_CONTROL_CANNOT_BE_MODIFIED,
     RiskControlReasonRequired: RISK_CONTROL_REASON_REQUIRED,
+    DocumentTypeNotFound: DOCUMENT_TYPE_NOT_FOUND,
+    DuplicateDocumentTypeCode: DUPLICATE_DOCUMENT_TYPE_CODE,
+    ComplianceDocumentNotFound: COMPLIANCE_DOCUMENT_NOT_FOUND,
+    DuplicateActiveComplianceDocumentCode: DUPLICATE_COMPLIANCE_DOCUMENT_CODE,
+    ComplianceDocumentVersionConflict: COMPLIANCE_DOCUMENT_VERSION_CONFLICT,
+    InvalidComplianceDocumentTransition: INVALID_COMPLIANCE_DOCUMENT_TRANSITION,
+    ComplianceDocumentCannotBeModified: COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED,
+    ComplianceDocumentValidationError: COMPLIANCE_DOCUMENT_VALIDATION_ERROR,
+    ComplianceDocumentReasonRequired: COMPLIANCE_DOCUMENT_REASON_REQUIRED,
 }
 
 DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
@@ -530,6 +578,21 @@ DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     RiskControlValidationError: "Risk control validation failed.",
     RiskControlCannotBeModified: "Risk control cannot be modified.",
     RiskControlReasonRequired: "A reason is required for this risk control action.",
+    DocumentTypeNotFound: "Document type was not found.",
+    DuplicateDocumentTypeCode: "Document type code already exists.",
+    ComplianceDocumentNotFound: "Compliance document was not found.",
+    DuplicateActiveComplianceDocumentCode: (
+        "An active compliance document already uses this code."
+    ),
+    ComplianceDocumentVersionConflict: "Compliance document version conflict.",
+    InvalidComplianceDocumentTransition: (
+        "Invalid compliance document lifecycle transition."
+    ),
+    ComplianceDocumentCannotBeModified: "Compliance document cannot be modified.",
+    ComplianceDocumentValidationError: "Compliance document validation failed.",
+    ComplianceDocumentReasonRequired: (
+        "A reason is required for this compliance document action."
+    ),
 }
 
 APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {

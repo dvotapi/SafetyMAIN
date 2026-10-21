@@ -1,11 +1,20 @@
 from __future__ import annotations
 
 from backend.core.domain.exceptions.base import SafetyMainDomainError
-from backend.core.domain.value_objects.safety_ids import ComplianceDocumentId
+from backend.core.domain.value_objects.safety_ids import (
+    ComplianceDocumentId,
+    DocumentTypeId,
+)
 
 
 class DocumentTypeError(SafetyMainDomainError):
     """Base error for the DocumentType catalog."""
+
+
+class DocumentTypeNotFound(DocumentTypeError):
+    def __init__(self, document_type_id: DocumentTypeId) -> None:
+        self.document_type_id = document_type_id
+        super().__init__(f"Document type was not found: {document_type_id.value}.")
 
 
 class DuplicateDocumentTypeCode(DocumentTypeError):
