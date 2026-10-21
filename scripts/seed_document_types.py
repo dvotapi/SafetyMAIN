@@ -9,9 +9,9 @@ organization: the operator seeds types for an existing one.
 Re-running the script leaves the database unchanged: codes that already
 exist in the organization are skipped.
 
-The default periods in `DOCUMENT_TYPE_CATALOG` are the task's D2 draft
-and must be confirmed by the product owner (or an OT specialist) before
-production rollout. See
+The periods, acknowledgement/approval-order flags and warning thresholds in
+`DOCUMENT_TYPE_CATALOG` are the D2 catalog confirmed by the product owner
+on 2026-10-21. See
 docs/tasks/TASK-P11-001-storage-and-compliance-documents.md.
 
 Usage (inside the backend image, with DATABASE_URL set):
@@ -71,16 +71,26 @@ class SeedResult:
     skipped: tuple[str, ...]
 
 
-# D2 draft — pending product-owner confirmation. See TASK-P11-001.
+# Warning thresholds: Variant Б — longer thresholds for long-period documents
+# (60+ months) and shorter ones for short-period documents (<= 12 months).
+# A document whose period is <= 12 months lights up as "review-due" too far
+# in advance under the default [90, 30, 14, 7]; a smaller set keeps the warning
+# proportional to the lifecycle.
+_LONG_THRESHOLDS: tuple[int, ...] = (90, 30, 14, 7)
+_SHORT_THRESHOLDS: tuple[int, ...] = (30, 14, 7, 3)
+
+# D2 — confirmed by the product owner on 2026-10-21.
 DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
-    # Organization documents
+    # ---- Organization documents ----
     DocumentTypeSeed(
         code="iot_profession",
         title_ru="Инструкция по охране труда для профессии",
         safety_domain=SafetyDomain.OCCUPATIONAL,
         subject_kind=DocumentSubjectKind.ORGANIZATION,
         review_period_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
         requires_acknowledgement=True,
+        requires_approval_order=True,
         legal_basis="Приказ Минтруда России от 29.10.2021 № 772н",
     ),
     DocumentTypeSeed(
@@ -89,7 +99,9 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.OCCUPATIONAL,
         subject_kind=DocumentSubjectKind.ORGANIZATION,
         review_period_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
         requires_acknowledgement=True,
+        requires_approval_order=True,
         legal_basis="Приказ Минтруда России от 29.10.2021 № 772н",
     ),
     DocumentTypeSeed(
@@ -98,7 +110,9 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.INDUSTRIAL,
         subject_kind=DocumentSubjectKind.ORGANIZATION,
         review_period_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
         requires_acknowledgement=True,
+        requires_approval_order=True,
     ),
     DocumentTypeSeed(
         code="regulation_suot",
@@ -106,6 +120,9 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.OCCUPATIONAL,
         subject_kind=DocumentSubjectKind.ORGANIZATION,
         review_period_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
+        requires_acknowledgement=True,
+        requires_approval_order=True,
         legal_basis="Приказ Минтруда России от 29.10.2021 № 776н",
     ),
     DocumentTypeSeed(
@@ -120,7 +137,9 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.OCCUPATIONAL,
         subject_kind=DocumentSubjectKind.ORGANIZATION,
         review_period_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
         requires_acknowledgement=True,
+        requires_approval_order=True,
         legal_basis="Постановление Правительства РФ от 24.12.2021 № 2464",
     ),
     DocumentTypeSeed(
@@ -129,7 +148,9 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.INDUSTRIAL,
         subject_kind=DocumentSubjectKind.ORGANIZATION,
         review_period_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
         requires_acknowledgement=True,
+        requires_approval_order=True,
         legal_basis="Постановление Правительства РФ от 15.09.2020 № 1437",
     ),
     DocumentTypeSeed(
@@ -138,15 +159,19 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.INDUSTRIAL,
         subject_kind=DocumentSubjectKind.ORGANIZATION,
         review_period_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
+        requires_acknowledgement=True,
+        requires_approval_order=True,
         legal_basis="Постановление Правительства РФ от 18.12.2020 № 2168",
     ),
-    # Employee documents (validity)
+    # ---- Employee documents (validity) ----
     DocumentTypeSeed(
         code="dopog_cert",
         title_ru="Свидетельство ДОПОГ водителя",
         safety_domain=SafetyDomain.DANGEROUS_GOODS,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
         validity_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
         legal_basis="ДОПОГ 8.2.2.8",
     ),
     DocumentTypeSeed(
@@ -155,12 +180,13 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.ROAD,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
         validity_months=120,
+        warning_thresholds_days=_LONG_THRESHOLDS,
         legal_basis="Федеральный закон от 10.12.1995 № 196-ФЗ, ст. 25",
     ),
     DocumentTypeSeed(
         code="ekv",
-        title_ru="Единая карточка водителя",
-        safety_domain=SafetyDomain.ROAD,
+        title_ru="Единая книжка взрывника",
+        safety_domain=SafetyDomain.INDUSTRIAL,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
     ),
     DocumentTypeSeed(
@@ -169,15 +195,17 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.INDUSTRIAL,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
         validity_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
         legal_basis="Постановление Правительства РФ от 25.10.2019 № 1365",
     ),
     DocumentTypeSeed(
         code="attestation_protocol",
-        title_ru="Протокол проверки знаний требований охраны труда",
-        safety_domain=SafetyDomain.OCCUPATIONAL,
+        title_ru="Протокол проверки знаний требований промышленной безопасности",
+        safety_domain=SafetyDomain.INDUSTRIAL,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
-        validity_months=36,
-        legal_basis="Постановление Правительства РФ от 24.12.2021 № 2464",
+        validity_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
+        legal_basis="Постановление Правительства РФ от 25.10.2019 № 1365",
     ),
     DocumentTypeSeed(
         code="tractor_license",
@@ -185,21 +213,26 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.ROAD,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
         validity_months=120,
+        warning_thresholds_days=_LONG_THRESHOLDS,
         legal_basis="Постановление Правительства РФ от 12.07.1999 № 796",
     ),
     DocumentTypeSeed(
         code="drilling_license",
-        title_ru="Удостоверение бурильщика",
-        safety_domain=SafetyDomain.INDUSTRIAL,
+        title_ru="Удостоверение тракториста-машиниста с отметкой «буровая установка»",
+        safety_domain=SafetyDomain.ROAD,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
-        validity_months=12,
+        validity_months=120,
+        warning_thresholds_days=_LONG_THRESHOLDS,
+        legal_basis="Постановление Правительства РФ от 12.07.1999 № 796",
     ),
     DocumentTypeSeed(
         code="excavator_license",
-        title_ru="Удостоверение машиниста экскаватора",
-        safety_domain=SafetyDomain.INDUSTRIAL,
+        title_ru="Удостоверение тракториста-машиниста с отметкой «экскаватор»",
+        safety_domain=SafetyDomain.ROAD,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
-        validity_months=12,
+        validity_months=120,
+        warning_thresholds_days=_LONG_THRESHOLDS,
+        legal_basis="Постановление Правительства РФ от 12.07.1999 № 796",
     ),
     DocumentTypeSeed(
         code="medical_conclusion",
@@ -207,6 +240,7 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.OCCUPATIONAL,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
         validity_months=12,
+        warning_thresholds_days=_SHORT_THRESHOLDS,
         legal_basis="Приказ Минздрава России от 28.01.2021 № 29н",
     ),
     DocumentTypeSeed(
@@ -215,9 +249,10 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.OCCUPATIONAL,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
         validity_months=60,
+        warning_thresholds_days=_LONG_THRESHOLDS,
         legal_basis="Приказ Минздрава России от 20.05.2022 № 342н",
     ),
-    # Repeating briefings (periodicity)
+    # ---- Repeating briefings (periodicity) ----
     DocumentTypeSeed(
         code="ot_briefing_introductory",
         title_ru="Вводный инструктаж по охране труда",
@@ -238,6 +273,7 @@ DOCUMENT_TYPE_CATALOG: tuple[DocumentTypeSeed, ...] = (
         safety_domain=SafetyDomain.OCCUPATIONAL,
         subject_kind=DocumentSubjectKind.EMPLOYEE,
         periodicity_months=6,
+        warning_thresholds_days=_SHORT_THRESHOLDS,
         legal_basis="Постановление Правительства РФ от 24.12.2021 № 2464",
     ),
     DocumentTypeSeed(

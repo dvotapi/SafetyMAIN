@@ -91,6 +91,43 @@ def test_repeat_briefing_has_periodicity() -> None:
     assert repeat.safety_domain is SafetyDomain.OCCUPATIONAL
 
 
+def test_organizational_normative_acts_require_acknowledgement_and_approval_order() -> None:
+    required = {
+        "iot_profession",
+        "iot_work_type",
+        "production_instruction",
+        "regulation_suot",
+        "briefing_program",
+        "emergency_plan",
+        "production_control_regulation",
+    }
+    seeds = {s.code: s for s in DOCUMENT_TYPE_CATALOG}
+    for code in required:
+        assert seeds[code].requires_acknowledgement, code
+        assert seeds[code].requires_approval_order, code
+    # 'order' is itself the approval instrument and never requires another one.
+    assert seeds["order"].requires_approval_order is False
+    assert seeds["order"].requires_acknowledgement is False
+
+
+def test_short_period_types_use_short_thresholds() -> None:
+    seeds = {s.code: s for s in DOCUMENT_TYPE_CATALOG}
+    short = (30, 14, 7, 3)
+    long_ = (90, 30, 14, 7)
+    assert seeds["medical_conclusion"].warning_thresholds_days == short
+    assert seeds["ot_briefing_repeat"].warning_thresholds_days == short
+    assert seeds["iot_profession"].warning_thresholds_days == long_
+    assert seeds["psychiatric_conclusion"].warning_thresholds_days == long_
+
+
+def test_ekv_has_no_period() -> None:
+    seeds = {s.code: s for s in DOCUMENT_TYPE_CATALOG}
+    ekv = seeds["ekv"]
+    assert ekv.review_period_months is None
+    assert ekv.validity_months is None
+    assert ekv.periodicity_months is None
+
+
 # ---- DB tests ----
 
 
