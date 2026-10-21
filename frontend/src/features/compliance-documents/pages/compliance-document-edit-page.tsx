@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 
 import {
@@ -69,12 +69,17 @@ export function ComplianceDocumentEditPage({
     window.document.title = "Редактировать документ · SafetyMAIN";
   }, []);
 
+  // Hydrate the form once per documentId. Later refetches (window-focus, cache
+  // invalidation) must not clobber in-progress user edits; the mutation sends
+  // expected_version and the server surfaces real conflicts via 409.
+  const hydratedForId = useRef<string | null>(null);
   useEffect(() => {
-    if (detail.data) {
+    if (detail.data && hydratedForId.current !== detail.data.id) {
       form.reset(complianceDocumentToFormValues(detail.data));
+      hydratedForId.current = detail.data.id;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when server data arrives
-  }, [detail.data?.id, detail.data?.version]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate only on first detail payload per id
+  }, [detail.data?.id]);
 
   useEffect(() => {
     if (detail.data && detail.data.status !== "draft") {
@@ -168,7 +173,15 @@ export function ComplianceDocumentEditPage({
       router.push(`/compliance-documents/${updated.id}`);
     } catch (error) {
       if (error instanceof ConflictError) {
-        // Could be duplicate code OR version conflict — surface server message.
+        if (error.code === "duplicate_compliance_document_code") {
+          form.setError("code", {
+            message:
+              error.message || "Документ с таким кодом уже существует в силе.",
+          });
+          form.setFocus("code");
+          return;
+        }
+        // Version conflict or any other 409 — the field is not the issue.
         form.setError("root", {
           message: error.message || "Конфликт при сохранении документа.",
         });

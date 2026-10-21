@@ -30,6 +30,15 @@ import { useOrganization } from "@/hooks/auth";
 
 const ORDER_TYPE_CODE = "order";
 
+// Picker candidates: the backend only accepts an in-force edition
+// (active or under_review) as either an approving order or a supersede
+// target. Applied on both pickers to keep the UI in sync with that rule.
+function isInForce<T extends { status: ComplianceDocumentStatus }>(
+  item: T,
+): boolean {
+  return item.status === "active" || item.status === "under_review";
+}
+
 function typeOptions(types: DocumentTypeDto[]): SelectOption[] {
   return types.map((type) => ({
     value: type.id,
@@ -46,7 +55,13 @@ function documentOptions(
     label: `${item.code} — ${item.title}`,
   }));
   if (currentValue && !options.some((o) => o.value === currentValue)) {
-    options.unshift({ value: currentValue, label: currentValue });
+    // The linked document is outside the loaded candidate window (archived,
+    // superseded, draft, or past the first page). Keep the id so the form
+    // round-trips it, but show a readable label instead of the raw UUID.
+    options.unshift({
+      value: currentValue,
+      label: "Текущий связанный документ (вне списка)",
+    });
   }
   options.unshift({ value: "", label: "— Не выбрано —" });
   return options;
@@ -104,9 +119,7 @@ export function ComplianceDocumentForm({
     enabled: approvedByEnabled && Boolean(organizationId),
   });
   const approvedByCandidates = (approvedByQuery.data?.items ?? []).filter(
-    (item) =>
-      (item.status as ComplianceDocumentStatus) === "active" ||
-      (item.status as ComplianceDocumentStatus) === "under_review",
+    isInForce,
   );
 
   const supersedesEnabled =
@@ -123,9 +136,7 @@ export function ComplianceDocumentForm({
     enabled: supersedesEnabled,
   });
   const supersedesCandidates = (supersedesQuery.data?.items ?? []).filter(
-    (item) =>
-      (item.status as ComplianceDocumentStatus) === "active" ||
-      (item.status as ComplianceDocumentStatus) === "under_review",
+    isInForce,
   );
 
   return (

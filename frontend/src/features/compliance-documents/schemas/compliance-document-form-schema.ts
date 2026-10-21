@@ -36,6 +36,9 @@ export const complianceDocumentFormSchema = z.object({
   positions: tagList,
   work_types: tagList,
   departments: tagList,
+  // asset_ids is not yet editable in the UI — kept in form state as a
+  // passthrough so an existing document's links survive a draft edit.
+  asset_ids: z.array(z.string().regex(UUID_RE)),
   notes: z.string().max(10_000),
 });
 
@@ -57,5 +60,6 @@ export const defaultComplianceDocumentFormValues: ComplianceDocumentFormValues =
     positions: [],
     work_types: [],
     departments: [],
+    asset_ids: [],
     notes: "",
   };

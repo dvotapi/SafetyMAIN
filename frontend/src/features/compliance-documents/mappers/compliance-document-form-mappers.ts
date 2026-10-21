@@ -18,7 +18,9 @@ function buildApplicability(
     positions: values.positions,
     work_types: values.work_types,
     departments: values.departments,
-    asset_ids: [],
+    // asset_ids is not editable in the current UI; pass through what the
+    // server returned so saving a draft never silently drops linked assets.
+    asset_ids: values.asset_ids,
   };
 }
 
@@ -82,6 +84,7 @@ export function complianceDocumentToFormValues(
     positions: document.applicability.positions,
     work_types: document.applicability.work_types,
     departments: document.applicability.departments,
+    asset_ids: document.applicability.asset_ids,
     notes: document.notes,
   };
 }
