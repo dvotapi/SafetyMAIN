@@ -34,7 +34,7 @@ const SUBJECT_KIND_LABELS: Record<DocumentSubjectKind, string> = {
 const SAFETY_DOMAIN_LABELS: Record<SafetyDomain, string> = {
   occupational: "Охрана труда",
   industrial: "Промышленная безопасность",
-  labour: "Трудовое право",
+  transport_security: "Транспортная безопасность",
   fire: "Пожарная безопасность",
   environmental: "Экология",
   road: "БДД",

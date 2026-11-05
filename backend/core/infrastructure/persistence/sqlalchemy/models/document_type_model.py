@@ -24,7 +24,7 @@ from backend.core.infrastructure.persistence.sqlalchemy.base import Base
 _SAFETY_DOMAINS = (
     "occupational",
     "industrial",
-    "labour",
+    "transport_security",
     "fire",
     "environmental",
     "road",

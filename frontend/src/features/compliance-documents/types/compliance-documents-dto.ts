@@ -59,7 +59,7 @@ export const DOCUMENT_SUBJECT_KINDS: readonly DocumentSubjectKind[] = [
 export const SAFETY_DOMAINS: readonly SafetyDomain[] = [
   "occupational",
   "industrial",
-  "labour",
+  "transport_security",
   "fire",
   "environmental",
   "road",

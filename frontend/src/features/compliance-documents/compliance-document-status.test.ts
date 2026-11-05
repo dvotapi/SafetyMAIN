@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { safetyDomainSchema } from "@/features/compliance-documents/schemas/compliance-documents-response-schemas";
 import {
   complianceDocumentStatusLabel,
   complianceDocumentStatusToVisual,
+  safetyDomainLabel,
   shouldShowReviewDueWarning,
 } from "@/features/compliance-documents/utils/status";
 
@@ -40,5 +42,20 @@ describe("shouldShowReviewDueWarning", () => {
 
   it("hides warning when flag is false", () => {
     expect(shouldShowReviewDueWarning("active", false)).toBe(false);
+  });
+});
+
+describe("safety domain", () => {
+  it("labels transport security («ТрБез», 16-ФЗ)", () => {
+    expect(safetyDomainLabel("transport_security")).toBe(
+      "Транспортная безопасность",
+    );
+  });
+
+  it("accepts transport_security and rejects the retired labour code", () => {
+    expect(safetyDomainSchema.parse("transport_security")).toBe(
+      "transport_security",
+    );
+    expect(safetyDomainSchema.safeParse("labour").success).toBe(false);
   });
 });

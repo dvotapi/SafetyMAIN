@@ -195,3 +195,27 @@ def test_auditor_can_list_document_types(
         "/api/v1/document-types", headers=_headers(org, token)
     )
     assert response.status_code == 200
+
+
+def test_document_type_serializes_transport_security_domain(
+    enforced_auth_settings: AppSettings,
+) -> None:
+    client, org, token, document_types = _build_client(
+        enforced_auth_settings, role=Role.member()
+    )
+    document_types.add(
+        DocumentType.create(
+            organization_id=org,
+            code="transport_security_plan",
+            title_ru="План обеспечения транспортной безопасности",
+            safety_domain=SafetyDomain.TRANSPORT_SECURITY,
+            subject_kind=DocumentSubjectKind.ORGANIZATION,
+            review_period_months=60,
+            created_at=datetime.now(UTC),
+        )
+    )
+    response = client.get("/api/v1/document-types", headers=_headers(org, token))
+    assert response.status_code == 200
+    assert [item["safety_domain"] for item in response.json()["items"]] == [
+        "transport_security"
+    ]

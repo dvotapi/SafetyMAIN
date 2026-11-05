@@ -491,6 +491,24 @@ def test_list_filters_by_safety_domain(
     assert codes == {"CD-FIRE"}
 
 
+
+@pytest.mark.parametrize(
+    ("safety_domain", "expected_status"),
+    [("transport_security", 200), ("labour", 422)],
+)
+def test_list_safety_domain_filter_accepts_transport_security_only(
+    enforced_auth_settings: AppSettings,
+    safety_domain: str,
+    expected_status: int,
+) -> None:
+    ctx = _build_client(enforced_auth_settings, role=Role.admin())
+    response = ctx["client"].get(
+        "/api/v1/compliance-documents",
+        headers=_headers(ctx["organization_id"], ctx["token"]),
+        params={"safety_domain": safety_domain},
+    )
+    assert response.status_code == expected_status
+
 def test_no_delete_route(enforced_auth_settings: AppSettings) -> None:
     ctx = _build_client(enforced_auth_settings, role=Role.admin())
     headers = _headers(ctx["organization_id"], ctx["token"])
