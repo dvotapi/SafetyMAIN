@@ -2,7 +2,7 @@
 
 Status: Proposed
 Epic: `docs/tasks/EPIC-P11-compliance-documentation.md`
-Depends on: TASK-P11-006 (obligations), TASK-P11-003 (organisation profile seed)
+Depends on: TASK-P11-006 (obligations), TASK-P11-003 (organisation profile seed), TASK-P11-012 (shelf places)
 
 ---
 
@@ -120,6 +120,34 @@ accept plus existing member permissions. Audit: `compliance.requirement.*`,
 `docs/architecture/RegulatoryRequirements.md`, `docs/api/RegulationsAPI.md`,
 `docs/api/ComplianceGapsAPI.md`, seed authoring guide for curators.
 
+### 8. Amendments from TASK-P11-012 (approved 2026-11-05)
+
+The shelf (P11-012) already holds the curated list of required places
+(416 places, permanent codes, legal basis with confidence, applicability
+condition, exclusions). This task builds on it instead of a parallel list:
+
+- `regulatory_requirements.shelf_slot_id` (nullable FK; many requirements →
+  one place). A requirement without a place is allowed (appointments,
+  periodic activities) but flagged in the registry.
+- **Seed**: the first curated seed is generated from shelf places' legal
+  basis (regulation, clause, quote, confidence); entries with confidence
+  `secondary` / `unconfirmed` are marked for curator confirmation; the
+  completion report lists confirmed vs pending entries.
+- **Gap analysis** uses the place's effective status (P11-012 evaluator) as
+  the presence signal for documents. An **excluded place** makes its
+  requirements `not_applicable` for the organisation with the exclusion
+  reason (no obligation); `accepted_risk` stays for applicable requirements
+  that are deliberately not met. Gap items reference the place;
+  `develop_document` / `review_document` obligations carry `shelf_slot_id`.
+- **Role**: `compliance_curator` receives `shelf:read`, `shelf:curate`
+  (until then shelf curation is admin-only).
+- **Frontend**: the requirement page links its place; the gap matrix
+  drills down to shelf places; the shelf panel's «Основание» shows the
+  linked requirements (clause, edition, status) instead of free text once
+  requirements exist.
+- **Domains**: «ТрБез» is transport security (`transport_security`), not
+  labour safety.
+
 ---
 
 ## Acceptance Criteria
@@ -136,6 +164,10 @@ accept plus existing member permissions. Audit: `compliance.requirement.*`,
   were confirmed by the curators.
 - `npm run verify`; E2E: run gap analysis → obligation appears.
 
+- Seed generated from shelf places loads idempotently; excluded places
+  produce `not_applicable` gap items; a missing place produces one
+  `develop_document` obligation with `shelf_slot_id`; `compliance_curator`
+  can exclude and restore shelf places (TASK-P11-012 amendment).
 ---
 
 ## Non-Goals
@@ -156,7 +188,8 @@ frontend tests; curator review of the seed recorded in the completion report.
 
 ## Suggested implementation phases
 
-1. Organisation profile extension + API + form.
+1. Organisation profile extension + API + form (+ `compliance_curator` role
+   mapped to `shelf:*`).
 2. Regulations/requirements model + API + role.
 3. Seed loader + curated seed.
 4. Gap analysis service + job + obligations.

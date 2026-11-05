@@ -152,6 +152,29 @@ dismissed`, `integration.hr.sync_started | sync_completed | sync_failed`.
 `SafetyDomainFoundation.md`, `ApplicationServerDeployment.md` (HR DB role,
 network access from the application server to the hr_form database), `CLAUDE.md`.
 
+### 8. Amendments from TASK-P11-012 (approved 2026-11-05)
+
+The shelf shows, for every document that requires acknowledgement, who must
+be acquainted with it by the nature of their work (P11-012 D5). That needs
+positions to be **codes**, not free text:
+
+- `Employee.position_code` is mandatory to resolve for active employees;
+  unmatched positions are listed in the sync run report and on the
+  "Интеграция с HR" admin page («Должности без кода: N»), so the OT
+  specialist can map them.
+- Position codes come from the `role` entries of `tag_vocabulary` (P11-002
+  D14). If `tag_vocabulary` is not available when this task starts, this
+  task introduces a minimal organisation-owned position catalogue
+  (`positions`: code, title_ru, aliases) used by both
+  `Employee.position_code` and `DocumentApplicability.positions`; P11-002
+  later maps it into `tag_vocabulary`. The choice is made in planning and
+  recorded as a planning decision.
+- Provide a read model for the acknowledgement panel: full name, position
+  title, department, line manager's full name (all within the epic's allowed
+  personal-data set).
+- This task is on the acknowledgement critical path (P11-012 D4): its
+  phases 1–3 and the `employee` role (phase 4) come before the rest.
+
 ---
 
 ## Acceptance Criteria
@@ -167,6 +190,10 @@ network access from the application server to the hr_form database), `CLAUDE.md`
 - "Персонал" registry and object page work with the pattern components;
   `npm run verify` passes; E2E covers registry → object page → invite.
 
+- Unmatched positions appear in the sync report and the admin page; with a
+  test catalogue, an employee whose hr_form position matches an alias gets
+  the code; the acknowledgement read model returns name, position, and
+  manager without any other personal field (P11-012 amendment).
 ---
 
 ## Non-Goals

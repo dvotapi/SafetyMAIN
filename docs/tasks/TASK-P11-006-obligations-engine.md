@@ -2,7 +2,7 @@
 
 Status: Proposed
 Epic: `docs/tasks/EPIC-P11-compliance-documentation.md`
-Depends on: TASK-P11-003 (documents, applicability), TASK-P11-005 (journals, Training)
+Depends on: TASK-P11-003 (documents, applicability), TASK-P11-005 (journals, Training). The `acknowledge_document` slice (§7) depends only on TASK-P11-004 and the TASK-P11-005 acknowledgement journal (TASK-P11-012 D4).
 
 ---
 
@@ -37,9 +37,9 @@ Obligation kinds in this task:
   / `department`, `DocumentType.periodicity_months / validity_months /
   review_period_months / warning_thresholds_days / requires_acknowledgement`,
   `Training.expires_at`, `DocumentAssembly.stale_items`.
-- Acknowledgement of a document is recorded as a journal entry of a new
-  journal type `acknowledgement` (reuse P11-005 machinery; the printable
-  form is the acknowledgement sheet template from P11-003).
+- Acknowledgement of a document is recorded as a journal entry of the
+  journal type `acknowledgement`, seeded by P11-005 §9 (the printable form
+  is the acknowledgement sheet template from P11-003, delivered later).
 
 ---
 
@@ -133,6 +133,31 @@ Permissions: `obligation:read | manage`, `obligation:read_self`,
 dedupe; thresholds), `docs/api/ObligationsAPI.md`,
 `docs/api/ApplicabilityRulesAPI.md`, `docs/domain/Obligations.md`, `CLAUDE.md`.
 
+### 7. Amendments from TASK-P11-012 (approved 2026-11-05)
+
+**Slice `acknowledge_document` first.** Phases 1–3 are first delivered for
+this one obligation kind, end to end, before the other kinds:
+
+- Applicability for `compliance_document` targets uses **position codes**
+  (`Employee.position_code`, P11-004 §8), plus departments and work types.
+  `DocumentApplicability.positions` free text is migrated to codes where it
+  matches; a document with unresolved applicability is flagged
+  `applicability_resolved = false` and creates no obligations (the shelf
+  shows «Область применения не привязана к должностям»).
+- Activating a document whose type `requires_acknowledgement` creates
+  obligations for the current edition; a new edition cancels the open ones
+  for the previous edition and creates new ones (coverage resets per edition).
+- A signed `acknowledgement` entry (P11-005 §9) completes the obligation.
+- Query for consumers (shelf panel, document «Ознакомление» tab):
+  `GET /api/v1/compliance-documents/{id}/acknowledgement-coverage` →
+  `required_total, acknowledged_total, overdue_total, applicability_resolved,
+  pending[{employee_id, full_name, position_title, manager_full_name,
+  due_date, overdue}]`, acknowledged list paged. All counts are computed here;
+  P11-012 only displays them.
+- Shelf places (P11-012) are not obligation subjects in this task;
+  `develop_document` / `review_document` obligations for places come with
+  P11-009 gap analysis.
+
 ---
 
 ## Acceptance Criteria
@@ -152,6 +177,12 @@ dedupe; thresholds), `docs/api/ObligationsAPI.md`,
   document → obligation appears for employee → employee signs → obligation
   completed.
 
+- Slice: activating a document with coded applicability creates
+  `acknowledge_document` obligations only for matching active employees;
+  a new edition resets them; `acknowledgement-coverage` returns counts and
+  the pending list matching the obligations; a document with free-text
+  applicability returns `applicability_resolved = false` (TASK-P11-012
+  amendment).
 ---
 
 ## Non-Goals
@@ -174,6 +205,8 @@ in-memory repos; `db` tests for dedupe uniqueness; security matrix for
 
 ## Suggested implementation phases
 
+0. Slice `acknowledge_document` (§7): phases 1–4 below limited to this kind,
+   plus `acknowledgement-coverage`; ships first.
 1. Applicability rules + resolver + tests.
 2. Obligation domain + repos + migration + events.
 3. Evaluation job + event subscriptions + run reports.

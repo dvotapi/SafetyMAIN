@@ -8,7 +8,7 @@ Status: **Proposed** (architecture discussed 2026-09-13; tasks await Phase 1 rev
 
 SafetyMAIN becomes the single place where ComplEX keeps, produces, and controls
 all safety documentation across seven domains: occupational safety (ОТ),
-industrial safety (ПБ), labour safety (ТрБез), fire safety (ПожБ),
+industrial safety (ПБ), transport security (ТрБез, 16-ФЗ), fire safety (ПожБ),
 environmental safety, road safety (БДД), and dangerous-goods transport (ДОПОГ).
 
 Concretely, after this epic:
@@ -28,6 +28,11 @@ Concretely, after this epic:
 5. A **registry of required local acts** derived from legislation tells the
    organisation which documents it must have, performs gap analysis, and is
    kept current from regulatory-change monitoring with human confirmation.
+6. A **document shelf** («Полка», P11-012) shows every place the
+   organisation's document system must fill — present, in progress, missing,
+   to clarify, or excluded — with signed scans and acknowledgement coverage.
+   Its curated places (imported from the OT specialist's workbook) are the
+   anchor that P11-009 requirements attach to.
 
 The business priority is **instructions and journals first**; deadline
 warnings second; the legislative registry third.
@@ -47,7 +52,10 @@ warnings second; the legislative registry third.
 | LLM provider | Chat models via OpenCode Zen gateway (OpenAI-compatible, `https://opencode.ai/zen/v1/`); model chosen per task (cheap for segmentation, stronger for classification/drafting). Embeddings via Z.ai directly. Free-tier models are forbidden for internal documents. |
 | Vector search | `pgvector` in the existing PostgreSQL. |
 | Regulatory sources | pravo.gov.ru; Garant (lawyer's subscription — API availability to be confirmed). |
-| Curators of the legislative registry | Occupational-safety specialist and the product owner (role `compliance_curator`). |
+| Curators of the legislative registry | Occupational-safety specialist and the product owner (role `compliance_curator`). Until P11-009 introduces that role, shelf curation (`shelf:curate`, P11-012) is admin-only. |
+| «ТрБез» | Transport security (16-ФЗ, ПП РФ № 1640), domain code `transport_security`; the earlier `labour` code was a mistranslation and is replaced in P11-012 phase 1. |
+| Required-document places | The shelf (P11-012) owns the list of places with permanent codes (`ВМ.10.01`); P11-009 links requirements to places (many → one) instead of keeping a parallel list. |
+| Acknowledgement priority | The `acknowledge_document` slice of P11-006 is delivered first, after P11-004 and the P11-005 acknowledgement journal, without waiting for P11-003 (P11-012 D4). |
 
 ## Task sequence
 
@@ -59,15 +67,20 @@ warnings second; the legislative registry third.
 | P11-003 | Instruction assembly from blocks | 002 | `DocumentTemplate`, `DocumentAssembly`, docx/pdf generation |
 | P11-004 | Employee read-model + employee accounts | 001 | `Employee`, hr_form view sync, `employee` role, "People" UI |
 | P11-005 | Electronic journals + simple e-signature | 004 | `Journal`, `JournalEntry`, ПЭП, printable forms, `Training` persistence |
-| P11-006 | Obligations Engine | 003, 005 | `Obligation`, applicability rules, evaluation worker, "Deadlines" UI |
+| P11-006 | Obligations Engine | 003, 005 (slice `acknowledge_document`: 004 + 005 acknowledgement journal) | `Obligation`, applicability rules, evaluation worker, "Deadlines" UI |
 | P11-007 | Notifications | 006 | `Notification`, in-app inbox, email |
-| P11-008 | Employee permit documents from hr_form | 004, 006 | `field_key → DocumentType` mapping, expiry obligations |
-| P11-009 | Regulatory requirements registry | 006 | `RegulatoryRequirement`, `ApplicabilityRule`, `OrganizationComplianceProfile`, gap analysis |
+| P11-008 | Employee permit documents from hr_form | 004, 006 | `field_key → DocumentType` mapping, expiry obligations, per-type coverage for shelf places kept on employees |
+| P11-009 | Regulatory requirements registry | 006, 012 | `RegulatoryRequirement` linked to shelf places, `ApplicabilityRule`, `OrganizationComplianceProfile`, gap analysis, role `compliance_curator` |
 | P11-010 | Regulatory change monitoring + AI | 009 | source watchers, AI diff, curator queue |
 | P11-011 | hr_form push events | 008 + hr_form work | `POST /integrations/hr/events`, dismissal handling |
+| P11-012 | Document shelf («Полка») | 001; phase 5: 004, 005, 006 slice | `ShelfSection`, `ShelfSlot`, workbook import, bookcase UI with scans and acknowledgement coverage; replaces `labour` with `transport_security` |
 
 Critical path for the business priority: **000 → 001 → 002 → 003** (instructions)
-and **001 → 004 → 005** (journals). 006–008 follow; 009–011 are the next horizon.
+and **001 → 004 → 005** (journals). **001 → 012** phases 1–4 (shelf, scans,
+exclusions) can run in parallel with both. Acknowledgement path:
+**004 → 005 (acknowledgement journal) → 006 slice `acknowledge_document` →
+012 phase 5**. The rest of 006, then 007–008 follow; 009–011 are the next
+horizon.
 
 ## Pre-work that needs no code
 
