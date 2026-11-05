@@ -70,6 +70,12 @@ ALLOWED_METADATA_KEYS = frozenset(
         "section_code",
         "subsection_code",
         "comment",
+        "created_count",
+        "updated_count",
+        "unchanged_count",
+        "conflict_count",
+        "rejected_count",
+        "missing_count",
     }
 )
 

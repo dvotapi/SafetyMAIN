@@ -364,3 +364,76 @@ def test_legal_basis_keeps_http_urls_and_clears_blank_ones() -> None:
         "https://pravo.gov.ru/doc"
     )
     assert SlotLegalBasis(source_url="  ").source_url is None
+
+
+# ---- workbook import (phase 3, P14) ----
+
+
+def test_create_with_import_fingerprint_marks_the_import_time() -> None:
+    slot = make_slot(import_fingerprint="f" * 64)
+
+    assert slot.import_fingerprint == "f" * 64
+    assert slot.last_imported_at == slot.created_at
+    assert make_slot().last_imported_at is None
+
+
+def test_apply_import_sets_fields_and_import_marks_in_one_version() -> None:
+    slot = make_slot(import_fingerprint="a" * 64)
+    later = FIXED_AT + timedelta(days=1)
+    actor = make_actor()
+
+    imported = slot.apply_import(
+        values={"title": "Новое название", "curated_status": CuratedSlotStatus.PRESENT},
+        fingerprint="b" * 64,
+        at=later,
+        actor_id=actor,
+        expected_version=1,
+    )
+
+    assert imported.title == "Новое название"
+    assert imported.curated_status is CuratedSlotStatus.PRESENT
+    assert imported.import_fingerprint == "b" * 64
+    assert imported.last_imported_at == later
+    assert imported.version == 2
+    assert imported.updated_by == actor
+
+
+def test_apply_import_guards() -> None:
+    slot = make_slot()
+    with pytest.raises(ShelfSlotVersionConflict):
+        slot.apply_import(
+            values={}, fingerprint="x", at=FIXED_AT, actor_id=make_actor(), expected_version=9
+        )
+    with pytest.raises(ShelfSlotValidationError):
+        slot.apply_import(
+            values={"code": "ТрБ.01.09"},
+            fingerprint="x",
+            at=FIXED_AT,
+            actor_id=make_actor(),
+            expected_version=1,
+        )
+    excluded = slot.exclude(
+        reason=SlotExclusionReason.OTHER,
+        comment="Не нужно",
+        at=FIXED_AT,
+        actor_id=make_actor(),
+        expected_version=1,
+    )
+    with pytest.raises(ShelfSlotAlreadyExcluded):
+        excluded.apply_import(
+            values={"curated_status": CuratedSlotStatus.PRESENT},
+            fingerprint="x",
+            at=FIXED_AT,
+            actor_id=make_actor(),
+            expected_version=2,
+        )
+
+
+def test_update_details_cannot_touch_import_marks() -> None:
+    with pytest.raises(ShelfSlotValidationError):
+        make_slot().update_details(
+            at=FIXED_AT,
+            actor_id=make_actor(),
+            expected_version=1,
+            import_fingerprint="x",
+        )

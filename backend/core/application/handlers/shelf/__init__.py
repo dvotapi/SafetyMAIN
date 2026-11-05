@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from backend.core.application.handlers.shelf.import_workbook import (
+    ImportConflict,
+    ImportReport,
+    ImportShelfWorkbookHandler,
+)
 from backend.core.application.handlers.shelf.queries import (
     GetShelfOverviewHandler,
     GetShelfSectionSlotsHandler,
@@ -47,6 +52,9 @@ __all__ = [
     "GetShelfOverviewHandler",
     "GetShelfSectionSlotsHandler",
     "GetShelfSlotHandler",
+    "ImportConflict",
+    "ImportReport",
+    "ImportShelfWorkbookHandler",
     "LinkShelfSlotDocumentHandler",
     "RenameShelfSectionHandler",
     "RenameShelfSubsectionHandler",

@@ -238,7 +238,10 @@ class ShelfSlot(BaseModel):
         package_code: str = "",
         legacy_code: str = "",
         slot_id: ShelfSlotId | None = None,
+        import_fingerprint: str | None = None,
     ) -> ShelfSlot:
+        """``import_fingerprint`` is set only by the workbook import (it also
+        sets ``last_imported_at`` = ``created_at``)."""
         try:
             slot_code = ShelfSlotCode(value=code)
         except ValidationError as error:
@@ -273,6 +276,8 @@ class ShelfSlot(BaseModel):
             notes=notes,
             package_code=package_code,
             legacy_code=legacy_code,
+            import_fingerprint=import_fingerprint,
+            last_imported_at=created_at if import_fingerprint is not None else None,
             created_at=created_at,
             created_by=created_by,
             updated_at=created_at,
@@ -304,6 +309,40 @@ class ShelfSlot(BaseModel):
         if self.is_excluded and candidate.curated_status is not self.curated_status:
             raise ShelfSlotAlreadyExcluded(self.id)
         return self._mutated(at=at, actor_id=actor_id, **changes)
+
+    def apply_import(
+        self,
+        *,
+        values: dict[str, Any],
+        fingerprint: str,
+        at: datetime,
+        actor_id: UserId,
+        expected_version: int,
+    ) -> ShelfSlot:
+        """Workbook import (D3): set mapped curated fields and the import marks.
+
+        Always a new version, because the fingerprint changes. Exclusion and links
+        are untouched; on an excluded place the curated status stays frozen.
+        """
+        self._assert_version(expected_version)
+        unknown = set(values) - _EDITABLE_FIELDS
+        if unknown:
+            raise ShelfSlotValidationError(
+                "Fields cannot be imported: " + ", ".join(sorted(unknown)) + "."
+            )
+        if (
+            self.is_excluded
+            and "curated_status" in values
+            and values["curated_status"] is not self.curated_status
+        ):
+            raise ShelfSlotAlreadyExcluded(self.id)
+        return self._mutated(
+            at=at,
+            actor_id=actor_id,
+            **values,
+            import_fingerprint=fingerprint,
+            last_imported_at=at,
+        )
 
     def exclude(
         self,

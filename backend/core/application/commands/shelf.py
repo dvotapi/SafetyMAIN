@@ -176,3 +176,17 @@ class DevelopShelfSlotDocumentCommand:
     expected_version: int
     document_type_code: str | None = None
     audit_context: AuditContext | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ImportShelfWorkbookCommand:
+    """Workbook import (TASK-P11-012 §3); ``rows`` come from the workbook reader."""
+
+    organization_id: OrganizationId
+    actor_id: UserId
+    rows: tuple[Any, ...]
+    """``WorkbookRow`` items (application/services/shelf_import_mapping.py)."""
+    headers: tuple[str, ...]
+    file_sha256: str
+    dry_run: bool = True
+    audit_context: AuditContext | None = None

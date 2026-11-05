@@ -45,6 +45,8 @@ Tests marked `db` are skipped unless `SAFETYMAIN_RUN_DB_TESTS=1` **and** `DATABA
 
 Object storage (ADR-0006): `STORAGE_*` settings in `.env.example` point at the compose MinIO (images from `cgr.dev/chainguard/*` pinned by digest; the upstream `minio/*` images are no longer published). Without `STORAGE_BUCKET`, non-production runs use `InMemoryStorage`; production requires bucket and keys (Yandex Object Storage).
 
+Shelf workbook import (TASK-P11-012 phase 3, needs `pip install -e ".[import]"`, `openpyxl` only in `infrastructure/importing/` and `scripts/`): `python -m scripts.import_shelf_workbook --organization-id <uuid> --file <xlsx> --actor-email <curator> [--dry-run] [--report <json>]`; guide `docs/guides/ShelfImport.md`. Tests use synthetic workbooks only (`tests/fixtures/shelf_workbook.py`); never commit the real workbook.
+
 Planned, not yet implemented: background worker `safetymain-worker` (ADR-0007); the P11 task that introduces it adds its commands here.
 
 ### Frontend (`frontend/`, Next.js 15 App Router, React 19, strict TypeScript)
