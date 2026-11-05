@@ -87,6 +87,16 @@ The optional `scripts/attach_shelf_scans.py` (§4.5) is **not** in this plan. It
 - The document response gains `current_signed_scan`, and file items gain `role`. The frontend zod schema accepts `role` with a `working` default and ignores `current_signed_scan`, which only the shelf needs, through its own DTO.
 - `upload_signed_scan` is offered only for the in-force statuses (`present`, `review_due`, `overdue_review`, `under_review`), before `exclude`. It is based on the new capability `can_update_document` (`compliance_document:update`).
 
+## Implementation notes (4b)
+
+- «N из M» in the overview row and «N из M в порядке» in the opened shelf show the backend count `by_group.present` of `total`. The page adds nothing up: readiness is the backend percent.
+- The overview strip carries only `{code, group}`, so «Обязательные» dims only excluded bars there; the opened shelf dims by `obligation_level`.
+- The panel column (≥ 1200 px) is enabled in 4c with the panel; 4b keeps a single column.
+- `paper.150` = `#F5F3EC` (spine text) is a primitive stop that §6 uses but did not list.
+- Known TASK gap: in the dark theme, spine text on «В работе» (`#F5F3EC` on `#437B62`) reaches 4.45:1, under 4.5:1. The contrast test records it as a known exception; a proposed `#417760` (4.69:1 text, 3.08:1 graphic) waits for the product owner.
+- Storybook cannot render feature components that import `next/link` (`process is not defined`, existing configuration). Screenshots were taken in the running app with a synthetic workbook imported by the phase 3 script.
+- The app shell is wider than a 375 px viewport on every page (pre-existing; not part of this phase).
+
 ## Affected files (by PR)
 
 4a — Create: `alembic/versions/0016_document_file_role.py`; tests `tests/domain/test_compliance_document_signed_scan.py`, `tests/api/test_compliance_document_signed_scan_api.py`, `tests/infrastructure/test_document_file_role_migration.py`. Modify:

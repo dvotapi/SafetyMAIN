@@ -97,7 +97,7 @@ Boundaries are enforced by `frontend/.dependency-cruiser.cjs`, not just conventi
 - `features/*` must never import `app/*` route internals, and must never import another feature's internals directly (only that feature's `index.ts` public export).
 - Feature `api/` modules (e.g. `features/hazards/api`, `risk-control-api-no-components`) must not import React components; feature presentation code must not import the raw API client directly (e.g. `risk-control-presentation-no-fetch`).
 
-Structure: `app/` (Next.js routes) · `components/` (shared, domain-agnostic UI) · `layouts/` · `features/<domain>/{pages,components,hooks,api,index.ts}` (hazards, risk-assessments, risk-controls, auth, ...) · `hooks/`, `services/`, `theme/` (design tokens — no hardcoded hex outside `theme/`), `icons/`, `utils/`. Full rules in `docs/design/FrontendArchitecture.md`.
+Structure: `app/` (Next.js routes) · `components/` (shared, domain-agnostic UI) · `layouts/` · `features/<domain>/{pages,components,hooks,api,index.ts}` (hazards, risk-assessments, risk-controls, compliance-documents, document-shelf, auth, ...) · `hooks/`, `services/`, `theme/` (design tokens — no hardcoded hex outside `theme/`), `icons/`, `utils/`. Full rules in `docs/design/FrontendArchitecture.md`.
 
 The registry list pattern (filter bar, data grid, bulk command bar, pagination) used for Hazards/Risk Assessments/Risk Controls/Users/Audit events is documented in `docs/design/RegistryPattern.md` — reuse it rather than building new list UIs from scratch. Broader design system reference: `docs/design/README.md` and `docs/architecture/frontend/`.
 

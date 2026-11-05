@@ -234,6 +234,44 @@ Status-specific semantic tokens are listed in [StatusLanguage.md](StatusLanguage
 
 Dark theme remaps are in [Themes.md](Themes.md).
 
+### Document shelf («Полка», TASK-P11-012 §6)
+
+The shelf content area uses its own palette («Тёплая бумага»). The shell, navigation and
+place panel keep the global tokens. Primitives (`primitive.palette`):
+
+| Family | Stops |
+|---|---|
+| `paper` | 50 `#FFFDF9`, 100 `#F7F4EE`, 150 `#F5F3EC`, 200 `#E4DED2`, 300 `#CFC8BA`, 400 `#B4B0A6`, 500 `#6B665C`, 600 `#4A4740`, 700 `#3A3D38`, 800 `#262925`, 900 `#1F2220` |
+| `graphite` | 400 `#6E6E6E`, 600 `#3B3B3B` |
+| `forest` | 500 `#437B62`, 800 `#213C30` |
+| `ochre` | 100 `#F3E3C3`, 200 `#E9D6A8`, 300 `#E0C27E`, 400 `#C9A45E`, 600 `#A47A2C`, 800 `#5A4316`, 900 `#5A3F0E` |
+| `brick` | 100 `#EADBD5`, 500 `#CA372D`, 700 `#87251E`, 900 `#342522` |
+
+Semantic tokens (light / dark), consumed as `--sm-color-shelf-*`:
+
+| Token | Light | Dark | Meaning |
+|---|---|---|---|
+| `shelf-page-bg` | paper.100 | paper.900 | Shelf background |
+| `shelf-ink` | paper.500 | paper.400 | Secondary text on the shelf |
+| `shelf-card-bg` / `shelf-card-border` | paper.50 / paper.200 | paper.800 / paper.700 | Cards |
+| `shelf-plank` | paper.300 | paper.600 | Shelf board |
+| `shelf-present-bg` | graphite.600 | graphite.400 | Есть (also its border) |
+| `shelf-progress-bg` | forest.800 | forest.500 | В работе (also its border) |
+| `shelf-spine-fg` | paper.150 | paper.150 | Text on present / progress spines |
+| `shelf-progress-ribbon` | ochre.400 | ochre.300 | Bookmark ribbon |
+| `shelf-review-bg` / `-border` / `-fg` | ochre.200 / ochre.400 / ochre.900 | ochre.800 / ochre.600 / ochre.100 | Пересмотр |
+| `shelf-missing-border` | brick.700 | brick.500 | Нет (dashed 1.5 px; also text) |
+| `shelf-missing-bg` | brick.100 | brick.900 | Tint of an empty place |
+| `shelf-clarify-border` | slate.400 | slate.400 | Уточнить (dotted 1.5 px) |
+| `shelf-excluded-border` | paper.300 | paper.600 | Исключено (dashed 1 px) |
+| `shelf-ack-dot` | brick.700 | brick.500 | Not everyone acquainted |
+
+Contrast pairs are tested in
+`frontend/src/features/document-shelf/shelf-tokens-contrast.test.ts`. Graphics must reach
+≥ 3:1 on `shelf-page-bg`, and text ≥ 4.5:1. Known gap: in the dark theme the spine text on
+«В работе» (`#437B62`) reaches 4.45:1. This is open with the product owner; the TASK value
+stays until a decision is made.
+
 ---
 
 ## 7. Z-index scale

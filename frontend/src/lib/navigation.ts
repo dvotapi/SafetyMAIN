@@ -78,6 +78,12 @@ export const primaryNavigation: NavSection[] = [
         href: "/compliance-documents",
         requiredPermission: "compliance_document:read",
       },
+      {
+        id: "document-shelf",
+        label: "Полка",
+        href: "/shelf",
+        requiredPermission: "shelf:read",
+      },
     ],
   },
   {

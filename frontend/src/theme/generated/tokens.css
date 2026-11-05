@@ -62,6 +62,32 @@
   --sm-palette-blue-700: #1A436D;
   --sm-palette-blue-800: #12304E;
   --sm-palette-blue-900: #0B1F33;
+  --sm-palette-paper-50: #FFFDF9;
+  --sm-palette-paper-100: #F7F4EE;
+  --sm-palette-paper-150: #F5F3EC;
+  --sm-palette-paper-200: #E4DED2;
+  --sm-palette-paper-300: #CFC8BA;
+  --sm-palette-paper-400: #B4B0A6;
+  --sm-palette-paper-500: #6B665C;
+  --sm-palette-paper-600: #4A4740;
+  --sm-palette-paper-700: #3A3D38;
+  --sm-palette-paper-800: #262925;
+  --sm-palette-paper-900: #1F2220;
+  --sm-palette-graphite-400: #6E6E6E;
+  --sm-palette-graphite-600: #3B3B3B;
+  --sm-palette-forest-500: #437B62;
+  --sm-palette-forest-800: #213C30;
+  --sm-palette-ochre-100: #F3E3C3;
+  --sm-palette-ochre-200: #E9D6A8;
+  --sm-palette-ochre-300: #E0C27E;
+  --sm-palette-ochre-400: #C9A45E;
+  --sm-palette-ochre-600: #A47A2C;
+  --sm-palette-ochre-800: #5A4316;
+  --sm-palette-ochre-900: #5A3F0E;
+  --sm-palette-brick-100: #EADBD5;
+  --sm-palette-brick-500: #CA372D;
+  --sm-palette-brick-700: #87251E;
+  --sm-palette-brick-900: #342522;
   --sm-palette-white: #FFFFFF;
   --sm-palette-black: #000000;
   --sm-font-family-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
@@ -218,6 +244,23 @@
   --sm-color-status-superseded-fg: #303B45;
   --sm-color-status-superseded-bg: #E8ECF0;
   --sm-color-status-superseded-border: #7A8896;
+  --sm-color-shelf-page-bg: #F7F4EE;
+  --sm-color-shelf-ink: #6B665C;
+  --sm-color-shelf-card-bg: #FFFDF9;
+  --sm-color-shelf-card-border: #E4DED2;
+  --sm-color-shelf-plank: #CFC8BA;
+  --sm-color-shelf-present-bg: #3B3B3B;
+  --sm-color-shelf-progress-bg: #213C30;
+  --sm-color-shelf-spine-fg: #F5F3EC;
+  --sm-color-shelf-progress-ribbon: #C9A45E;
+  --sm-color-shelf-review-bg: #E9D6A8;
+  --sm-color-shelf-review-border: #C9A45E;
+  --sm-color-shelf-review-fg: #5A3F0E;
+  --sm-color-shelf-missing-border: #87251E;
+  --sm-color-shelf-missing-bg: #EADBD5;
+  --sm-color-shelf-clarify-border: #7A8896;
+  --sm-color-shelf-excluded-border: #CFC8BA;
+  --sm-color-shelf-ack-dot: #87251E;
 }
 
 [data-theme="dark"] {
@@ -301,6 +344,23 @@
   --sm-color-status-superseded-fg: #D0D7DE;
   --sm-color-status-superseded-bg: #303B45;
   --sm-color-status-superseded-border: #7A8896;
+  --sm-color-shelf-page-bg: #1F2220;
+  --sm-color-shelf-ink: #B4B0A6;
+  --sm-color-shelf-card-bg: #262925;
+  --sm-color-shelf-card-border: #3A3D38;
+  --sm-color-shelf-plank: #4A4740;
+  --sm-color-shelf-present-bg: #6E6E6E;
+  --sm-color-shelf-progress-bg: #437B62;
+  --sm-color-shelf-spine-fg: #F5F3EC;
+  --sm-color-shelf-progress-ribbon: #E0C27E;
+  --sm-color-shelf-review-bg: #5A4316;
+  --sm-color-shelf-review-border: #A47A2C;
+  --sm-color-shelf-review-fg: #F3E3C3;
+  --sm-color-shelf-missing-border: #CA372D;
+  --sm-color-shelf-missing-bg: #342522;
+  --sm-color-shelf-clarify-border: #7A8896;
+  --sm-color-shelf-excluded-border: #4A4740;
+  --sm-color-shelf-ack-dot: #CA372D;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -385,5 +445,22 @@
     --sm-color-status-superseded-fg: #D0D7DE;
     --sm-color-status-superseded-bg: #303B45;
     --sm-color-status-superseded-border: #7A8896;
+    --sm-color-shelf-page-bg: #1F2220;
+    --sm-color-shelf-ink: #B4B0A6;
+    --sm-color-shelf-card-bg: #262925;
+    --sm-color-shelf-card-border: #3A3D38;
+    --sm-color-shelf-plank: #4A4740;
+    --sm-color-shelf-present-bg: #6E6E6E;
+    --sm-color-shelf-progress-bg: #437B62;
+    --sm-color-shelf-spine-fg: #F5F3EC;
+    --sm-color-shelf-progress-ribbon: #E0C27E;
+    --sm-color-shelf-review-bg: #5A4316;
+    --sm-color-shelf-review-border: #A47A2C;
+    --sm-color-shelf-review-fg: #F3E3C3;
+    --sm-color-shelf-missing-border: #CA372D;
+    --sm-color-shelf-missing-bg: #342522;
+    --sm-color-shelf-clarify-border: #7A8896;
+    --sm-color-shelf-excluded-border: #4A4740;
+    --sm-color-shelf-ack-dot: #CA372D;
   }
 }
