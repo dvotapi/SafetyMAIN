@@ -64,6 +64,8 @@ export const documentFileSchema = z
     original_filename: z.string(),
     uploaded_at: z.string(),
     uploaded_by: z.string().uuid(),
+    /** `working` (default) or `signed_scan` (TASK-P11-012 D1). */
+    role: z.enum(["working", "signed_scan"]).default("working"),
   })
   .passthrough();
 

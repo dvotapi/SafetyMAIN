@@ -88,6 +88,16 @@ _CURATOR_ACTIONS: dict[ShelfEffectiveStatus, tuple[ShelfAction | None, tuple[She
     ShelfEffectiveStatus.EXCLUDED: (ShelfAction.RESTORE, ()),
 }
 
+# Effective statuses backed by a current in-force document.
+_IN_FORCE_STATUSES = frozenset(
+    {
+        ShelfEffectiveStatus.PRESENT,
+        ShelfEffectiveStatus.REVIEW_DUE,
+        ShelfEffectiveStatus.OVERDUE_REVIEW,
+        ShelfEffectiveStatus.UNDER_REVIEW,
+    }
+)
+
 # Actions that act on an existing document; dropped when the place has none.
 _NEEDS_CURRENT_DOCUMENT = frozenset({ShelfAction.OPEN_DOCUMENT, ShelfAction.START_REVIEW})
 _NEEDS_PROJECT_DOCUMENT = frozenset({ShelfAction.OPEN_PROJECT})
@@ -100,6 +110,7 @@ class SlotEvaluation:
     review_date: date | None
     current_document_id: ComplianceDocumentId | None
     project_document_id: ComplianceDocumentId | None
+    current_has_signed_scan: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,7 +156,13 @@ def evaluate(
         document_type = document_types.get(current.document_type_id)
         review_date = _review_date(current, document_type, slot)
         status = _in_force_status(current, document_type, review_date, today)
-        return _evaluation(status, review_date, current.id, project_id)
+        return _evaluation(
+            status,
+            review_date,
+            current.id,
+            project_id,
+            has_signed_scan=current.current_signed_scan is not None,
+        )
 
     if project is not None:
         return _evaluation(ShelfEffectiveStatus.IN_PROGRESS, None, None, project_id)
@@ -154,9 +171,17 @@ def evaluate(
 
 
 def available_actions(
-    evaluation: SlotEvaluation, *, can_curate: bool, can_create_document: bool
+    evaluation: SlotEvaluation,
+    *,
+    can_curate: bool,
+    can_create_document: bool,
+    can_update_document: bool = False,
 ) -> SlotActions:
-    """Actions offered to the current user; viewers only open existing documents."""
+    """Actions offered to the current user; viewers only open existing documents.
+
+    Curators who may update documents are also offered ``upload_signed_scan``
+    while the current in-force document has no signed scan (TASK-P11-012 D1).
+    """
     if not can_curate:
         if evaluation.effective_status is ShelfEffectiveStatus.IN_PROGRESS:
             return SlotActions(
@@ -172,6 +197,19 @@ def available_actions(
         for action in ((primary,) if primary else ()) + others
         if _possible(action, evaluation, can_create_document=can_create_document)
     ]
+    if (
+        can_update_document
+        and evaluation.effective_status in _IN_FORCE_STATUSES
+        and evaluation.current_document_id is not None
+        and not evaluation.current_has_signed_scan
+    ):
+        # Offered before «Исключить», which stays the last curator action.
+        position = (
+            offered.index(ShelfAction.EXCLUDE)
+            if ShelfAction.EXCLUDE in offered
+            else len(offered)
+        )
+        offered.insert(position, ShelfAction.UPLOAD_SIGNED_SCAN)
     if primary is not None and primary in offered:
         return SlotActions(primary, tuple(action for action in offered if action is not primary))
     return SlotActions(None, tuple(offered))
@@ -208,6 +246,8 @@ def _evaluation(
     review_date: date | None,
     current_id: ComplianceDocumentId | None,
     project_id: ComplianceDocumentId | None,
+    *,
+    has_signed_scan: bool = False,
 ) -> SlotEvaluation:
     return SlotEvaluation(
         effective_status=status,
@@ -215,6 +255,7 @@ def _evaluation(
         review_date=review_date,
         current_document_id=current_id,
         project_document_id=project_id,
+        current_has_signed_scan=has_signed_scan,
     )
 
 

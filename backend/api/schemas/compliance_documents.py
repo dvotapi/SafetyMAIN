@@ -54,6 +54,7 @@ class DocumentFileResponse(BaseModel):
     original_filename: str
     uploaded_at: datetime
     uploaded_by: UUID
+    role: Literal["working", "signed_scan"] = "working"
 
 
 class DocumentTypeResponse(BaseModel):
@@ -104,6 +105,9 @@ class ComplianceDocumentResponse(BaseModel):
     applicability: DocumentApplicabilityPayload
     source: ComplianceDocumentSourceValue
     current_file: DocumentFileResponse | None
+    """The last working file (P11-001 amendment A3)."""
+    current_signed_scan: DocumentFileResponse | None = None
+    """The last signed scan (TASK-P11-012 D1)."""
     notes: str
     status_before_archive: ComplianceDocumentStatusValue | None
     archive_reason: str | None

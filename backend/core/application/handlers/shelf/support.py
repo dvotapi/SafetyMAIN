@@ -72,6 +72,7 @@ class ShelfOverviewView:
     sections: tuple[ShelfSectionSummaryView, ...]
     totals: ShelfSummary
     evaluated_at: datetime
+    last_imported_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -181,6 +182,7 @@ class ShelfReader:
                 evaluation,
                 can_curate=capabilities.can_curate,
                 can_create_document=capabilities.can_create_document,
+                can_update_document=capabilities.can_update_document,
             ),
             current_document=current,
             approved_by_order=approved_by,

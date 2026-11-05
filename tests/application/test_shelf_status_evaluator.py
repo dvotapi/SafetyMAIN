@@ -400,3 +400,58 @@ def test_readiness_rounding(ready: int, total: int, percent: int) -> None:
     slot = _slot()
     statuses = [(slot, S.PRESENT)] * ready + [(slot, S.MISSING)] * (total - ready)
     assert summarize(statuses).readiness_percent == percent
+
+
+@pytest.mark.parametrize("status", [S.PRESENT, S.REVIEW_DUE, S.OVERDUE_REVIEW, S.UNDER_REVIEW])
+def test_upload_signed_scan_is_offered_while_the_current_document_has_none(
+    status: ShelfEffectiveStatus,
+) -> None:
+    evaluation = _with_docs(status)
+
+    actions = available_actions(
+        evaluation, can_curate=True, can_create_document=True, can_update_document=True
+    )
+
+    assert actions.others == (A.UPLOAD_SIGNED_SCAN, A.EXCLUDE)
+
+
+def test_upload_signed_scan_is_hidden_when_scanned_or_not_permitted() -> None:
+    from dataclasses import replace
+
+    scanned = replace(_with_docs(S.PRESENT), current_has_signed_scan=True)
+    for evaluation, can_update in (
+        (scanned, True),
+        (_with_docs(S.PRESENT), False),
+        (_with_docs(S.MISSING), True),
+        (_with_docs(S.IN_PROGRESS), True),
+    ):
+        actions = available_actions(
+            evaluation, can_curate=True, can_create_document=True, can_update_document=can_update
+        )
+        assert A.UPLOAD_SIGNED_SCAN not in actions.all
+    viewer = available_actions(
+        _with_docs(S.PRESENT), can_curate=False, can_create_document=True, can_update_document=True
+    )
+    assert viewer.all == (A.OPEN_DOCUMENT,)
+
+
+def test_evaluation_records_whether_the_current_document_has_a_signed_scan() -> None:
+    from backend.core.domain.value_objects.compliance_enums import DocumentFileRole
+    from tests.fixtures.compliance_documents import (
+        advance_to_active,
+        make_document_file,
+    )
+
+    slot = _slot()
+    document_type = _type(slot)
+    active = advance_to_active(compliance_document_draft(document_type), document_type)
+    scan = make_document_file(active, filename="s.pdf").model_copy(
+        update={"role": DocumentFileRole.SIGNED_SCAN}
+    )
+    scanned = active.attach_signed_scan(
+        file=scan, at=active.updated_at, actor_id=active.created_by, expected_version=active.version
+    )
+    slot = _linked(slot, active)
+
+    assert evaluate(slot, [active], {document_type.id: document_type}, TODAY).current_has_signed_scan is False
+    assert evaluate(slot, [scanned], {document_type.id: document_type}, TODAY).current_has_signed_scan is True

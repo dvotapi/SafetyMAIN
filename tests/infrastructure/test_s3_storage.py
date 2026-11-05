@@ -217,3 +217,20 @@ def test_download_url_accepts_maximum_ttl() -> None:
     )
 
     assert _query(url)["X-Amz-Expires"] == ["604800"]
+
+
+def test_view_url_uses_inline_disposition() -> None:
+    url = _storage().create_download_url(
+        BUCKET, KEY, None, "Скан.pdf", "application/pdf", disposition="inline"
+    )
+
+    disposition = _query(url)["response-content-disposition"][0]
+    assert disposition.startswith("inline; ")
+    assert "filename*=UTF-8''%D0%A1%D0%BA%D0%B0%D0%BD.pdf" in disposition
+
+
+def test_unknown_disposition_is_rejected() -> None:
+    with pytest.raises(ValueError):
+        _storage().create_download_url(
+            BUCKET, KEY, None, "a.pdf", "application/pdf", disposition="form-data"  # type: ignore[arg-type]
+        )

@@ -78,6 +78,7 @@ class AuditAction(str, Enum):
     COMPLIANCE_DOCUMENT_ARCHIVED = "compliance.document.archived"
     COMPLIANCE_DOCUMENT_RESTORED = "compliance.document.restored"
     COMPLIANCE_DOCUMENT_FILE_ATTACHED = "compliance.document.file_attached"
+    COMPLIANCE_DOCUMENT_SIGNED_SCAN_ATTACHED = "compliance.document.signed_scan_attached"
     COMPLIANCE_PLACE_CREATED = "compliance.place.created"
     COMPLIANCE_PLACE_UPDATED = "compliance.place.updated"
     COMPLIANCE_PLACE_EXCLUDED = "compliance.place.excluded"

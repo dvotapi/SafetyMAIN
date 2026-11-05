@@ -11,6 +11,7 @@ from backend.core.domain.value_objects.compliance_document_components import (
 from backend.core.domain.value_objects.compliance_enums import (
     ComplianceDocumentSource,
     ComplianceDocumentStatus,
+    DocumentFileRole,
     DocumentSubjectKind,
 )
 from backend.core.domain.value_objects.safety_ids import (
@@ -81,6 +82,7 @@ def files_to_models(document: ComplianceDocument) -> list[DocumentFileModel]:
             content_type=file.content_type,
             sha256=file.sha256,
             original_filename=file.original_filename,
+            role=file.role.value,
             uploaded_at=file.uploaded_at,
             uploaded_by=file.uploaded_by.value,
         )
@@ -97,6 +99,7 @@ def file_to_domain(model: DocumentFileModel) -> DocumentFile:
         content_type=model.content_type,
         sha256=model.sha256,
         original_filename=model.original_filename,
+        role=DocumentFileRole(model.role),
         uploaded_at=model.uploaded_at,
         uploaded_by=UserId(value=model.uploaded_by),
     )

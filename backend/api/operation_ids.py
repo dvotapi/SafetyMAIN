@@ -107,6 +107,10 @@ CREATE_COMPLIANCE_DOCUMENT_UPLOAD_URL = "create_compliance_document_upload_url"
 CONFIRM_COMPLIANCE_DOCUMENT_FILE = "confirm_compliance_document_file"
 GET_COMPLIANCE_DOCUMENT_DOWNLOAD_URL = "get_compliance_document_download_url"
 LIST_COMPLIANCE_DOCUMENT_FILE_VERSIONS = "list_compliance_document_file_versions"
+CREATE_COMPLIANCE_DOCUMENT_SIGNED_SCAN_UPLOAD_URL = "create_compliance_document_signed_scan_upload_url"
+CONFIRM_COMPLIANCE_DOCUMENT_SIGNED_SCAN = "confirm_compliance_document_signed_scan"
+GET_COMPLIANCE_DOCUMENT_SIGNED_SCAN_DOWNLOAD_URL = "get_compliance_document_signed_scan_download_url"
+GET_COMPLIANCE_DOCUMENT_FILE_VIEW_URL = "get_compliance_document_file_view_url"
 
 GET_SHELF_OVERVIEW = "get_shelf_overview"
 LIST_SHELF_SECTION_SLOTS = "list_shelf_section_slots"
@@ -204,6 +208,10 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         CONFIRM_COMPLIANCE_DOCUMENT_FILE,
         GET_COMPLIANCE_DOCUMENT_DOWNLOAD_URL,
         LIST_COMPLIANCE_DOCUMENT_FILE_VERSIONS,
+        CREATE_COMPLIANCE_DOCUMENT_SIGNED_SCAN_UPLOAD_URL,
+        CONFIRM_COMPLIANCE_DOCUMENT_SIGNED_SCAN,
+        GET_COMPLIANCE_DOCUMENT_SIGNED_SCAN_DOWNLOAD_URL,
+        GET_COMPLIANCE_DOCUMENT_FILE_VIEW_URL,
         GET_SHELF_OVERVIEW,
         LIST_SHELF_SECTION_SLOTS,
         SEARCH_SHELF_SLOTS,

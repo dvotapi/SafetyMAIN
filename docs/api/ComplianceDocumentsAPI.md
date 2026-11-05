@@ -210,6 +210,22 @@ Permission: `compliance_document:read`. Returns every file ever attached, oldest
 Phase 5 only writes files on `draft`, so most documents have one entry; the endpoint is
 in place for future supersession-with-reupload workflows.
 
+## Signed scans and inline view (TASK-P11-012 D1, amendments A2–A4)
+
+Every file has `role`: `working` (default) or `signed_scan`. `current_file` in the
+document response is the last **working** file. `current_signed_scan` is the last signed
+scan, or `null` if there is none. `files/versions` lists both roles with `role`.
+
+| Endpoint | Permission | Notes |
+|---|---|---|
+| `POST .../{id}/signed-scan/upload-url` | `compliance_document:update` | body as `files/upload-url`. Allowed in `approved`, `active`, `under_review`, else 422 `compliance_document_cannot_be_modified`. PDF, JPEG or PNG, else 422 `compliance_document_file_type_not_allowed` |
+| `POST .../{id}/signed-scan/confirm` | `compliance_document:update` | body as `files/confirm`; the same storage checks. Audit: `compliance.document.signed_scan_attached` (legacy identifier, like `file_attached`) |
+| `GET .../{id}/files/signed-scan/current/download-url` | `compliance_document:read` | `attachment`; 404 `compliance_document_file_not_found` without a scan |
+| `GET .../{id}/files/{file_id}/view-url` | `compliance_document:read` | presigned GET with `Content-Disposition: inline` for any file of the document. An unknown file → 404 `compliance_document_file_not_found` |
+
+Working files are unchanged: uploading a working file to a non-draft document is still
+rejected, and approval and activation need a working file.
+
 ## Created from a shelf place (TASK-P11-012)
 
 `POST /api/v1/shelf/slots/{slot_id}/develop` creates a `draft` document through the same

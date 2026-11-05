@@ -34,3 +34,10 @@ class ComplianceDocumentSource(str, Enum):
     MANUAL = "manual"
     GENERATED = "generated"
     HR_FORM = "hr_form"
+
+
+class DocumentFileRole(str, Enum):
+    """Role of an uploaded file (TASK-P11-012 D1, P11-001 amendment A2)."""
+
+    WORKING = "working"
+    SIGNED_SCAN = "signed_scan"

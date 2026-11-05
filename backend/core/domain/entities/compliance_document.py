@@ -29,6 +29,7 @@ from backend.core.domain.value_objects.compliance_document_components import (
 from backend.core.domain.value_objects.compliance_enums import (
     ComplianceDocumentSource,
     ComplianceDocumentStatus,
+    DocumentFileRole,
     DocumentSubjectKind,
 )
 from backend.core.domain.value_objects.safety_ids import (
@@ -42,6 +43,17 @@ _IN_FORCE = frozenset(
 
 # Restore is not a graph edge: it returns an archived document to the status it
 # held before archiving (D8).
+SIGNED_SCAN_STATUSES = frozenset(
+    {
+        ComplianceDocumentStatus.APPROVED,
+        ComplianceDocumentStatus.ACTIVE,
+        ComplianceDocumentStatus.UNDER_REVIEW,
+    }
+)
+"""Statuses that accept a signed scan (TASK-P11-012 D1)."""
+
+SIGNED_SCAN_CONTENT_TYPES = frozenset({"application/pdf", "image/jpeg", "image/png"})
+
 _TRANSITIONS: dict[str, frozenset[str]] = {
     ComplianceDocumentStatus.DRAFT.value: frozenset(
         {
@@ -170,7 +182,19 @@ class ComplianceDocument(BaseModel):
 
     @property
     def current_file(self) -> DocumentFile | None:
-        return self.files[-1] if self.files else None
+        """The last working file (A3); approval and activation depend on it."""
+        return self._last_file(DocumentFileRole.WORKING)
+
+    @property
+    def current_signed_scan(self) -> DocumentFile | None:
+        """The last signed scan (TASK-P11-012 D1)."""
+        return self._last_file(DocumentFileRole.SIGNED_SCAN)
+
+    def _last_file(self, role: DocumentFileRole) -> DocumentFile | None:
+        for file in reversed(self.files):
+            if file.role is role:
+                return file
+        return None
 
     @classmethod
     def create(
@@ -275,6 +299,42 @@ class ComplianceDocument(BaseModel):
     ) -> ComplianceDocument:
         self._assert_version(expected_version)
         self._assert_draft("file attachment")
+        if file.role is not DocumentFileRole.WORKING:
+            raise ComplianceDocumentValidationError(
+                "A signed scan is attached with attach_signed_scan."
+            )
+        return self._append_file(file, at=at, actor_id=actor_id)
+
+    def attach_signed_scan(
+        self,
+        *,
+        file: DocumentFile,
+        at: datetime,
+        actor_id: UserId,
+        expected_version: int,
+    ) -> ComplianceDocument:
+        """Attach a scan of the signed edition (D1, A2).
+
+        Allowed in ``approved``, ``active`` and ``under_review``. A newer scan
+        becomes the current one; earlier scans stay in the file history.
+        """
+        self._assert_version(expected_version)
+        if self.status not in SIGNED_SCAN_STATUSES:
+            raise ComplianceDocumentCannotBeModified(
+                self.id,
+                reason=f"status {self.status.value} blocks signed scan attachment",
+            )
+        if file.role is not DocumentFileRole.SIGNED_SCAN:
+            raise ComplianceDocumentValidationError("The file is not a signed scan.")
+        if file.content_type not in SIGNED_SCAN_CONTENT_TYPES:
+            raise ComplianceDocumentValidationError(
+                "A signed scan must be a PDF, JPEG or PNG file."
+            )
+        return self._append_file(file, at=at, actor_id=actor_id)
+
+    def _append_file(
+        self, file: DocumentFile, *, at: datetime, actor_id: UserId
+    ) -> ComplianceDocument:
         if any(existing.key == file.key for existing in self.files):
             raise ComplianceDocumentValidationError("The file is already attached.")
         return self._mutated(at=at, actor_id=actor_id, files=(*self.files, file))

@@ -189,7 +189,7 @@ def test_slot_detail_shows_current_document_editions_and_actions(
     assert body["current_document"]["working_file"]["content_type"] == "application/pdf"
     assert [edition["status"] for edition in body["editions"]] == ["active"]
     assert body["primary_action"] == "open_document"
-    assert body["available_actions"] == ["open_document", "exclude"]
+    assert body["available_actions"] == ["open_document", "upload_signed_scan", "exclude"]
     assert body["acknowledgement"] is None
     assert body["review_date"] is not None
     assert body["version"] == 2
@@ -254,3 +254,45 @@ def test_shelf_requires_authentication(shelf: ShelfClient) -> None:
     response = shelf.client.get("/api/v1/shelf")
 
     assert response.status_code == 401
+
+
+def test_detail_shows_the_signed_scan_and_overview_the_import_date(shelf: ShelfClient) -> None:
+    from backend.core.domain.value_objects.compliance_enums import DocumentFileRole
+    from tests.fixtures.compliance_documents import make_document_file
+
+    section = shelf.seed_section()
+    active = advance_to_active(
+        compliance_document_draft(shelf.document_type, code="ПОТБ-9"), shelf.document_type
+    )
+    scan = make_document_file(active, filename="scan.pdf").model_copy(
+        update={"role": DocumentFileRole.SIGNED_SCAN}
+    )
+    scanned = active.attach_signed_scan(
+        file=scan, at=active.updated_at, actor_id=active.created_by, expected_version=active.version
+    )
+    shelf.documents.add(scanned)
+    slot = make_slot(section, created_by=shelf.user_id, import_fingerprint="f" * 64)
+    shelf.slots.add(
+        slot.link_document(
+            document=scanned,
+            linked_documents=(),
+            at=slot.created_at,
+            actor_id=shelf.user_id,
+            expected_version=1,
+        )
+    )
+
+    body = shelf.get(f"/slots/{slot.id.value}").json()
+    overview = shelf.get("").json()
+
+    current = body["current_document"]
+    assert current["signed_scan"]["file_id"] == str(scan.id.value)
+    assert current["working_file"]["file_id"] == str(active.current_file.id.value)
+    assert "upload_signed_scan" not in body["available_actions"]
+    assert overview["last_imported_at"] is not None
+
+
+def test_overview_has_no_import_date_before_an_import(shelf: ShelfClient) -> None:
+    shelf.seed_slot(shelf.seed_section())
+
+    assert shelf.get("").json()["last_imported_at"] is None

@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from backend.core.domain.value_objects import UserId
+from backend.core.domain.value_objects.compliance_enums import DocumentFileRole
 from backend.core.domain.value_objects.safety_ids import DocumentFileId
 
 _SHA256_HEX = re.compile(r"[0-9a-f]{64}")
@@ -49,6 +50,7 @@ class DocumentFile(BaseModel):
     original_filename: str
     uploaded_at: datetime
     uploaded_by: UserId
+    role: DocumentFileRole = DocumentFileRole.WORKING
 
     @field_validator("bucket", "key", "content_type", "original_filename")
     @classmethod

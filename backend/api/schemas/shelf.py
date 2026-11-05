@@ -44,6 +44,7 @@ ShelfActionValue = Literal[
     "open_project",
     "open_document",
     "upload_scan",
+    "upload_signed_scan",
     "start_review",
     "send_for_acknowledgement",
 ]
@@ -102,6 +103,8 @@ class ShelfOverviewResponse(BaseModel):
     sections: list[ShelfSectionSummaryResponse]
     totals: ShelfTotalsResponse
     evaluated_at: datetime
+    last_imported_at: datetime | None
+    """Latest workbook import of the organization's places; ``null`` before one."""
 
 
 class ShelfSlotSummaryResponse(BaseModel):
@@ -201,7 +204,7 @@ class ShelfCurrentDocumentResponse(BaseModel):
     next_review_at: date | None
     approved_by_order: ShelfDocumentRefResponse | None
     signed_scan: ShelfDocumentFileResponse | None
-    """Always ``null`` until phase 4 (signed scans)."""
+    """The current signed scan (TASK-P11-012 D1)."""
     working_file: ShelfDocumentFileResponse | None
 
 

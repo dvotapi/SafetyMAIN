@@ -18,6 +18,7 @@ class ShelfCapabilities:
 
     can_curate: bool = False
     can_create_document: bool = False
+    can_update_document: bool = False
 
 
 @dataclass(frozen=True, slots=True)

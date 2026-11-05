@@ -10,11 +10,12 @@ from backend.core.contracts.clock import ClockContract
 from backend.core.contracts.storage import (
     SHA256_HEADER,
     SHA256_METADATA_KEY,
+    Disposition,
     ObjectInfo,
     PresignedUpload,
 )
 from backend.core.infrastructure.storage.presign_rules import (
-    attachment_content_disposition,
+    content_disposition,
     ensure_owned_bucket,
     resolve_ttl,
     validate_object_reference,
@@ -109,6 +110,7 @@ class S3Storage:
         ttl: timedelta | None,
         filename: str,
         content_type: str,
+        disposition: Disposition = "attachment",
     ) -> str:
         ensure_owned_bucket(bucket, self._bucket)
         validate_object_reference(key=key, content_type=content_type)
@@ -117,7 +119,7 @@ class S3Storage:
             Params={
                 "Bucket": bucket,
                 "Key": key,
-                "ResponseContentDisposition": attachment_content_disposition(filename),
+                "ResponseContentDisposition": content_disposition(filename, disposition=disposition),
                 "ResponseContentType": content_type,
             },
             ExpiresIn=resolve_ttl(ttl, self._presign_ttl_seconds),

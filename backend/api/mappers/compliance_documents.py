@@ -70,6 +70,7 @@ def to_file_response(file: DocumentFile) -> DocumentFileResponse:
         original_filename=file.original_filename,
         uploaded_at=file.uploaded_at,
         uploaded_by=file.uploaded_by.value,
+        role=file.role.value,
     )
 
 
@@ -137,6 +138,11 @@ def to_compliance_document_response(
         ),
         applicability=to_applicability_payload(document.applicability),
         source=document.source.value,  # type: ignore[arg-type]
+        current_signed_scan=(
+            None
+            if document.current_signed_scan is None
+            else to_file_response(document.current_signed_scan)
+        ),
         current_file=(
             None if document.current_file is None else to_file_response(document.current_file)
         ),

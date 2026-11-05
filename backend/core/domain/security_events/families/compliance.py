@@ -78,6 +78,12 @@ COMPLIANCE_SECURITY_EVENT_DESCRIPTORS: tuple[SecurityEventDescriptor, ...] = (
         description="Compliance document file attachment completed or rejected.",
         legacy_identifier=True,
     ),
+    # TASK-P11-012 D1: same legacy shape as ``file_attached`` (underscore in the action).
+    _compliance_descriptor(
+        event_type="compliance.document.signed_scan_attached",
+        description="Compliance document signed scan attachment completed or rejected.",
+        legacy_identifier=True,
+    ),
     # Document shelf (TASK-P11-012 §2.4). ``imported`` is emitted by the phase 3
     # workbook import; it is registered now so the registry stays complete.
     *(

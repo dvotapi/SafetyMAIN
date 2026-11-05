@@ -2,10 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Protocol
+from typing import Literal, Protocol
 
 SHA256_METADATA_KEY = "sha256"
 SHA256_HEADER = f"x-amz-meta-{SHA256_METADATA_KEY}"
+
+
+Disposition = Literal["attachment", "inline"]
+"""``Content-Disposition`` of a presigned GET."""
 
 
 class StorageRequestRejectedError(ValueError):
@@ -72,8 +76,10 @@ class StorageContract(Protocol):
         ttl: timedelta | None,
         filename: str,
         content_type: str,
+        disposition: Disposition = "attachment",
     ) -> str:
-        """Sign a GET that forces an attachment download with ``filename``.
+        """Sign a GET with ``Content-Disposition`` ``attachment`` (download, the
+        default) or ``inline`` (in-browser view, A4) and ``filename``.
 
         ``ttl=None`` uses the configured presign lifetime.
         """

@@ -82,5 +82,6 @@ class ShelfAction(str, Enum):
     OPEN_PROJECT = "open_project"
     OPEN_DOCUMENT = "open_document"
     UPLOAD_SCAN = "upload_scan"
+    UPLOAD_SIGNED_SCAN = "upload_signed_scan"
     START_REVIEW = "start_review"
     SEND_FOR_ACKNOWLEDGEMENT = "send_for_acknowledgement"
