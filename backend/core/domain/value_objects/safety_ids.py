@@ -83,3 +83,15 @@ class ComplianceDocumentId(_UuidIdentity):
 
 class DocumentFileId(_UuidIdentity):
     pass
+
+
+class ShelfSectionId(_UuidIdentity):
+    pass
+
+
+class ShelfSubsectionId(_UuidIdentity):
+    pass
+
+
+class ShelfSlotId(_UuidIdentity):
+    pass

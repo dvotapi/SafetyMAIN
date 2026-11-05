@@ -48,6 +48,12 @@ from backend.core.domain.repositories.safety_supporting_repositories import (
     PermitRepositoryContract,
     TrainingRepositoryContract,
 )
+from backend.core.domain.repositories.shelf_section_repository import (
+    ShelfSectionRepositoryContract,
+)
+from backend.core.domain.repositories.shelf_slot_repository import (
+    ShelfSlotRepositoryContract,
+)
 from backend.core.domain.repositories.user_repository import UserRepositoryContract
 
 __all__ = [
@@ -70,6 +76,8 @@ __all__ = [
     "RiskAssessmentRepositoryContract",
     "RiskControlRepositoryContract",
     "RiskRepositoryContract",
+    "ShelfSectionRepositoryContract",
+    "ShelfSlotRepositoryContract",
     "TrainingRepositoryContract",
     "UserRepositoryContract",
 ]

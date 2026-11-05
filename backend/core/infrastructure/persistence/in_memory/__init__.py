@@ -36,6 +36,12 @@ from backend.core.infrastructure.persistence.in_memory.organization_repository i
 from backend.core.infrastructure.persistence.in_memory.refresh_token_session_repository import (
     InMemoryRefreshTokenSessionRepository,
 )
+from backend.core.infrastructure.persistence.in_memory.shelf_section_repository import (
+    InMemoryShelfSectionRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.shelf_slot_repository import (
+    InMemoryShelfSlotRepository,
+)
 from backend.core.infrastructure.persistence.in_memory.unit_of_work import InMemoryUnitOfWork
 from backend.core.infrastructure.persistence.in_memory.user_repository import (
     InMemoryUserRepository,
@@ -54,6 +60,8 @@ __all__ = [
     "InMemoryMembershipRepository",
     "InMemoryOrganizationRepository",
     "InMemoryRefreshTokenSessionRepository",
+    "InMemoryShelfSectionRepository",
+    "InMemoryShelfSlotRepository",
     "InMemoryUnitOfWork",
     "InMemoryUserRepository",
 ]
