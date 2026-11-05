@@ -163,3 +163,41 @@ class ShelfSlotDocumentNotFound(ShelfError):
     def __init__(self, document_id: ComplianceDocumentId) -> None:
         self.document_id = document_id
         super().__init__(f"Compliance document was not found: {document_id.value}.")
+
+
+class ShelfSlotDocumentTypeRequired(ShelfError):
+    """Developing a document needs a type from the request or the place."""
+
+    def __init__(self, slot_id: ShelfSlotId) -> None:
+        self.slot_id = slot_id
+        super().__init__(f"Shelf place {slot_id.value} has no document type to develop.")
+
+
+class ShelfSlotDocumentTypeUnknown(ShelfError):
+    """A place names a document type code that is missing or inactive in the catalog."""
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__(f"Document type is not in the active catalog: {code}.")
+
+
+class ShelfSlotsVersionConflict(ShelfError):
+    """Bulk command: one or more places changed since the client read them."""
+
+    def __init__(self, slot_ids: tuple[ShelfSlotId, ...]) -> None:
+        self.slot_ids = slot_ids
+        super().__init__(f"{len(slot_ids)} shelf place(s) have a version conflict.")
+
+    def public_details(self) -> dict[str, object]:
+        return {"conflicting_slot_ids": [str(slot_id.value) for slot_id in self.slot_ids]}
+
+
+class ShelfSlotsAlreadyExcluded(ShelfError):
+    """Bulk command: one or more places are already excluded."""
+
+    def __init__(self, slot_ids: tuple[ShelfSlotId, ...]) -> None:
+        self.slot_ids = slot_ids
+        super().__init__(f"{len(slot_ids)} shelf place(s) are already excluded.")
+
+    def public_details(self) -> dict[str, object]:
+        return {"excluded_slot_ids": [str(slot_id.value) for slot_id in self.slot_ids]}

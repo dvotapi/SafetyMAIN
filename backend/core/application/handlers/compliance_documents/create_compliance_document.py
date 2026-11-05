@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from backend.core.application.audit.administrative_audit_recorder import (
     AdministrativeAuditRecorder,
+    AuditContext,
     AuditRecordSpec,
 )
 from backend.core.application.audit.handler_support import (
@@ -20,6 +23,86 @@ from backend.core.domain.exceptions.compliance_document import (
 )
 from backend.core.domain.value_objects.audit_action import AuditAction
 from backend.core.domain.value_objects.audit_resource_type import AuditResourceType
+
+
+def build_compliance_document(
+    unit_of_work: UnitOfWorkContract,
+    command: CreateComplianceDocumentCommand,
+    *,
+    now: datetime,
+) -> ComplianceDocument:
+    """Validate references and build a new draft document; nothing is stored.
+
+    Shared by the create handler and the shelf ``develop`` command, which adds the
+    document in its own unit of work (TASK-P11-012 P12).
+    """
+    document_type = unit_of_work.document_types.get(
+        command.organization_id,
+        command.document_type_id,
+    )
+    if document_type is None:
+        raise DocumentTypeNotFound(command.document_type_id)
+    # Soft existence checks for related documents in the same organization.
+    # Full type/status checks for ``supersedes`` and ``approved_by`` move
+    # to the lifecycle handlers in Phase 5.
+    if (
+        command.approved_by_document_id is not None
+        and unit_of_work.compliance_documents.get(
+            command.organization_id,
+            command.approved_by_document_id,
+        )
+        is None
+    ):
+        raise ComplianceDocumentValidationError(
+            "The approval order document does not exist."
+        )
+    if (
+        command.supersedes_document_id is not None
+        and unit_of_work.compliance_documents.get(
+            command.organization_id,
+            command.supersedes_document_id,
+        )
+        is None
+    ):
+        raise ComplianceDocumentValidationError(
+            "The superseded document does not exist."
+        )
+    return ComplianceDocument.create(
+        organization_id=command.organization_id,
+        document_type=document_type,
+        code=command.code,
+        title=command.title,
+        created_by=command.actor_id,
+        created_at=now,
+        subject_id=command.subject_id,
+        issued_at=command.issued_at,
+        effective_from=command.effective_from,
+        next_review_at=command.next_review_at,
+        approved_by_document_id=command.approved_by_document_id,
+        supersedes_document_id=command.supersedes_document_id,
+        applicability=command.applicability,
+        source=command.source,
+        notes=command.notes,
+    )
+
+
+def document_created_audit_spec(
+    document: ComplianceDocument, context: AuditContext
+) -> AuditRecordSpec:
+    return AuditRecordSpec(
+        action=AuditAction.COMPLIANCE_DOCUMENT_CREATED,
+        context=context,
+        resource_type=AuditResourceType.COMPLIANCE_DOCUMENT,
+        resource_id=document.id.value,
+        target_organization_id=document.organization_id,
+        metadata={
+            "document_id": str(document.id.value),
+            "document_code": document.code,
+            "document_type_id": str(document.document_type_id.value),
+            "subject_kind": document.subject_kind.value,
+            "new_status": document.status.value,
+        },
+    )
 
 
 class CreateComplianceDocumentHandler:
@@ -44,72 +127,13 @@ class CreateComplianceDocumentHandler:
         )
 
         def operation() -> ComplianceDocument:
-            document_type = self._unit_of_work.document_types.get(
-                command.organization_id,
-                command.document_type_id,
-            )
-            if document_type is None:
-                raise DocumentTypeNotFound(command.document_type_id)
-            # Soft existence checks for related documents in the same organization.
-            # Full type/status checks for ``supersedes`` and ``approved_by`` move
-            # to the lifecycle handlers in Phase 5.
-            if (
-                command.approved_by_document_id is not None
-                and self._unit_of_work.compliance_documents.get(
-                    command.organization_id,
-                    command.approved_by_document_id,
-                )
-                is None
-            ):
-                raise ComplianceDocumentValidationError(
-                    "The approval order document does not exist."
-                )
-            if (
-                command.supersedes_document_id is not None
-                and self._unit_of_work.compliance_documents.get(
-                    command.organization_id,
-                    command.supersedes_document_id,
-                )
-                is None
-            ):
-                raise ComplianceDocumentValidationError(
-                    "The superseded document does not exist."
-                )
-            now = self._clock.now()
-            return ComplianceDocument.create(
-                organization_id=command.organization_id,
-                document_type=document_type,
-                code=command.code,
-                title=command.title,
-                created_by=command.actor_id,
-                created_at=now,
-                subject_id=command.subject_id,
-                issued_at=command.issued_at,
-                effective_from=command.effective_from,
-                next_review_at=command.next_review_at,
-                approved_by_document_id=command.approved_by_document_id,
-                supersedes_document_id=command.supersedes_document_id,
-                applicability=command.applicability,
-                source=command.source,
-                notes=command.notes,
+            return build_compliance_document(
+                self._unit_of_work, command, now=self._clock.now()
             )
 
         def success_spec(document: ComplianceDocument) -> AuditRecordSpec:
             self._unit_of_work.compliance_documents.add(document)
-            return AuditRecordSpec(
-                action=AuditAction.COMPLIANCE_DOCUMENT_CREATED,
-                context=audit_context,
-                resource_type=AuditResourceType.COMPLIANCE_DOCUMENT,
-                resource_id=document.id.value,
-                target_organization_id=document.organization_id,
-                metadata={
-                    "document_id": str(document.id.value),
-                    "document_code": document.code,
-                    "document_type_id": str(document.document_type_id.value),
-                    "subject_kind": document.subject_kind.value,
-                    "new_status": document.status.value,
-                },
-            )
+            return document_created_audit_spec(document, audit_context)
 
         return run_audited_admin_operation(
             self._audit,

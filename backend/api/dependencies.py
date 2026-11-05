@@ -26,6 +26,7 @@ from backend.core.application.audit.permission_denial_audit import (
 from backend.core.application.context.tenant_context import TenantContext
 from backend.core.application.exceptions.authentication import UnauthenticatedError
 from backend.core.application.exceptions.authorization import PermissionDeniedError
+from backend.core.application.queries.shelf import ShelfCapabilities
 from backend.core.application.handlers.archive_knowledge_object import (
     ArchiveKnowledgeObjectHandler,
 )
@@ -49,6 +50,21 @@ from backend.core.application.handlers.compliance_documents import (
     UpdateComplianceDocumentHandler,
 )
 from backend.core.contracts.storage import StorageContract
+from backend.core.application.handlers.shelf import (
+    BulkExcludeShelfSlotsHandler,
+    ConfirmShelfSlotApplicableHandler,
+    CreateShelfSlotHandler,
+    DevelopShelfSlotDocumentHandler,
+    ExcludeShelfSlotHandler,
+    GetShelfOverviewHandler,
+    GetShelfSectionSlotsHandler,
+    GetShelfSlotHandler,
+    LinkShelfSlotDocumentHandler,
+    RestoreShelfSlotHandler,
+    SearchShelfSlotsHandler,
+    UnlinkShelfSlotDocumentHandler,
+    UpdateShelfSlotHandler,
+)
 from backend.core.application.handlers.create_risk_assessment import CreateRiskAssessmentHandler
 from backend.core.application.handlers.create_risk_control import CreateRiskControlHandler
 from backend.core.application.handlers.get_list_risk_controls import (
@@ -203,6 +219,7 @@ from backend.core.domain.value_objects.safety_ids import (
     HazardId,
     RiskAssessmentId,
     RiskControlId,
+    ShelfSlotId,
 )
 from backend.core.infrastructure.time.utc_clock import UtcClock
 
@@ -1252,3 +1269,148 @@ def get_list_compliance_document_files_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
 ) -> ListComplianceDocumentFilesHandler:
     return ListComplianceDocumentFilesHandler(uow)
+
+
+# ---- document shelf (TASK-P11-012) ----
+
+
+def get_shelf_slot_id(slot_id: Annotated[UUID, Path()]) -> ShelfSlotId:
+    return ShelfSlotId(value=slot_id)
+
+
+def _has_permission(
+    container: AppContainer,
+    settings: AppSettings,
+    tenant_context: TenantContext,
+    permission: SystemPermission,
+) -> bool:
+    """Probe a permission without auditing a denial (it only shapes the response)."""
+    if not settings.auth_enforcement:
+        return True
+    if tenant_context.actor_user_id is None:
+        return False
+    try:
+        container.authorization_service.require_permission(
+            actor_user_id=tenant_context.actor_user_id,
+            organization_id=tenant_context.organization_id,
+            permission=Permission.from_system_permission(permission),
+        )
+    except PermissionDeniedError:
+        return False
+    return True
+
+
+def get_shelf_capabilities(
+    tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
+    container: Annotated[AppContainer, Depends(get_container)],
+    settings: Annotated[AppSettings, Depends(get_settings)],
+) -> ShelfCapabilities:
+    """Backend-computed basis of ``available_actions`` for the current user (§2.2)."""
+    return ShelfCapabilities(
+        can_curate=_has_permission(
+            container, settings, tenant_context, SystemPermission.SHELF_CURATE
+        ),
+        can_create_document=_has_permission(
+            container, settings, tenant_context, SystemPermission.COMPLIANCE_DOCUMENT_CREATE
+        ),
+    )
+
+
+def get_get_shelf_overview_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> GetShelfOverviewHandler:
+    return GetShelfOverviewHandler(uow, clock)
+
+
+def get_get_shelf_section_slots_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> GetShelfSectionSlotsHandler:
+    return GetShelfSectionSlotsHandler(uow, clock)
+
+
+def get_search_shelf_slots_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> SearchShelfSlotsHandler:
+    return SearchShelfSlotsHandler(uow, clock)
+
+
+def get_get_shelf_slot_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+) -> GetShelfSlotHandler:
+    return GetShelfSlotHandler(uow, clock)
+
+
+def get_create_shelf_slot_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CreateShelfSlotHandler:
+    return CreateShelfSlotHandler(uow, clock, audit)
+
+
+def get_update_shelf_slot_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> UpdateShelfSlotHandler:
+    return UpdateShelfSlotHandler(uow, clock, audit)
+
+
+def get_exclude_shelf_slot_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ExcludeShelfSlotHandler:
+    return ExcludeShelfSlotHandler(uow, clock, audit)
+
+
+def get_restore_shelf_slot_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> RestoreShelfSlotHandler:
+    return RestoreShelfSlotHandler(uow, clock, audit)
+
+
+def get_bulk_exclude_shelf_slots_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> BulkExcludeShelfSlotsHandler:
+    return BulkExcludeShelfSlotsHandler(uow, clock, audit)
+
+
+def get_confirm_shelf_slot_applicable_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ConfirmShelfSlotApplicableHandler:
+    return ConfirmShelfSlotApplicableHandler(uow, clock, audit)
+
+
+def get_link_shelf_slot_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> LinkShelfSlotDocumentHandler:
+    return LinkShelfSlotDocumentHandler(uow, clock, audit)
+
+
+def get_unlink_shelf_slot_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> UnlinkShelfSlotDocumentHandler:
+    return UnlinkShelfSlotDocumentHandler(uow, clock, audit)
+
+
+def get_develop_shelf_slot_document_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> DevelopShelfSlotDocumentHandler:
+    return DevelopShelfSlotDocumentHandler(uow, clock, audit)

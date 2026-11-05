@@ -26,6 +26,30 @@ from backend.core.domain.exceptions.compliance_document import (
     DuplicateDocumentTypeCode,
     InvalidComplianceDocumentTransition,
 )
+from backend.core.domain.exceptions.shelf import (
+    DuplicateShelfSectionCode,
+    DuplicateShelfSectionNumber,
+    DuplicateShelfSlotCode,
+    ShelfSectionNotFound,
+    ShelfSectionValidationError,
+    ShelfSectionVersionConflict,
+    ShelfSlotAlreadyExcluded,
+    ShelfSlotCodeMismatch,
+    ShelfSlotDocumentAlreadyLinked,
+    ShelfSlotDocumentNotFound,
+    ShelfSlotDocumentNotLinked,
+    ShelfSlotDocumentSubjectNotSupported,
+    ShelfSlotDocumentTypeRequired,
+    ShelfSlotDocumentTypeUnknown,
+    ShelfSlotExclusionCommentTooShort,
+    ShelfSlotNotExcluded,
+    ShelfSlotNotFound,
+    ShelfSlotNotToClarify,
+    ShelfSlotValidationError,
+    ShelfSlotVersionConflict,
+    ShelfSlotsAlreadyExcluded,
+    ShelfSlotsVersionConflict,
+)
 from backend.core.domain.exceptions.risk_control import (
     DuplicateRiskControlCode,
     InvalidRiskControlTransition,
@@ -217,6 +241,24 @@ COMPLIANCE_DOCUMENT_REASON_REQUIRED = "compliance_document_reason_required"
 COMPLIANCE_DOCUMENT_FILE_NOT_FOUND = "compliance_document_file_not_found"
 COMPLIANCE_DOCUMENT_FILE_TOO_LARGE = "compliance_document_file_too_large"
 COMPLIANCE_DOCUMENT_FILE_TYPE_NOT_ALLOWED = "compliance_document_file_type_not_allowed"
+SHELF_SECTION_NOT_FOUND = "shelf_section_not_found"
+DUPLICATE_SHELF_SECTION_CODE = "duplicate_shelf_section_code"
+DUPLICATE_SHELF_SECTION_NUMBER = "duplicate_shelf_section_number"
+SHELF_SECTION_VALIDATION_ERROR = "shelf_section_validation_error"
+SHELF_SECTION_VERSION_CONFLICT = "shelf_section_version_conflict"
+SHELF_SLOT_NOT_FOUND = "shelf_slot_not_found"
+DUPLICATE_SHELF_SLOT_CODE = "duplicate_shelf_slot_code"
+SHELF_SLOT_CODE_MISMATCH = "shelf_slot_code_mismatch"
+SHELF_SLOT_VALIDATION_ERROR = "shelf_slot_validation_error"
+SHELF_SLOT_VERSION_CONFLICT = "shelf_slot_version_conflict"
+SHELF_SLOT_ALREADY_EXCLUDED = "already_excluded"
+SHELF_SLOT_NOT_EXCLUDED = "not_excluded"
+SHELF_SLOT_NOT_TO_CLARIFY = "not_to_clarify"
+SHELF_SLOT_COMMENT_TOO_SHORT = "comment_too_short"
+SHELF_SLOT_DOCUMENT_SUBJECT_NOT_SUPPORTED = "document_subject_not_supported"
+SHELF_SLOT_ALREADY_LINKED_ACTIVE_DOCUMENT = "already_linked_active_document"
+SHELF_SLOT_DOCUMENT_NOT_LINKED = "shelf_slot_document_not_linked"
+SHELF_SLOT_DOCUMENT_TYPE_REQUIRED = "document_type_required"
 
 REQUEST_VALIDATION_ERROR = "request_validation_error"
 REQUEST_VALIDATION_MESSAGE = "The request is invalid."
@@ -319,6 +361,24 @@ PUBLIC_ERROR_CODES: frozenset[str] = frozenset(
         COMPLIANCE_DOCUMENT_FILE_NOT_FOUND,
         COMPLIANCE_DOCUMENT_FILE_TOO_LARGE,
         COMPLIANCE_DOCUMENT_FILE_TYPE_NOT_ALLOWED,
+        SHELF_SECTION_NOT_FOUND,
+        DUPLICATE_SHELF_SECTION_CODE,
+        DUPLICATE_SHELF_SECTION_NUMBER,
+        SHELF_SECTION_VALIDATION_ERROR,
+        SHELF_SECTION_VERSION_CONFLICT,
+        SHELF_SLOT_NOT_FOUND,
+        DUPLICATE_SHELF_SLOT_CODE,
+        SHELF_SLOT_CODE_MISMATCH,
+        SHELF_SLOT_VALIDATION_ERROR,
+        SHELF_SLOT_VERSION_CONFLICT,
+        SHELF_SLOT_ALREADY_EXCLUDED,
+        SHELF_SLOT_NOT_EXCLUDED,
+        SHELF_SLOT_NOT_TO_CLARIFY,
+        SHELF_SLOT_COMMENT_TOO_SHORT,
+        SHELF_SLOT_DOCUMENT_SUBJECT_NOT_SUPPORTED,
+        SHELF_SLOT_ALREADY_LINKED_ACTIVE_DOCUMENT,
+        SHELF_SLOT_DOCUMENT_NOT_LINKED,
+        SHELF_SLOT_DOCUMENT_TYPE_REQUIRED,
         REQUEST_VALIDATION_ERROR,
         SERVICE_NOT_READY,
         INTERNAL_SERVER_ERROR,
@@ -413,6 +473,28 @@ DOMAIN_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {
     ComplianceDocumentFileNotFound: 404,
     ComplianceDocumentFileTooLarge: 422,
     ComplianceDocumentFileTypeNotAllowed: 422,
+    ShelfSectionNotFound: 404,
+    DuplicateShelfSectionCode: 409,
+    DuplicateShelfSectionNumber: 409,
+    ShelfSectionValidationError: 422,
+    ShelfSectionVersionConflict: 409,
+    ShelfSlotNotFound: 404,
+    DuplicateShelfSlotCode: 409,
+    ShelfSlotCodeMismatch: 422,
+    ShelfSlotValidationError: 422,
+    ShelfSlotVersionConflict: 409,
+    ShelfSlotsVersionConflict: 409,
+    ShelfSlotAlreadyExcluded: 422,
+    ShelfSlotsAlreadyExcluded: 422,
+    ShelfSlotNotExcluded: 422,
+    ShelfSlotNotToClarify: 422,
+    ShelfSlotExclusionCommentTooShort: 422,
+    ShelfSlotDocumentSubjectNotSupported: 422,
+    ShelfSlotDocumentAlreadyLinked: 422,
+    ShelfSlotDocumentNotLinked: 404,
+    ShelfSlotDocumentNotFound: 404,
+    ShelfSlotDocumentTypeRequired: 422,
+    ShelfSlotDocumentTypeUnknown: 422,
 }
 
 DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
@@ -503,6 +585,28 @@ DOMAIN_EXCEPTION_ERROR_CODES: dict[type[Exception], str] = {
     ComplianceDocumentFileNotFound: COMPLIANCE_DOCUMENT_FILE_NOT_FOUND,
     ComplianceDocumentFileTooLarge: COMPLIANCE_DOCUMENT_FILE_TOO_LARGE,
     ComplianceDocumentFileTypeNotAllowed: COMPLIANCE_DOCUMENT_FILE_TYPE_NOT_ALLOWED,
+    ShelfSectionNotFound: SHELF_SECTION_NOT_FOUND,
+    DuplicateShelfSectionCode: DUPLICATE_SHELF_SECTION_CODE,
+    DuplicateShelfSectionNumber: DUPLICATE_SHELF_SECTION_NUMBER,
+    ShelfSectionValidationError: SHELF_SECTION_VALIDATION_ERROR,
+    ShelfSectionVersionConflict: SHELF_SECTION_VERSION_CONFLICT,
+    ShelfSlotNotFound: SHELF_SLOT_NOT_FOUND,
+    DuplicateShelfSlotCode: DUPLICATE_SHELF_SLOT_CODE,
+    ShelfSlotCodeMismatch: SHELF_SLOT_CODE_MISMATCH,
+    ShelfSlotValidationError: SHELF_SLOT_VALIDATION_ERROR,
+    ShelfSlotVersionConflict: SHELF_SLOT_VERSION_CONFLICT,
+    ShelfSlotsVersionConflict: SHELF_SLOT_VERSION_CONFLICT,
+    ShelfSlotAlreadyExcluded: SHELF_SLOT_ALREADY_EXCLUDED,
+    ShelfSlotsAlreadyExcluded: SHELF_SLOT_ALREADY_EXCLUDED,
+    ShelfSlotNotExcluded: SHELF_SLOT_NOT_EXCLUDED,
+    ShelfSlotNotToClarify: SHELF_SLOT_NOT_TO_CLARIFY,
+    ShelfSlotExclusionCommentTooShort: SHELF_SLOT_COMMENT_TOO_SHORT,
+    ShelfSlotDocumentSubjectNotSupported: SHELF_SLOT_DOCUMENT_SUBJECT_NOT_SUPPORTED,
+    ShelfSlotDocumentAlreadyLinked: SHELF_SLOT_ALREADY_LINKED_ACTIVE_DOCUMENT,
+    ShelfSlotDocumentNotLinked: SHELF_SLOT_DOCUMENT_NOT_LINKED,
+    ShelfSlotDocumentNotFound: COMPLIANCE_DOCUMENT_NOT_FOUND,
+    ShelfSlotDocumentTypeRequired: SHELF_SLOT_DOCUMENT_TYPE_REQUIRED,
+    ShelfSlotDocumentTypeUnknown: DOCUMENT_TYPE_NOT_FOUND,
 }
 
 DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
@@ -611,6 +715,28 @@ DOMAIN_EXCEPTION_MESSAGES: dict[type[Exception], str] = {
     ComplianceDocumentFileNotFound: "Compliance document has no file attached.",
     ComplianceDocumentFileTooLarge: "File size exceeds the upload limit.",
     ComplianceDocumentFileTypeNotAllowed: "File content type is not allowed.",
+    ShelfSectionNotFound: "Shelf section was not found.",
+    DuplicateShelfSectionCode: "Shelf section code already exists.",
+    DuplicateShelfSectionNumber: "Shelf section number already exists.",
+    ShelfSectionValidationError: "Shelf section validation failed.",
+    ShelfSectionVersionConflict: "Shelf section version conflict.",
+    ShelfSlotNotFound: "Shelf place was not found.",
+    DuplicateShelfSlotCode: "Shelf place code already exists.",
+    ShelfSlotCodeMismatch: "Shelf place code does not match a subsection of the section.",
+    ShelfSlotValidationError: "Shelf place validation failed.",
+    ShelfSlotVersionConflict: "Shelf place version conflict.",
+    ShelfSlotsVersionConflict: "One or more shelf places have a version conflict.",
+    ShelfSlotAlreadyExcluded: "Shelf place is excluded.",
+    ShelfSlotsAlreadyExcluded: "One or more shelf places are already excluded.",
+    ShelfSlotNotExcluded: "Shelf place is not excluded.",
+    ShelfSlotNotToClarify: "Only a place to clarify can be confirmed applicable.",
+    ShelfSlotExclusionCommentTooShort: "Exclusion comment must have at least 5 characters.",
+    ShelfSlotDocumentSubjectNotSupported: "Only organization documents can be linked to a shelf place.",
+    ShelfSlotDocumentAlreadyLinked: "Shelf place already holds a document in progress or in force.",
+    ShelfSlotDocumentNotLinked: "Document is not linked to the shelf place.",
+    ShelfSlotDocumentNotFound: "Compliance document was not found.",
+    ShelfSlotDocumentTypeRequired: "A document type is required.",
+    ShelfSlotDocumentTypeUnknown: "Document type is not in the active catalog.",
 }
 
 APPLICATION_AUTHENTICATION_EXCEPTION_HTTP_STATUS: dict[type[Exception], int] = {

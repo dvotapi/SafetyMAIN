@@ -16,11 +16,12 @@ def _compliance_descriptor(
     event_type: str,
     description: str,
     legacy_identifier: bool = False,
+    subject_domain: SecurityEventSubjectDomain = SecurityEventSubjectDomain.COMPLIANCE_DOCUMENT,
 ) -> SecurityEventDescriptor:
     return SecurityEventDescriptor(
         event_type=event_type,
         category=SecurityEventCategory.ADMINISTRATIVE,
-        subject_domain=SecurityEventSubjectDomain.COMPLIANCE_DOCUMENT,
+        subject_domain=subject_domain,
         producer_owner=SecurityEventProducerOwner.ADMINISTRATIVE_AUDIT,
         allowed_outcomes=frozenset({AuditOutcome.SUCCESS, AuditOutcome.FAILURE}),
         legacy_identifier=legacy_identifier,
@@ -76,5 +77,32 @@ COMPLIANCE_SECURITY_EVENT_DESCRIPTORS: tuple[SecurityEventDescriptor, ...] = (
         event_type="compliance.document.file_attached",
         description="Compliance document file attachment completed or rejected.",
         legacy_identifier=True,
+    ),
+    # Document shelf (TASK-P11-012 §2.4). ``imported`` is emitted by the phase 3
+    # workbook import; it is registered now so the registry stays complete.
+    *(
+        _compliance_descriptor(
+            event_type=event_type,
+            description=description,
+            subject_domain=SecurityEventSubjectDomain.SHELF,
+        )
+        for event_type, description in (
+            ("compliance.place.created", "Shelf place creation completed or rejected."),
+            ("compliance.place.updated", "Shelf place update completed or rejected."),
+            ("compliance.place.excluded", "Shelf place exclusion completed or rejected."),
+            ("compliance.place.restored", "Shelf place restoration completed or rejected."),
+            (
+                "compliance.place.confirmed",
+                "Shelf place applicability confirmation completed or rejected.",
+            ),
+            ("compliance.place.linked", "Shelf place document link completed or rejected."),
+            (
+                "compliance.place.unlinked",
+                "Shelf place document unlink completed or rejected.",
+            ),
+            ("compliance.section.created", "Shelf section creation completed or rejected."),
+            ("compliance.section.updated", "Shelf section update completed or rejected."),
+            ("compliance.shelf.imported", "Shelf workbook import completed or rejected."),
+        )
     ),
 )

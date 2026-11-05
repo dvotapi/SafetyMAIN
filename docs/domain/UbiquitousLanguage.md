@@ -359,6 +359,39 @@ generic Knowledge Objects themselves.
 | **Examples** | “Provide SDS for hazardous chemicals on site”; LOTO regulatory duty. |
 | **Non-examples** | A Control measure; a completed Evidence file alone. |
 
+### Shelf («Полка»)
+
+| Field | Content |
+|-------|---------|
+| **Definition** | The organization's catalogue of required compliance documents, arranged as sections (shelves) and subsections. |
+| **Business meaning** | Shows at a glance which required documents exist, which need review, and which are missing; readiness = (present + excluded) / total. |
+| **Aliases** | «Полка документов»; section = «полка», subsection = «подполка». |
+| **Relationships** | Contains `Shelf Place`s; filled by `ComplianceDocument` editions; later referenced by `Compliance Requirement`s (P11-009). |
+| **Examples** | Section `ТрБ` «Транспортная безопасность» with subsections `ТрБ.01`…`ТрБ.06`. |
+| **Non-examples** | The documents registry (a list of editions); a single document. |
+
+### Shelf Place («Место на полке»)
+
+| Field | Content |
+|-------|---------|
+| **Definition** | A required document slot with a code (`ТрБ.02.02`), legal basis, obligation level and curated status (`ShelfSlot`). |
+| **Business meaning** | "What must be on the shelf", independent of whether a document already exists. |
+| **Aliases** | «Место»; «корешок» for its visual spine. Code identifiers use `slot`. |
+| **Relationships** | Belongs to a `Shelf` section and subsection; links `ComplianceDocument` editions (at most one in force). |
+| **Examples** | «План обеспечения транспортной безопасности», mandatory, kept on the facility. |
+| **Non-examples** | The plan document itself (`ComplianceDocument`); the regulation clause (`Compliance Requirement`). |
+
+### Excluded Place («Исключённое место»)
+
+| Field | Content |
+|-------|---------|
+| **Definition** | A place a curator marked as not required for the organization, with a reason and a comment. |
+| **Business meaning** | Stays visible as a ghost spine, counts toward readiness, and can be restored. |
+| **Aliases** | «Не применимо» in the workbook. |
+| **Relationships** | Keeps its code (codes stay unique); restoring returns the curated status it had before. |
+| **Examples** | `ТрБ.03.01` excluded with reason `condition_not_met`: «Нет объектов транспортной инфраструктуры». |
+| **Non-examples** | A missing place (required but absent); a deleted record (places are never deleted). |
+
 ### Evidence
 
 | Field | Content |

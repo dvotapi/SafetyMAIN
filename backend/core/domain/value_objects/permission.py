@@ -51,6 +51,8 @@ class SystemPermission(str, Enum):
     COMPLIANCE_DOCUMENT_APPROVE = "compliance_document:approve"
     COMPLIANCE_DOCUMENT_ACTIVATE = "compliance_document:activate"
     COMPLIANCE_DOCUMENT_ARCHIVE = "compliance_document:archive"
+    SHELF_READ = "shelf:read"
+    SHELF_CURATE = "shelf:curate"
 
 
 class Permission(BaseModel):

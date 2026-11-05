@@ -50,6 +50,8 @@ ADMINISTRATIVE_SYSTEM_PERMISSIONS: frozenset[SystemPermission] = frozenset(
         SystemPermission.COMPLIANCE_DOCUMENT_APPROVE,
         SystemPermission.COMPLIANCE_DOCUMENT_ACTIVATE,
         SystemPermission.COMPLIANCE_DOCUMENT_ARCHIVE,
+        SystemPermission.SHELF_READ,
+        SystemPermission.SHELF_CURATE,
     }
 )
 
@@ -93,6 +95,8 @@ _PERMISSION_TO_RESOURCE_TYPE: dict[str, AuditResourceType] = {
     SystemPermission.COMPLIANCE_DOCUMENT_APPROVE.value: AuditResourceType.COMPLIANCE_DOCUMENT,
     SystemPermission.COMPLIANCE_DOCUMENT_ACTIVATE.value: AuditResourceType.COMPLIANCE_DOCUMENT,
     SystemPermission.COMPLIANCE_DOCUMENT_ARCHIVE.value: AuditResourceType.COMPLIANCE_DOCUMENT,
+    SystemPermission.SHELF_READ.value: AuditResourceType.SHELF_PLACE,
+    SystemPermission.SHELF_CURATE.value: AuditResourceType.SHELF_PLACE,
 }
 
 

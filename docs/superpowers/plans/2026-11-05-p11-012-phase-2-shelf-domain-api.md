@@ -60,6 +60,19 @@ Each PR passes the full suite on its own; nothing in 2a/2b is reachable over HTT
 | P23 | `current_document.signed_scan` is always `null` and `working_file` = `current_file` until phase 4; `acknowledgement` = `null`, `has_acknowledgement_gap` = `false` until phase 5. `approved_by_order` resolved from `approved_by_document_id` (same org). | TASK phases 4–5 own those fields. |
 | P24 | `import_fingerprint` and `last_imported_at` columns and fields are added now (nullable), never set by phase 2 handlers. | TASK §2.1/§2.3 list them; phase 3 fills them. |
 
+## Implementation notes (2c)
+
+- Enum values follow the existing upper-case convention: `AuditResourceType` `SHELF`, `SHELF_SECTION`, `SHELF_PLACE`; `SecurityEventSubjectDomain.SHELF = "SHELF"`.
+- `SHELF_READ` is in `ADMINISTRATIVE_SYSTEM_PERMISSIONS` too, like every other read permission (`compliance_document:read`, `hazard:read`), so denials of both shelf permissions are audited.
+- `AuditEvent.ALLOWED_METADATA_KEYS` gains `slot_id`, `slot_code`, `section_id`, `section_code`, `subsection_code`, `comment` (the P15 metadata).
+- Bulk errors carry their ids through a `public_details()` hook read by the domain exception handler (`backend/api/exception_handlers.py`): `details.conflicting_slot_ids` (409) and `details.excluded_slot_ids` (422 `already_excluded`).
+- New domain exceptions `ShelfSlotDocumentTypeRequired` (422 `document_type_required`), `ShelfSlotDocumentTypeUnknown` (422 `document_type_not_found`; the P11-001 `DocumentTypeNotFound` stays 404), `ShelfSlotsVersionConflict`, `ShelfSlotsAlreadyExcluded`.
+- Command bodies use `version` (TASK §2.5), not `expected_version` as in the documents API.
+- Handlers use `run_shelf_command` (zero or more success events per unit of work) instead of `run_audited_admin_operation`: idempotent no-ops record nothing, bulk records one event per place, develop records two.
+- P12 also extracts `document_created_audit_spec`, so develop records exactly the metadata of `POST /compliance-documents`.
+- `available_actions` uses `ShelfCapabilities` from the `get_shelf_capabilities` dependency, which probes permissions without auditing a denial.
+- The detail DTO also returns the curated fields (`document_type_code`, `notes`, …) so the PATCH form can be filled from it; `available_actions` lists every action with `primary_action` first.
+
 ## Approved assumptions
 
 - `shelf:curate` is admin-only until P11-009 (TASK §2.4).
