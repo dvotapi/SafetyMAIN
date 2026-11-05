@@ -75,7 +75,8 @@ Table `document_types` (organisation-scoped, with a system seed):
   `attestation_protocol`, `tractor_license`, `drilling_license`,
   `excavator_license`, `medical_conclusion`, `psychiatric_conclusion`),
 - `title_ru`, `safety_domain` (enum: `occupational | industrial | labour |
-  fire | environmental | road | dangerous_goods`),
+  fire | environmental | road | dangerous_goods`; `labour` is replaced by
+  `transport_security` in TASK-P11-012 phase 1 — see Amendments below),
 - `subject_kind` (`organization | employee | asset`),
 - `review_period_months` (planned review, e.g. 60 for ИОТ) **or**
   `validity_months` (for employee permits) **or** `periodicity_months`
@@ -334,3 +335,20 @@ Each phase: self-review → independent review → explicit approval. One chat p
 - `crypto.subtle.digest` reads the whole file into memory (bounded by the size limit).
 - `review_due` filtering is evaluated in Python after loading the filtered set (Risk Control `overdue_only` precedent).
 - `applicability` stays loose JSON; asset links deferred; document types are seed-only; `today` is UTC; no physical deletion.
+
+---
+
+## Amendments after completion (from TASK-P11-012, approved 2026-11-05)
+
+This task is Done; the items below are delivered by TASK-P11-012 and recorded
+here so that readers of P11-001 decisions see the current rules.
+
+| # | Amends | Change | Delivered in |
+|---|---|---|---|
+| A1 | §2 `safety_domain` | `labour` was a mistranslation of «ТрБез» (transport security). Replaced by `transport_security` («Транспортная безопасность») with migration `0014_transport_security_domain`. | P11-012 phase 1 |
+| A2 | D6 (files only in `draft`) | `DocumentFile.role` = `working` (default) or `signed_scan`. Working files keep D6. A signed scan may be attached in `approved`, `active`, `under_review` (`/signed-scan/upload-url`, `/signed-scan/confirm`), audited. | P11-012 phase 4 |
+| A3 | `current_file` | `current_file` = the last **working** file (approve/activate preconditions and `files/current/download-url` unchanged in meaning); new `current_signed_scan` and `files/signed-scan/current/download-url`; `files/versions` returns `role`. | P11-012 phase 4 |
+| A4 | Download disposition | Download URLs stay `attachment`; new `files/{file_id}/view-url` returns an `inline` presigned GET for in-browser rendering. | P11-012 phase 4 |
+| A5 | Feature public API | `ComplianceDocumentUploadDialog` is exported from `features/compliance-documents/index.ts` for reuse by the shelf feature. | P11-012 phase 4 |
+| A6 | Creating documents from a place | `POST /shelf/slots/{id}/develop` creates a `draft` document (code and title from the place) through the existing create handler and links it; the create page itself is unchanged. | P11-012 phase 2 |
+

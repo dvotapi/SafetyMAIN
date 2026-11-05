@@ -84,6 +84,20 @@ admin ("неизвестный тип").
 `docs/architecture/HRIntegrationContract.md` (mapping section),
 `docs/api/EmployeeDocumentsAPI.md`.
 
+### 6. Amendments from TASK-P11-012 (approved 2026-11-05)
+
+The shelf has places kept on employees and vehicles (e.g. «Единая книжка
+взрывника», «Свидетельство ДОПОГ водителя», медицинские заключения). For a
+place whose `document_type_code` is an employee document type, the shelf
+shows aggregate coverage instead of a single document (P11-012 D6):
+
+- `GET /api/v1/document-types/{code}/coverage` → `required_total,
+  valid_total, expiring_total, expired_total, missing_total` over active
+  employees for whom the type is required (applicability rules of P11-006),
+  backend computed; drill-down to the employees list.
+- The shelf panel displays it as «Есть у N из M» with links to employee
+  cards; the shelf never computes coverage itself.
+
 ---
 
 ## Acceptance Criteria
@@ -100,6 +114,8 @@ admin ("неизвестный тип").
 - Employee "Документы" tab shows the backend-computed statuses;
   `npm run verify` passes.
 
+- `document-types/{code}/coverage` returns counts consistent with the
+  employee "Документы" tabs for the same type (TASK-P11-012 amendment).
 ---
 
 ## Non-Goals

@@ -55,9 +55,11 @@ registry changes without a human confirmation.
   changes and, for each affected `regulatory_requirement` (matched by clause
   references and semantic similarity of the quoted clause), proposes:
   `unchanged | amended (new quote, new text) | repealed | new requirement`.
-- Impact analysis (deterministic): affected requirements → document types →
-  active documents whose `legal_basis` or blocks reference the regulation →
-  assemblies → blocks. Result is a `change_proposal` with a tree of impacts.
+- Impact analysis (deterministic): affected requirements → shelf places
+  (P11-012, via `shelf_slot_id`) → document types → active documents whose
+  `legal_basis` or blocks reference the regulation → assemblies → blocks.
+  Result is a `change_proposal` with a tree of impacts; applying it can mark
+  places for review (their documents get `review_document` obligations).
 
 ### 3. Curator queue
 

@@ -2,7 +2,7 @@
 
 Status: Proposed
 Epic: `docs/tasks/EPIC-P11-compliance-documentation.md`
-Depends on: TASK-P11-004 (employees and accounts), TASK-P11-001 (documents), TASK-P11-003 (printable form templates; the e-signature regulation)
+Depends on: TASK-P11-004 (employees and accounts), TASK-P11-001 (documents), TASK-P11-003 (printable form templates; the e-signature regulation). The acknowledgement journal slice (§9) does not depend on TASK-P11-003 (TASK-P11-012 D4).
 
 ---
 
@@ -139,6 +139,28 @@ signed | reversed`, `safety.training.completed`.
 `docs/api/JournalsAPI.md`, `docs/domain/Training.md`, runbook section on
 verifying journal integrity, `CLAUDE.md`.
 
+### 9. Acknowledgement journal slice — first (TASK-P11-012 D4, approved 2026-11-05)
+
+Delivered before the other journal types, so that P11-006 can create and
+close `acknowledge_document` obligations and the shelf (P11-012 phase 5) can
+show acknowledgement coverage:
+
+- Seed journal type `acknowledgement` (this task owns it; P11-006 only
+  consumes it). Entry payload: `document_id`, document `code`, edition
+  `effective_from`, `employee_id`, confirmation text shown to the employee.
+- Entries are created by the system when an employee opens a pending
+  acknowledgement in `/me` and confirms; the ПЭП record and hash chain are the
+  same as for other entries (§3). The employee sees the document title and
+  its current file (inline view URL from P11-012 phase 4 when available,
+  otherwise download).
+- Bulk view per document: who acknowledged which edition and when
+  (`GET /api/v1/compliance-documents/{id}/acknowledgements`), consumed by
+  P11-006 and the shelf panel.
+- No printable acknowledgement sheet in the slice: it follows with the
+  P11-003 template engine (§5). The e-signature regulation itself is a
+  document (СУ.02.03 on the shelf) and must be in force before employees
+  sign — a rollout prerequisite, not code.
+
 ---
 
 ## Acceptance Criteria
@@ -157,6 +179,10 @@ verifying journal integrity, `CLAUDE.md`.
   type-specific code; `npm run verify` passes; E2E covers create entry →
   employee signs.
 
+- Acknowledgement slice: an employee confirms a document from `/me`; a
+  signed `acknowledgement` entry exists for that document edition; the
+  per-document acknowledgement list returns it; the slice ships without
+  P11-003 (TASK-P11-012 amendment).
 ---
 
 ## Non-Goals
@@ -180,6 +206,8 @@ journal.
 
 ## Suggested implementation phases
 
+0. Acknowledgement journal slice (§9): `acknowledgement` type, entry + ПЭП
+   path end-to-end, per-document acknowledgement list. Ships first.
 1. Journal types + schemas + seeds; Training persistence.
 2. Journals/entries/signatures domain + repos + migration + chain.
 3. API + RBAC + audit + integrity script extension.
