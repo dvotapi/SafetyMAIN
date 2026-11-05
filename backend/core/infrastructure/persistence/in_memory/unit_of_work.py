@@ -16,6 +16,8 @@ from backend.core.domain.repositories import (
     MembershipRepositoryContract,
     OrganizationRepositoryContract,
     RefreshTokenSessionRepositoryContract,
+    ShelfSectionRepositoryContract,
+    ShelfSlotRepositoryContract,
     UserRepositoryContract,
 )
 from backend.core.infrastructure.persistence.in_memory.audit_event_repository import (
@@ -54,6 +56,12 @@ from backend.core.infrastructure.persistence.in_memory.organization_repository i
 from backend.core.infrastructure.persistence.in_memory.refresh_token_session_repository import (
     InMemoryRefreshTokenSessionRepository,
 )
+from backend.core.infrastructure.persistence.in_memory.shelf_section_repository import (
+    InMemoryShelfSectionRepository,
+)
+from backend.core.infrastructure.persistence.in_memory.shelf_slot_repository import (
+    InMemoryShelfSlotRepository,
+)
 from backend.core.infrastructure.persistence.in_memory.user_repository import (
     InMemoryUserRepository,
 )
@@ -73,6 +81,8 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         risk_controls: RiskControlRepositoryContract | None = None,
         document_types: DocumentTypeRepositoryContract | None = None,
         compliance_documents: ComplianceDocumentRepositoryContract | None = None,
+        shelf_sections: ShelfSectionRepositoryContract | None = None,
+        shelf_slots: ShelfSlotRepositoryContract | None = None,
         audit_events: AuditEventRepositoryContract | None = None,
         refresh_sessions: RefreshTokenSessionRepositoryContract | None = None,
     ) -> None:
@@ -89,6 +99,8 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._compliance_documents = (
             compliance_documents or InMemoryComplianceDocumentRepository()
         )
+        self._shelf_sections = shelf_sections or InMemoryShelfSectionRepository()
+        self._shelf_slots = shelf_slots or InMemoryShelfSlotRepository()
         self._audit_events = audit_events or InMemoryAuditEventRepository()
         self._refresh_sessions = refresh_sessions or InMemoryRefreshTokenSessionRepository()
         self._knowledge_objects_snapshot: object | None = None
@@ -102,6 +114,8 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._risk_controls_snapshot: object | None = None
         self._document_types_snapshot: object | None = None
         self._compliance_documents_snapshot: object | None = None
+        self._shelf_sections_snapshot: object | None = None
+        self._shelf_slots_snapshot: object | None = None
         self._audit_events_snapshot: object | None = None
         self._refresh_sessions_snapshot: object | None = None
         self._snapshots_taken = False
@@ -152,6 +166,14 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
     @property
     def compliance_documents(self) -> ComplianceDocumentRepositoryContract:
         return self._compliance_documents
+
+    @property
+    def shelf_sections(self) -> ShelfSectionRepositoryContract:
+        return self._shelf_sections
+
+    @property
+    def shelf_slots(self) -> ShelfSlotRepositoryContract:
+        return self._shelf_slots
 
     @property
     def audit_events(self) -> AuditEventRepositoryContract:
@@ -225,6 +247,10 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
             self._document_types_snapshot = self._document_types.snapshot()
         if hasattr(self._compliance_documents, "snapshot"):
             self._compliance_documents_snapshot = self._compliance_documents.snapshot()
+        if hasattr(self._shelf_sections, "snapshot"):
+            self._shelf_sections_snapshot = self._shelf_sections.snapshot()
+        if hasattr(self._shelf_slots, "snapshot"):
+            self._shelf_slots_snapshot = self._shelf_slots.snapshot()
         if hasattr(self._audit_events, "snapshot"):
             self._audit_events_snapshot = self._audit_events.snapshot()
         if hasattr(self._refresh_sessions, "snapshot"):
@@ -263,6 +289,10 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
             and hasattr(self._compliance_documents, "restore")
         ):
             self._compliance_documents.restore(self._compliance_documents_snapshot)
+        if self._shelf_sections_snapshot is not None and hasattr(self._shelf_sections, "restore"):
+            self._shelf_sections.restore(self._shelf_sections_snapshot)
+        if self._shelf_slots_snapshot is not None and hasattr(self._shelf_slots, "restore"):
+            self._shelf_slots.restore(self._shelf_slots_snapshot)
         if self._audit_events_snapshot is not None and hasattr(self._audit_events, "restore"):
             self._audit_events.restore(self._audit_events_snapshot)
         if self._refresh_sessions_snapshot is not None and hasattr(self._refresh_sessions, "restore"):
@@ -281,5 +311,7 @@ class InMemoryUnitOfWork(UnitOfWorkContract):
         self._risk_controls_snapshot = None
         self._document_types_snapshot = None
         self._compliance_documents_snapshot = None
+        self._shelf_sections_snapshot = None
+        self._shelf_slots_snapshot = None
         self._audit_events_snapshot = None
         self._refresh_sessions_snapshot = None
