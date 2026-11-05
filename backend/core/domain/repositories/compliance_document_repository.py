@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Protocol
 
 from backend.core.domain.entities.compliance_document import ComplianceDocument
@@ -28,6 +29,15 @@ class ComplianceDocumentRepositoryContract(Protocol):
         organization_id: OrganizationId,
         document_id: ComplianceDocumentId,
     ) -> ComplianceDocument | None:
+        ...
+
+    def list_by_ids(
+        self,
+        organization_id: OrganizationId,
+        document_ids: Iterable[ComplianceDocumentId],
+    ) -> tuple[ComplianceDocument, ...]:
+        """Documents of the organization among ``document_ids`` (foreign and unknown ids
+        are skipped), in no particular order."""
         ...
 
     def list(self, query: ComplianceDocumentQuery) -> ComplianceDocumentPage:

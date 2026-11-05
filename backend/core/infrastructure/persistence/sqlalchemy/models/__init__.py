@@ -36,6 +36,12 @@ from backend.core.infrastructure.persistence.sqlalchemy.models.risk_assessment_m
 from backend.core.infrastructure.persistence.sqlalchemy.models.risk_control_model import (
     RiskControlModel,
 )
+from backend.core.infrastructure.persistence.sqlalchemy.models.shelf_model import (
+    ShelfSectionModel,
+    ShelfSlotDocumentModel,
+    ShelfSlotModel,
+    ShelfSubsectionModel,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.models.user_model import (
     UserModel,
 )
@@ -55,5 +61,9 @@ __all__ = [
     "RefreshTokenSessionModel",
     "RiskAssessmentModel",
     "RiskControlModel",
+    "ShelfSectionModel",
+    "ShelfSlotDocumentModel",
+    "ShelfSlotModel",
+    "ShelfSubsectionModel",
     "UserModel",
 ]

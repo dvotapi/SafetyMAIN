@@ -70,6 +70,24 @@ class ComplianceDocumentRepositoryContractSuite:
             is None
         )
 
+    def test_list_by_ids_is_scoped_to_the_organization(
+        self, repository: ComplianceDocumentRepositoryContract
+    ) -> None:
+        document_type = make_document_type()
+        first = compliance_document_draft(document_type, code="ИОТ-1")
+        second = with_file(compliance_document_draft(document_type, code="ИОТ-2"))
+        foreign = compliance_document_draft()
+        for document in (first, second, foreign):
+            repository.add(document)
+
+        found = repository.list_by_ids(
+            document_type.organization_id,
+            [first.id, second.id, foreign.id, ComplianceDocumentId(value=uuid4()), first.id],
+        )
+
+        assert sorted(found, key=lambda item: item.code) == [first, second]
+        assert repository.list_by_ids(document_type.organization_id, []) == ()
+
     def test_rich_round_trip_preserves_state(
         self, repository: ComplianceDocumentRepositoryContract
     ) -> None:

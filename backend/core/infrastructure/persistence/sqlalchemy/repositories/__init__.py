@@ -34,6 +34,12 @@ from backend.core.infrastructure.persistence.sqlalchemy.repositories.organizatio
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.refresh_token_session_repository import (
     SQLAlchemyRefreshTokenSessionRepository,
 )
+from backend.core.infrastructure.persistence.sqlalchemy.repositories.shelf_section_repository import (
+    SQLAlchemyShelfSectionRepository,
+)
+from backend.core.infrastructure.persistence.sqlalchemy.repositories.shelf_slot_repository import (
+    SQLAlchemyShelfSlotRepository,
+)
 from backend.core.infrastructure.persistence.sqlalchemy.repositories.user_repository import (
     SQLAlchemyUserRepository,
 )
@@ -51,5 +57,7 @@ __all__ = [
     "SQLAlchemyMembershipRepository",
     "SQLAlchemyOrganizationRepository",
     "SQLAlchemyRefreshTokenSessionRepository",
+    "SQLAlchemyShelfSectionRepository",
+    "SQLAlchemyShelfSlotRepository",
     "SQLAlchemyUserRepository",
 ]
