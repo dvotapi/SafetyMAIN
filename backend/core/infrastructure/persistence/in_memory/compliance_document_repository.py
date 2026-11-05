@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 from backend.core.domain.entities.compliance_document import (
     ComplianceDocument,
     is_in_force,
@@ -38,6 +40,14 @@ class InMemoryComplianceDocumentRepository(ComplianceDocumentRepositoryContract)
         if document is None or document.organization_id != organization_id:
             return None
         return document
+
+    def list_by_ids(
+        self,
+        organization_id: OrganizationId,
+        document_ids: Iterable[ComplianceDocumentId],
+    ) -> tuple[ComplianceDocument, ...]:
+        found = (self.get(organization_id, document_id) for document_id in set(document_ids))
+        return tuple(document for document in found if document is not None)
 
     def list(self, query: ComplianceDocumentQuery) -> ComplianceDocumentPage:
         items = [

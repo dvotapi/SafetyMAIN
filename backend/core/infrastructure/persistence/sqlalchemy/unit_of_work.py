@@ -18,6 +18,8 @@ from backend.core.domain.repositories import (
     RefreshTokenSessionRepositoryContract,
     RiskAssessmentRepositoryContract,
     RiskControlRepositoryContract,
+    ShelfSectionRepositoryContract,
+    ShelfSlotRepositoryContract,
     UserRepositoryContract,
 )
 from backend.core.infrastructure.persistence.sqlalchemy.repositories import (
@@ -33,6 +35,8 @@ from backend.core.infrastructure.persistence.sqlalchemy.repositories import (
     SQLAlchemyRefreshTokenSessionRepository,
     SQLAlchemyRiskAssessmentRepository,
     SQLAlchemyRiskControlRepository,
+    SQLAlchemyShelfSectionRepository,
+    SQLAlchemyShelfSlotRepository,
     SQLAlchemyUserRepository,
 )
 
@@ -54,6 +58,8 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._refresh_sessions: SQLAlchemyRefreshTokenSessionRepository | None = None
         self._document_types: SQLAlchemyDocumentTypeRepository | None = None
         self._compliance_documents: SQLAlchemyComplianceDocumentRepository | None = None
+        self._shelf_sections: SQLAlchemyShelfSectionRepository | None = None
+        self._shelf_slots: SQLAlchemyShelfSlotRepository | None = None
         self._committed = False
         self._rolled_back = False
 
@@ -156,6 +162,20 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
 
         return self._compliance_documents
 
+    @property
+    def shelf_sections(self) -> ShelfSectionRepositoryContract:
+        if self._shelf_sections is None:
+            raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
+
+        return self._shelf_sections
+
+    @property
+    def shelf_slots(self) -> ShelfSlotRepositoryContract:
+        if self._shelf_slots is None:
+            raise RuntimeError("SQLAlchemyUnitOfWork has not been entered.")
+
+        return self._shelf_slots
+
     def commit(self) -> None:
         if self._committed:
             return
@@ -189,6 +209,8 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
         self._compliance_documents = SQLAlchemyComplianceDocumentRepository(
             self._session
         )
+        self._shelf_sections = SQLAlchemyShelfSectionRepository(self._session)
+        self._shelf_slots = SQLAlchemyShelfSlotRepository(self._session)
         self._committed = False
         self._rolled_back = False
         return self
@@ -219,5 +241,7 @@ class SQLAlchemyUnitOfWork(UnitOfWorkContract):
                 self._refresh_sessions = None
                 self._document_types = None
                 self._compliance_documents = None
+                self._shelf_sections = None
+                self._shelf_slots = None
 
         return False

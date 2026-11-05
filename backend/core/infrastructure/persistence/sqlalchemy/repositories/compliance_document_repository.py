@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -118,6 +120,26 @@ class SQLAlchemyComplianceDocumentRepository(ComplianceDocumentRepositoryContrac
             )
         )
         return None if model is None else self._hydrate(model)
+
+    def list_by_ids(
+        self,
+        organization_id: OrganizationId,
+        document_ids: Iterable[ComplianceDocumentId],
+    ) -> tuple[ComplianceDocument, ...]:
+        ids = list({document_id.value for document_id in document_ids})
+        if not ids:
+            return ()
+        models = self._session.scalars(
+            select(ComplianceDocumentModel).where(
+                ComplianceDocumentModel.organization_id == organization_id.value,
+                ComplianceDocumentModel.id.in_(ids),
+            )
+        ).all()
+        file_groups = self._load_files([ComplianceDocumentId(value=m.id) for m in models])
+        return tuple(
+            to_domain(m, file_groups.get(ComplianceDocumentId(value=m.id), []))
+            for m in models
+        )
 
     def list(self, query: ComplianceDocumentQuery) -> ComplianceDocumentPage:
         filters: list[object] = [

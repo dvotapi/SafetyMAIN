@@ -16,6 +16,8 @@ from backend.core.domain.repositories import (
     MembershipRepositoryContract,
     OrganizationRepositoryContract,
     RefreshTokenSessionRepositoryContract,
+    ShelfSectionRepositoryContract,
+    ShelfSlotRepositoryContract,
     UserRepositoryContract,
 )
 
@@ -65,6 +67,14 @@ class UnitOfWorkContract(Protocol):
 
     @property
     def compliance_documents(self) -> ComplianceDocumentRepositoryContract:
+        ...
+
+    @property
+    def shelf_sections(self) -> ShelfSectionRepositoryContract:
+        ...
+
+    @property
+    def shelf_slots(self) -> ShelfSlotRepositoryContract:
         ...
 
     @property
