@@ -21,7 +21,7 @@ DocumentSubjectKindValue = Literal["organization", "employee", "asset"]
 SafetyDomainValue = Literal[
     "occupational",
     "industrial",
-    "labour",
+    "transport_security",
     "fire",
     "environmental",
     "road",

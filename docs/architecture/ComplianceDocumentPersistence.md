@@ -13,6 +13,10 @@ Persistence layer for the TASK-P11-001 compliance documentation aggregate. See a
   `requires_acknowledgement`, `requires_approval_order`, `legal_basis`,
   `legal_basis_reference`, `is_active`, timestamps.
   Unique: `(organization_id, code)`.
+  `safety_domain` values: `occupational | industrial | transport_security | fire |
+  environmental | road | dangerous_goods` (`ck_document_types_safety_domain`).
+  Migration `0014_transport_security_domain` replaced the mistranslated `labour`
+  with `transport_security` («ТрБез», 16-ФЗ; TASK-P11-012 phase 1).
 - `compliance_documents` — aggregate root.
   Columns include lifecycle fields (`status`, `status_before_archive`,
   `archive_reason`), scheduling (`issued_at`, `effective_from`, `next_review_at`),

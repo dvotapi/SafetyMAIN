@@ -37,7 +37,7 @@ export const documentSubjectKindSchema = z.enum([
 export const safetyDomainSchema = z.enum([
   "occupational",
   "industrial",
-  "labour",
+  "transport_security",
   "fire",
   "environmental",
   "road",

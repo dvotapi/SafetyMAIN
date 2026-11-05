@@ -8,7 +8,7 @@ class SafetyDomain(str, Enum):
 
     OCCUPATIONAL = "occupational"
     INDUSTRIAL = "industrial"
-    LABOUR = "labour"
+    TRANSPORT_SECURITY = "transport_security"
     FIRE = "fire"
     ENVIRONMENTAL = "environmental"
     ROAD = "road"

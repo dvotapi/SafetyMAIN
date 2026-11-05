@@ -34,7 +34,7 @@ def test_create_keeps_legal_basis_and_empty_reference_becomes_none() -> None:
         organization_id=make_document_type().organization_id,
         code="order",
         title_ru="Приказ",
-        safety_domain=SafetyDomain.LABOUR,
+        safety_domain=SafetyDomain.TRANSPORT_SECURITY,
         subject_kind=DocumentSubjectKind.ORGANIZATION,
         legal_basis="  ТК РФ ст. 212 ",
         legal_basis_reference="   ",

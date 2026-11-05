@@ -1,6 +1,6 @@
 # TASK-P11-012 — Document Shelf ("Полка")
 
-Status: **Approved** — Phase 1 specification approved by the product owner on 2026-11-05. Next: Phase 2 planning per `docs/ai/DevelopmentWorkflow.md` (investigation only, no code until the plan is approved).
+Status: **Approved** — Phase 1 specification approved by the product owner on 2026-11-05. Phase 1 (transport security domain) implemented; plan `docs/superpowers/plans/2026-11-05-p11-012-phase-1-transport-security.md`. Next: Phase 2 planning per `docs/ai/DevelopmentWorkflow.md` (investigation only, no code until the plan is approved).
 Epic: `docs/tasks/EPIC-P11-compliance-documentation.md`
 Depends on: TASK-P11-001 (Done) for phases 1–4; for phase 5: TASK-P11-004 (and its worker prerequisite), TASK-P11-005 (acknowledgement journal only), the `acknowledge_document` slice of TASK-P11-006, and the position codes of D5
 Related: TASK-P11-009 §8 (requirements link to shelf places; seed from places; excluded places → `not_applicable`; `compliance_curator` gets `shelf:*`), TASK-P11-008 §6 (coverage for places kept on employees), TASK-P11-010 (impact analysis includes places), TASK-P11-001 «Amendments after completion» (A1–A6)
