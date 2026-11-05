@@ -57,11 +57,9 @@ describe("shelf tokens (TASK-P11-012 §6)", () => {
       expect(
         contrast(spineText, color(mode, "shelf-present-bg")),
       ).toBeGreaterThanOrEqual(4.5);
-      // Known gap of the TASK §6 values: dark «В работе» #437B62 gives 4.45:1.
-      // Raised with the product owner (PR 4b); the TASK value stays until decided.
       expect(
         contrast(spineText, color(mode, "shelf-progress-bg")),
-      ).toBeGreaterThanOrEqual(mode === "dark" ? 4.45 : 4.5);
+      ).toBeGreaterThanOrEqual(4.5);
       expect(
         contrast(
           color(mode, "shelf-review-fg"),
@@ -79,5 +77,7 @@ describe("shelf tokens (TASK-P11-012 §6)", () => {
     expect(color("dark", "shelf-page-bg")).toBe("#1F2220");
     expect(color("light", "shelf-progress-ribbon")).toBe("#C9A45E");
     expect(color("dark", "shelf-review-fg")).toBe("#F3E3C3");
+    // Changed from #437B62 by the product owner (2026-11-06) for 4.5:1 spine text.
+    expect(color("dark", "shelf-progress-bg")).toBe("#417760");
   });
 });

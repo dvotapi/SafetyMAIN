@@ -243,7 +243,7 @@ place panel keep the global tokens. Primitives (`primitive.palette`):
 |---|---|
 | `paper` | 50 `#FFFDF9`, 100 `#F7F4EE`, 150 `#F5F3EC`, 200 `#E4DED2`, 300 `#CFC8BA`, 400 `#B4B0A6`, 500 `#6B665C`, 600 `#4A4740`, 700 `#3A3D38`, 800 `#262925`, 900 `#1F2220` |
 | `graphite` | 400 `#6E6E6E`, 600 `#3B3B3B` |
-| `forest` | 500 `#437B62`, 800 `#213C30` |
+| `forest` | 500 `#417760`, 800 `#213C30` |
 | `ochre` | 100 `#F3E3C3`, 200 `#E9D6A8`, 300 `#E0C27E`, 400 `#C9A45E`, 600 `#A47A2C`, 800 `#5A4316`, 900 `#5A3F0E` |
 | `brick` | 100 `#EADBD5`, 500 `#CA372D`, 700 `#87251E`, 900 `#342522` |
 
@@ -268,9 +268,7 @@ Semantic tokens (light / dark), consumed as `--sm-color-shelf-*`:
 
 Contrast pairs are tested in
 `frontend/src/features/document-shelf/shelf-tokens-contrast.test.ts`. Graphics must reach
-≥ 3:1 on `shelf-page-bg`, and text ≥ 4.5:1. Known gap: in the dark theme the spine text on
-«В работе» (`#437B62`) reaches 4.45:1. This is open with the product owner; the TASK value
-stays until a decision is made.
+≥ 3:1 on `shelf-page-bg`, and text ≥ 4.5:1. The dark «В работе» is `#417760` instead of the first `#437B62`, which gave only 4.45:1 for spine text (product owner, 2026-11-06).
 
 ---
 

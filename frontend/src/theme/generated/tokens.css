@@ -75,7 +75,7 @@
   --sm-palette-paper-900: #1F2220;
   --sm-palette-graphite-400: #6E6E6E;
   --sm-palette-graphite-600: #3B3B3B;
-  --sm-palette-forest-500: #437B62;
+  --sm-palette-forest-500: #417760;
   --sm-palette-forest-800: #213C30;
   --sm-palette-ochre-100: #F3E3C3;
   --sm-palette-ochre-200: #E9D6A8;
@@ -350,7 +350,7 @@
   --sm-color-shelf-card-border: #3A3D38;
   --sm-color-shelf-plank: #4A4740;
   --sm-color-shelf-present-bg: #6E6E6E;
-  --sm-color-shelf-progress-bg: #437B62;
+  --sm-color-shelf-progress-bg: #417760;
   --sm-color-shelf-spine-fg: #F5F3EC;
   --sm-color-shelf-progress-ribbon: #E0C27E;
   --sm-color-shelf-review-bg: #5A4316;
@@ -451,7 +451,7 @@
     --sm-color-shelf-card-border: #3A3D38;
     --sm-color-shelf-plank: #4A4740;
     --sm-color-shelf-present-bg: #6E6E6E;
-    --sm-color-shelf-progress-bg: #437B62;
+    --sm-color-shelf-progress-bg: #417760;
     --sm-color-shelf-spine-fg: #F5F3EC;
     --sm-color-shelf-progress-ribbon: #E0C27E;
     --sm-color-shelf-review-bg: #5A4316;

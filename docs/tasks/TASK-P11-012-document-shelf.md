@@ -330,7 +330,7 @@ Content area background `shelf-page-bg`; shell, top bar, and the place panel kee
 
 ### 6. Design tokens (§D9, D10)
 
-Semantic colours in `tokens.json` reference primitives (`{palette.*}`); the shelf follows that rule. New primitive families in `primitive.palette`: `paper` (`#F7F4EE`, `#FFFDF9`, `#E4DED2`, `#CFC8BA`, `#6B665C`, `#B4B0A6`, `#4A4740`, `#3A3D38`, `#262925`, `#1F2220`), `graphite` (`#3B3B3B`, `#6E6E6E`), `forest` (`#213C30`, `#437B62`), `ochre` (`#E9D6A8`, `#C9A45E`, `#A47A2C`, `#5A4316`, `#5A3F0E`, `#E0C27E`, `#F3E3C3`), `brick` (`#87251E`, `#CA372D`, `#EADBD5`, `#342522`) — stop names fixed in planning. The semantic tokens below (`semantic.light.color` / `semantic.dark.color`) reference them and are consumed via CSS variables only. Values: Dark values reach ≥ 3:1 against `shelf-page-bg` for non-text graphics; spine text keeps ≥ 4.5:1.
+Semantic colours in `tokens.json` reference primitives (`{palette.*}`); the shelf follows that rule. New primitive families in `primitive.palette`: `paper` (`#F7F4EE`, `#FFFDF9`, `#E4DED2`, `#CFC8BA`, `#6B665C`, `#B4B0A6`, `#4A4740`, `#3A3D38`, `#262925`, `#1F2220`), `graphite` (`#3B3B3B`, `#6E6E6E`), `forest` (`#213C30`, `#417760`), `ochre` (`#E9D6A8`, `#C9A45E`, `#A47A2C`, `#5A4316`, `#5A3F0E`, `#E0C27E`, `#F3E3C3`), `brick` (`#87251E`, `#CA372D`, `#EADBD5`, `#342522`) — stop names fixed in planning. The semantic tokens below (`semantic.light.color` / `semantic.dark.color`) reference them and are consumed via CSS variables only. Values: Dark values reach ≥ 3:1 against `shelf-page-bg` for non-text graphics; spine text keeps ≥ 4.5:1.
 
 | Token | Light | Dark | Meaning |
 |---|---|---|---|
@@ -339,7 +339,7 @@ Semantic colours in `tokens.json` reference primitives (`{palette.*}`); the shel
 | `shelf-card-bg` / `shelf-card-border` | `#FFFDF9` / `#E4DED2` | `#262925` / `#3A3D38` | Summary and overview cards |
 | `shelf-plank` | `#CFC8BA` | `#4A4740` | Shelf board |
 | `shelf-present-bg` (= border) | `#3B3B3B` | `#6E6E6E` | Есть |
-| `shelf-progress-bg` (= border) | `#213C30` | `#437B62` | В работе |
+| `shelf-progress-bg` (= border) | `#213C30` | `#417760` | В работе (dark changed from `#437B62` on 2026-11-06: spine text reached only 4.45:1) |
 | `shelf-spine-fg` | `#F5F3EC` | `#F5F3EC` | Text on present / progress spines |
 | `shelf-progress-ribbon` | `#C9A45E` | `#E0C27E` | Bookmark ribbon |
 | `shelf-review-bg` / `-border` / `-fg` | `#E9D6A8` / `#C9A45E` / `#5A3F0E` | `#5A4316` / `#A47A2C` / `#F3E3C3` | Пересмотр |

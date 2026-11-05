@@ -100,7 +100,7 @@ export const tokens = {
         "600": "#3B3B3B"
       },
       "forest": {
-        "500": "#437B62",
+        "500": "#417760",
         "800": "#213C30"
       },
       "ochre": {
@@ -416,7 +416,7 @@ export const tokens = {
         "shelf-card-border": "#3A3D38",
         "shelf-plank": "#4A4740",
         "shelf-present-bg": "#6E6E6E",
-        "shelf-progress-bg": "#437B62",
+        "shelf-progress-bg": "#417760",
         "shelf-spine-fg": "#F5F3EC",
         "shelf-progress-ribbon": "#E0C27E",
         "shelf-review-bg": "#5A4316",

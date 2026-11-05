@@ -93,7 +93,7 @@ The optional `scripts/attach_shelf_scans.py` (§4.5) is **not** in this plan. It
 - The overview strip carries only `{code, group}`, so «Обязательные» dims only excluded bars there; the opened shelf dims by `obligation_level`.
 - The panel column (≥ 1200 px) is enabled in 4c with the panel; 4b keeps a single column.
 - `paper.150` = `#F5F3EC` (spine text) is a primitive stop that §6 uses but did not list.
-- Known TASK gap: in the dark theme, spine text on «В работе» (`#F5F3EC` on `#437B62`) reaches 4.45:1, under 4.5:1. The contrast test records it as a known exception; a proposed `#417760` (4.69:1 text, 3.08:1 graphic) waits for the product owner.
+- Dark «В работе» is `#417760` (4.69:1 spine text, 3.08:1 against the page) instead of the TASK's `#437B62` (4.45:1), as the product owner decided on 2026-11-06; the TASK §6 table is updated.
 - Storybook cannot render feature components that import `next/link` (`process is not defined`, existing configuration). Screenshots were taken in the running app with a synthetic workbook imported by the phase 3 script.
 - The app shell is wider than a 375 px viewport on every page (pre-existing; not part of this phase).
 
