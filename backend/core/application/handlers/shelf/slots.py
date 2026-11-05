@@ -65,7 +65,9 @@ from backend.core.domain.value_objects.shelf_slot_code import ShelfSlotCode
 
 BULK_EXCLUDE_MAX_ITEMS = 200
 
-CURATOR = ShelfCapabilities(can_curate=True, can_create_document=True)
+CURATOR = ShelfCapabilities(
+    can_curate=True, can_create_document=True, can_update_document=True
+)
 """Default capabilities of a command caller (the router passes the real ones)."""
 
 

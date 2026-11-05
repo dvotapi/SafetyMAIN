@@ -168,6 +168,13 @@ Impact analysis:
 - Browsers reach the object storage endpoint directly. Bucket CORS and endpoint reachability become deployment concerns documented in `docs/infrastructure/ApplicationServerDeployment.md`.
 - Physical deletion of objects requires a future ADR.
 
+## Amendment 2026-11-05 — signed scans and inline viewing (TASK-P11-012 D1)
+
+- A file has a role: `working` (default; all files before migration `0016_document_file_role`) or `signed_scan`. Working files still attach only in `draft` (P11-001 D6). A signed scan, i.e. the scan of the signed paper edition, may be attached while the document is `approved`, `active` or `under_review`. Only PDF, JPEG and PNG are accepted, with the same size and SHA-256 rules (D3, D20).
+- `current_file` is the last **working** file. Approval, activation and `files/current/download-url` use it, so a signed scan never satisfies or changes those preconditions. `current_signed_scan` is the last signed scan. Earlier scans stay in the file history.
+- The storage port's `create_download_url` takes `disposition` (`attachment`, the default, or `inline`). Download URLs stay `attachment`. `GET /compliance-documents/{id}/files/{file_id}/view-url` signs an `inline` GET for in-browser viewing. File bytes still never pass through the API.
+- The shelf viewer (pdf.js) loads a file with one plain `GET` (`disableRange`, `disableStream`), so the existing bucket CORS rule (`GET` from the application origin) is enough. Range requests would need `range` in `AllowedHeaders` and `Content-Range`, `Accept-Ranges`, `Content-Length` in `ExposeHeaders`; they are not used.
+
 ---
 
 # Related ADRs

@@ -6,11 +6,12 @@ from urllib.parse import quote, urlencode
 from backend.core.contracts.clock import ClockContract
 from backend.core.contracts.storage import (
     SHA256_HEADER,
+    Disposition,
     ObjectInfo,
     PresignedUpload,
 )
 from backend.core.infrastructure.storage.presign_rules import (
-    attachment_content_disposition,
+    content_disposition,
     ensure_owned_bucket,
     resolve_ttl,
     validate_object_reference,
@@ -73,6 +74,7 @@ class InMemoryStorage:
         ttl: timedelta | None,
         filename: str,
         content_type: str,
+        disposition: Disposition = "attachment",
     ) -> str:
         ensure_owned_bucket(bucket, self._bucket)
         validate_object_reference(key=key, content_type=content_type)
@@ -82,7 +84,7 @@ class InMemoryStorage:
             {
                 "method": "GET",
                 "expires_in": str(resolve_ttl(ttl, self._presign_ttl_seconds)),
-                "response-content-disposition": attachment_content_disposition(filename),
+                "response-content-disposition": content_disposition(filename, disposition=disposition),
                 "response-content-type": content_type,
             },
         )

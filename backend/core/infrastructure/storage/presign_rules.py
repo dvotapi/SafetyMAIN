@@ -64,6 +64,13 @@ def resolve_ttl(ttl: timedelta | None, default_ttl_seconds: int) -> int:
 
 def attachment_content_disposition(filename: str) -> str:
     """Build ``attachment`` with an ASCII fallback and an RFC 5987 UTF-8 name."""
+    return content_disposition(filename, disposition="attachment")
+
+
+def content_disposition(filename: str, *, disposition: str) -> str:
+    """``attachment`` or ``inline`` with an ASCII fallback and an RFC 5987 UTF-8 name."""
+    if disposition not in ("attachment", "inline"):
+        raise ValueError(f"Unsupported content disposition: {disposition}.")
 
     cleaned = _CONTROL_CHARACTERS.sub("", filename).strip() or "download"
     fallback = "".join(
@@ -71,4 +78,4 @@ def attachment_content_disposition(filename: str) -> str:
         for character in cleaned
     )
     encoded = quote(cleaned, safe=_RFC5987_SAFE)
-    return f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
+    return f"{disposition}; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"

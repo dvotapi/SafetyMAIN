@@ -118,3 +118,12 @@ def test_download_url_validates_reference_and_ttl_like_s3_adapter() -> None:
         storage.create_download_url(
             BUCKET, KEY, timedelta(days=8), "a.pdf", "application/pdf"
         )
+
+
+def test_view_url_uses_inline_disposition() -> None:
+    url = _storage().create_download_url(
+        BUCKET, KEY, None, "Скан.pdf", "application/pdf", disposition="inline"
+    )
+
+    disposition = parse_qs(urlparse(url).query)["response-content-disposition"][0]
+    assert disposition.startswith('inline; filename="____.pdf"; ')

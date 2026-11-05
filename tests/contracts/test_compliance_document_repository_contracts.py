@@ -22,6 +22,7 @@ from backend.core.domain.value_objects.compliance_document_query import (
 from backend.core.domain.value_objects.compliance_enums import (
     ComplianceDocumentSource,
     ComplianceDocumentStatus,
+    DocumentFileRole,
     DocumentSubjectKind,
 )
 from backend.core.domain.value_objects.safety_ids import ComplianceDocumentId
@@ -33,6 +34,7 @@ from tests.fixtures.compliance_documents import (
     FIXED_AT,
     advance_to_active,
     compliance_document_draft,
+    make_document_file,
     make_document_type,
     rich_applicability,
     with_file,
@@ -111,6 +113,27 @@ class ComplianceDocumentRepositoryContractSuite:
         assert len(loaded.files) == 2
         assert loaded.current_file == document.files[-1]
         assert loaded.status_before_archive is ComplianceDocumentStatus.ACTIVE
+
+    def test_signed_scan_role_survives_save_and_reload(
+        self, repository: ComplianceDocumentRepositoryContract
+    ) -> None:
+        document_type = make_document_type()
+        active = advance_to_active(compliance_document_draft(document_type), document_type)
+        repository.add(active)
+        scan = make_document_file(active, filename="scan.pdf").model_copy(
+            update={"role": DocumentFileRole.SIGNED_SCAN}
+        )
+        scanned = active.attach_signed_scan(
+            file=scan, at=LATER, actor_id=active.created_by, expected_version=active.version
+        )
+
+        repository.save(scanned, expected_version=active.version)
+
+        loaded = repository.get(active.organization_id, active.id)
+        assert loaded == scanned
+        assert loaded is not None
+        assert loaded.current_signed_scan == scan
+        assert loaded.current_file == active.current_file
 
     def test_save_checks_version_and_existence(
         self, repository: ComplianceDocumentRepositoryContract

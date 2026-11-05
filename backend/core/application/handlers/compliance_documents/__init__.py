@@ -9,6 +9,7 @@ from backend.core.application.handlers.compliance_documents.files import (
     ConfirmComplianceDocumentFileHandler,
     CreateComplianceDocumentUploadUrlHandler,
     GetComplianceDocumentDownloadUrlHandler,
+    GetComplianceDocumentFileViewUrlHandler,
     ListComplianceDocumentFilesHandler,
 )
 from backend.core.application.handlers.compliance_documents.get_list_compliance_documents import (
@@ -45,6 +46,7 @@ __all__ = [
     "CreateComplianceDocumentHandler",
     "CreateComplianceDocumentUploadUrlHandler",
     "GetComplianceDocumentDownloadUrlHandler",
+    "GetComplianceDocumentFileViewUrlHandler",
     "GetComplianceDocumentHandler",
     "ListComplianceDocumentFilesHandler",
     "ListComplianceDocumentsHandler",

@@ -27,6 +27,7 @@ from backend.core.application.context.tenant_context import TenantContext
 from backend.core.application.exceptions.authentication import UnauthenticatedError
 from backend.core.application.exceptions.authorization import PermissionDeniedError
 from backend.core.application.queries.shelf import ShelfCapabilities
+from backend.core.domain.value_objects.compliance_enums import DocumentFileRole
 from backend.core.application.handlers.archive_knowledge_object import (
     ArchiveKnowledgeObjectHandler,
 )
@@ -41,6 +42,7 @@ from backend.core.application.handlers.compliance_documents import (
     CreateComplianceDocumentHandler,
     CreateComplianceDocumentUploadUrlHandler,
     GetComplianceDocumentDownloadUrlHandler,
+    GetComplianceDocumentFileViewUrlHandler,
     GetComplianceDocumentHandler,
     ListComplianceDocumentFilesHandler,
     ListComplianceDocumentsHandler,
@@ -1265,6 +1267,50 @@ def get_get_compliance_document_download_url_handler(
     )
 
 
+def get_create_compliance_document_signed_scan_upload_url_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    storage: StorageContract = Depends(get_storage),
+    settings: AppSettings = Depends(get_settings),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> CreateComplianceDocumentUploadUrlHandler:
+    return CreateComplianceDocumentUploadUrlHandler(
+        uow, storage, settings.storage_max_upload_bytes, audit, role=DocumentFileRole.SIGNED_SCAN
+    )
+
+
+def get_confirm_compliance_document_signed_scan_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    storage: StorageContract = Depends(get_storage),
+    clock: ClockContract = Depends(get_clock),
+    audit: AdministrativeAuditRecorder = Depends(get_administrative_audit_recorder),
+) -> ConfirmComplianceDocumentFileHandler:
+    return ConfirmComplianceDocumentFileHandler(
+        uow, storage, clock, audit, role=DocumentFileRole.SIGNED_SCAN
+    )
+
+
+def get_get_compliance_document_signed_scan_download_url_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    storage: StorageContract = Depends(get_storage),
+    clock: ClockContract = Depends(get_clock),
+    settings: AppSettings = Depends(get_settings),
+) -> GetComplianceDocumentDownloadUrlHandler:
+    return GetComplianceDocumentDownloadUrlHandler(
+        uow, storage, clock, settings.storage_presign_ttl_seconds, role=DocumentFileRole.SIGNED_SCAN
+    )
+
+
+def get_get_compliance_document_file_view_url_handler(
+    uow: UnitOfWorkContract = Depends(get_uow),
+    storage: StorageContract = Depends(get_storage),
+    clock: ClockContract = Depends(get_clock),
+    settings: AppSettings = Depends(get_settings),
+) -> GetComplianceDocumentFileViewUrlHandler:
+    return GetComplianceDocumentFileViewUrlHandler(
+        uow, storage, clock, settings.storage_presign_ttl_seconds
+    )
+
+
 def get_list_compliance_document_files_handler(
     uow: UnitOfWorkContract = Depends(get_uow),
 ) -> ListComplianceDocumentFilesHandler:
@@ -1312,6 +1358,9 @@ def get_shelf_capabilities(
         ),
         can_create_document=_has_permission(
             container, settings, tenant_context, SystemPermission.COMPLIANCE_DOCUMENT_CREATE
+        ),
+        can_update_document=_has_permission(
+            container, settings, tenant_context, SystemPermission.COMPLIANCE_DOCUMENT_UPDATE
         ),
     )
 

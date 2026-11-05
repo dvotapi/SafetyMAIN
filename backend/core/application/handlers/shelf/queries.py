@@ -66,7 +66,13 @@ class GetShelfOverviewHandler(_QueryHandlerBase):
             for section in sections
         )
         totals = summarize((view.slot, view.evaluation.effective_status) for view in views)
-        return ShelfOverviewView(sections=summaries, totals=totals, evaluated_at=now)
+        imported = [view.slot.last_imported_at for view in views if view.slot.last_imported_at]
+        return ShelfOverviewView(
+            sections=summaries,
+            totals=totals,
+            evaluated_at=now,
+            last_imported_at=max(imported) if imported else None,
+        )
 
 
 class GetShelfSectionSlotsHandler(_QueryHandlerBase):

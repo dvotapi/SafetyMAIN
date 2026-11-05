@@ -115,6 +115,7 @@ def to_overview_response(view: ShelfOverviewView) -> ShelfOverviewResponse:
             readiness_percent=view.totals.readiness_percent,
         ),
         evaluated_at=view.evaluated_at,
+        last_imported_at=view.last_imported_at,
     )
 
 
@@ -187,7 +188,7 @@ def _current_document(
             if approved_by is not None
             else None
         ),
-        signed_scan=None,
+        signed_scan=_file(document.current_signed_scan),
         working_file=_file(document.current_file),
     )
 

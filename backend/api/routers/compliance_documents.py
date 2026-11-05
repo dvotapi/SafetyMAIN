@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Path, Query, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -18,7 +18,11 @@ from backend.api.dependencies import (
     get_confirm_compliance_document_file_handler,
     get_create_compliance_document_handler,
     get_create_compliance_document_upload_url_handler,
+    get_confirm_compliance_document_signed_scan_handler,
+    get_create_compliance_document_signed_scan_upload_url_handler,
     get_get_compliance_document_download_url_handler,
+    get_get_compliance_document_file_view_url_handler,
+    get_get_compliance_document_signed_scan_download_url_handler,
     get_get_compliance_document_handler,
     get_list_compliance_document_files_handler,
     get_list_compliance_documents_handler,
@@ -46,10 +50,14 @@ from backend.api.operation_ids import (
     ARCHIVE_COMPLIANCE_DOCUMENT,
     COMPLETE_REVIEW_COMPLIANCE_DOCUMENT,
     CONFIRM_COMPLIANCE_DOCUMENT_FILE,
+    CONFIRM_COMPLIANCE_DOCUMENT_SIGNED_SCAN,
     CREATE_COMPLIANCE_DOCUMENT,
+    CREATE_COMPLIANCE_DOCUMENT_SIGNED_SCAN_UPLOAD_URL,
     CREATE_COMPLIANCE_DOCUMENT_UPLOAD_URL,
     GET_COMPLIANCE_DOCUMENT,
     GET_COMPLIANCE_DOCUMENT_DOWNLOAD_URL,
+    GET_COMPLIANCE_DOCUMENT_FILE_VIEW_URL,
+    GET_COMPLIANCE_DOCUMENT_SIGNED_SCAN_DOWNLOAD_URL,
     LIST_COMPLIANCE_DOCUMENTS,
     LIST_COMPLIANCE_DOCUMENT_FILE_VERSIONS,
     RESTORE_COMPLIANCE_DOCUMENT,
@@ -88,9 +96,11 @@ from backend.core.application.handlers.compliance_documents import (
     ApproveComplianceDocumentHandler,
     ArchiveComplianceDocumentHandler,
     CompleteReviewComplianceDocumentHandler,
+    ComplianceDocumentDownloadDescriptor,
     ConfirmComplianceDocumentFileHandler,
     CreateComplianceDocumentUploadUrlHandler,
     GetComplianceDocumentDownloadUrlHandler,
+    GetComplianceDocumentFileViewUrlHandler,
     ListComplianceDocumentFilesHandler,
     RestoreComplianceDocumentHandler,
     StartReviewComplianceDocumentHandler,
@@ -130,6 +140,7 @@ from backend.core.domain.value_objects.compliance_enums import (
 )
 from backend.core.domain.value_objects.safety_ids import (
     ComplianceDocumentId,
+    DocumentFileId,
     DocumentTypeId,
 )
 
@@ -747,3 +758,131 @@ def list_compliance_document_file_versions(
     return ComplianceDocumentFilesListResponse(
         items=[to_file_response(file) for file in files]
     )
+
+
+# ---- signed scans and inline view (TASK-P11-012 D1, P11-001 amendments A2-A4) ----
+
+
+def _download_response(
+    descriptor: ComplianceDocumentDownloadDescriptor,
+) -> ComplianceDocumentDownloadUrlResponse:
+    file = descriptor.file
+    return ComplianceDocumentDownloadUrlResponse(
+        url=descriptor.url,
+        expires_at=descriptor.expires_at,
+        filename=file.original_filename,
+        content_type=file.content_type,
+        size_bytes=file.size_bytes,
+        sha256=file.sha256,
+    )
+
+
+@router.post(
+    "/{document_id}/signed-scan/upload-url",
+    response_model=ComplianceDocumentUploadUrlResponse,
+    operation_id=CREATE_COMPLIANCE_DOCUMENT_SIGNED_SCAN_UPLOAD_URL,
+    responses={
+        **success_response(
+            model=ComplianceDocumentUploadUrlResponse,
+            description="Presigned upload URL for a signed scan issued.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def create_compliance_document_signed_scan_upload_url(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    request_body: ComplianceDocumentUploadUrlRequest,
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_UPDATE))
+    ],
+    handler: Annotated[
+        CreateComplianceDocumentUploadUrlHandler,
+        Depends(get_create_compliance_document_signed_scan_upload_url_handler),
+    ],
+) -> ComplianceDocumentUploadUrlResponse:
+    return create_compliance_document_upload_url(
+        document_id, request_body, tenant_context, handler
+    )
+
+
+@router.post(
+    "/{document_id}/signed-scan/confirm",
+    response_model=ComplianceDocumentResponse,
+    operation_id=CONFIRM_COMPLIANCE_DOCUMENT_SIGNED_SCAN,
+    responses={
+        **success_response(
+            model=ComplianceDocumentResponse,
+            description="Uploaded signed scan attached to the document.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def confirm_compliance_document_signed_scan(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    request_body: ConfirmComplianceDocumentFileRequest,
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_UPDATE))
+    ],
+    handler: Annotated[
+        ConfirmComplianceDocumentFileHandler,
+        Depends(get_confirm_compliance_document_signed_scan_handler),
+    ],
+) -> ComplianceDocumentResponse:
+    return confirm_compliance_document_file(document_id, request_body, tenant_context, handler)
+
+
+@router.get(
+    "/{document_id}/files/signed-scan/current/download-url",
+    response_model=ComplianceDocumentDownloadUrlResponse,
+    operation_id=GET_COMPLIANCE_DOCUMENT_SIGNED_SCAN_DOWNLOAD_URL,
+    responses={
+        **success_response(
+            model=ComplianceDocumentDownloadUrlResponse,
+            description="Presigned download URL of the current signed scan issued.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def get_compliance_document_signed_scan_download_url(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_READ))
+    ],
+    handler: Annotated[
+        GetComplianceDocumentDownloadUrlHandler,
+        Depends(get_get_compliance_document_signed_scan_download_url_handler),
+    ],
+) -> ComplianceDocumentDownloadUrlResponse:
+    return get_compliance_document_download_url(document_id, tenant_context, handler)
+
+
+@router.get(
+    "/{document_id}/files/{file_id}/view-url",
+    response_model=ComplianceDocumentDownloadUrlResponse,
+    operation_id=GET_COMPLIANCE_DOCUMENT_FILE_VIEW_URL,
+    responses={
+        **success_response(
+            model=ComplianceDocumentDownloadUrlResponse,
+            description="Presigned inline view URL issued.",
+        ),
+        **PROTECTED_BUSINESS_ERROR_RESPONSES,
+    },
+)
+def get_compliance_document_file_view_url(
+    document_id: Annotated[ComplianceDocumentId, Depends(get_compliance_document_id)],
+    file_id: Annotated[UUID, Path()],
+    tenant_context: Annotated[
+        TenantContext, Depends(require_permission(COMPLIANCE_DOCUMENT_READ))
+    ],
+    handler: Annotated[
+        GetComplianceDocumentFileViewUrlHandler,
+        Depends(get_get_compliance_document_file_view_url_handler),
+    ],
+) -> ComplianceDocumentDownloadUrlResponse:
+    descriptor = handler.handle(
+        GetComplianceDocumentQuery(
+            organization_id=tenant_context.organization_id, document_id=document_id
+        ),
+        DocumentFileId(value=file_id),
+    )
+    return _download_response(descriptor)

@@ -62,11 +62,14 @@ import through the application handlers `CreateShelfSection`, `RenameShelfSectio
 {
   "sections": [ShelfSectionSummaryDto],
   "totals": {"places": 416, "excluded": 3, "by_group": GroupCounts, "readiness_percent": 41},
-  "evaluated_at": "2026-11-05T09:00:00Z"
+  "evaluated_at": "2026-11-05T09:00:00Z",
+  "last_imported_at": "2026-11-05T08:00:00Z"
 }
 ```
 
 `GroupCounts` = `{present, review, in_progress, missing, to_clarify, excluded}`.
+`last_imported_at` is the latest workbook import of the organization's places, or `null`
+before the first one.
 
 `ShelfSectionSummaryDto`: `code, number, title, safety_domain, total, mandatory_total,
 by_group, readiness_percent, strip[{code, group}]`. Sections are ordered by `number`.
@@ -91,7 +94,7 @@ code order.
 | `curated_status` | `present`, `present_needs_review`, `in_progress`, `missing`, `to_clarify` |
 | `document_type_code`, `proposed_document_type`, `responsible_text`, `legacy_location`, `notes`, `package_code`, `legacy_code` | curated |
 | `exclusion` | `{reason, comment, excluded_by_name, excluded_at}` or `null`. `excluded_by_name` is `""` when the user no longer exists |
-| `current_document` | `{id, code, title, status, effective_from, next_review_at, approved_by_order{code, title}\|null, signed_scan, working_file{file_id, content_type, size_bytes, uploaded_at}\|null}` or `null`. `signed_scan` is always `null` until phase 4 |
+| `current_document` | `{id, code, title, status, effective_from, next_review_at, approved_by_order{code, title}\|null, signed_scan, working_file{file_id, content_type, size_bytes, uploaded_at}\|null}` or `null`. `signed_scan` is the current signed scan and `working_file` the current working file. Both carry `file_id`, so the viewer gets an inline URL from `GET /compliance-documents/{id}/files/{file_id}/view-url` |
 | `editions[]` | `{id, code, status, effective_from}` of every linked document; newest `effective_from` first, unset last |
 | `available_actions[]` | every action offered to the current user, `primary_action` first |
 | `primary_action` | action or `null` |
@@ -99,7 +102,10 @@ code order.
 | `version` | |
 
 Actions: `develop_document`, `link_document`, `exclude`, `restore`, `confirm_applicable`,
-`open_project`, `open_document`, `upload_scan`, `start_review`, `send_for_acknowledgement`.
+`open_project`, `open_document`, `upload_scan`, `upload_signed_scan`, `start_review`,
+`send_for_acknowledgement`. `upload_signed_scan` is offered to curators who hold
+`compliance_document:update` while the current in-force document has no signed scan. It
+is placed before `exclude`.
 
 ## Requests
 

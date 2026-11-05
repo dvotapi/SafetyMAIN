@@ -169,6 +169,9 @@ class DocumentFileModel(Base):
         CheckConstraint(
             "sha256 ~ '^[0-9a-f]{64}$'", name="ck_document_files_sha256_hex"
         ),
+        CheckConstraint(
+            "role IN ('working', 'signed_scan')", name="ck_document_files_role"
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True)
@@ -184,6 +187,9 @@ class DocumentFileModel(Base):
     content_type: Mapped[str] = mapped_column(String(length=255), nullable=False)
     sha256: Mapped[str] = mapped_column(String(length=64), nullable=False)
     original_filename: Mapped[str] = mapped_column(Text, nullable=False)
+    role: Mapped[str] = mapped_column(
+        String(length=16), nullable=False, server_default="working"
+    )
     uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     uploaded_by: Mapped[UUID] = mapped_column(
         PostgreSQLUUID(as_uuid=True),

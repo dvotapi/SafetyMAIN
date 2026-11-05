@@ -32,7 +32,10 @@ export function ComplianceDocumentVersions({
                   borderBottom: "1px solid var(--sm-color-border-subtle)",
                 }}
               >
-                <Text as="span">{file.original_filename}</Text>
+                <Text as="span">
+                  {file.original_filename}
+                  {file.role === "signed_scan" ? " · подписанный скан" : ""}
+                </Text>
                 <Text as="span" tone="muted" variant="caption">
                   {formatDateTime(file.uploaded_at)} · {file.content_type} ·{" "}
                   {file.size_bytes} Б

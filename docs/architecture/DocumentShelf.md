@@ -90,6 +90,10 @@ without auditing a denial, because this check only shapes the response.
 | `under_review` | `open_document` | `exclude` |
 | `excluded` | `restore` | — |
 
+Curators who may update documents also get `upload_signed_scan` while the current
+in-force document (`present`, `review_due`, `overdue_review`, `under_review`) has no signed
+scan (TASK-P11-012 D1).
+
 Users without `shelf:curate` get only `open_document` or `open_project`, and only where a
 target document exists.
 

@@ -26,14 +26,20 @@ from backend.core.application.queries.compliance_documents import (
 )
 from backend.core.contracts.clock import ClockContract
 from backend.core.contracts.storage import (
+    Disposition,
     PresignedUpload,
     StorageContract,
     StorageRequestRejectedError,
 )
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
-from backend.core.domain.entities.compliance_document import ComplianceDocument
+from backend.core.domain.entities.compliance_document import (
+    SIGNED_SCAN_CONTENT_TYPES,
+    SIGNED_SCAN_STATUSES,
+    ComplianceDocument,
+)
 from backend.core.domain.entities.document_type import DocumentType
 from backend.core.domain.exceptions.compliance_document import (
+    ComplianceDocumentCannotBeModified,
     ComplianceDocumentFileNotFound,
     ComplianceDocumentFileTooLarge,
     ComplianceDocumentFileTypeNotAllowed,
@@ -46,7 +52,11 @@ from backend.core.domain.value_objects.audit_resource_type import AuditResourceT
 from backend.core.domain.value_objects.compliance_document_components import (
     DocumentFile,
 )
-from backend.core.domain.value_objects.compliance_enums import ComplianceDocumentStatus
+from backend.core.domain.value_objects.compliance_enums import (
+    ComplianceDocumentStatus,
+    DocumentFileRole,
+)
+from backend.core.domain.value_objects.safety_ids import DocumentFileId
 
 ALLOWED_CONTENT_TYPES: frozenset[str] = frozenset(
     {
@@ -84,9 +94,37 @@ def _build_key(
     )
 
 
-def _validate_content_type(content_type: str) -> None:
-    if content_type not in ALLOWED_CONTENT_TYPES:
+def _validate_content_type(
+    content_type: str, role: DocumentFileRole = DocumentFileRole.WORKING
+) -> None:
+    allowed = (
+        SIGNED_SCAN_CONTENT_TYPES
+        if role is DocumentFileRole.SIGNED_SCAN
+        else ALLOWED_CONTENT_TYPES
+    )
+    if content_type not in allowed:
         raise ComplianceDocumentFileTypeNotAllowed(content_type)
+
+
+def _attach_action(role: DocumentFileRole) -> AuditAction:
+    if role is DocumentFileRole.SIGNED_SCAN:
+        return AuditAction.COMPLIANCE_DOCUMENT_SIGNED_SCAN_ATTACHED
+    return AuditAction.COMPLIANCE_DOCUMENT_FILE_ATTACHED
+
+
+def _ensure_accepts(document: ComplianceDocument, role: DocumentFileRole) -> None:
+    """Working files only in ``draft`` (D6); signed scans in approved/active/under_review (D1)."""
+    if role is DocumentFileRole.SIGNED_SCAN:
+        if document.status not in SIGNED_SCAN_STATUSES:
+            raise ComplianceDocumentCannotBeModified(
+                document.id,
+                reason=f"status {document.status.value} blocks signed scan attachment",
+            )
+        return
+    if document.status is not ComplianceDocumentStatus.DRAFT:
+        raise ComplianceDocumentValidationError(
+            "Files can be uploaded only for draft documents."
+        )
 
 
 def _validate_size(size_bytes: int, limit: int) -> None:
@@ -120,18 +158,20 @@ class CreateComplianceDocumentUploadUrlHandler:
         storage: StorageContract,
         max_upload_bytes: int,
         audit: AdministrativeAuditRecorder,
+        role: DocumentFileRole = DocumentFileRole.WORKING,
     ) -> None:
         self._unit_of_work = unit_of_work
         self._storage = storage
         self._max_upload_bytes = max_upload_bytes
         self._audit = audit
+        self._role = role
 
     def handle(
         self, command: CreateComplianceDocumentUploadUrlCommand
     ) -> ComplianceDocumentUploadDescriptor:
         context = require_audit_context(command.audit_context)
         failure_spec = AuditRecordSpec(
-            action=AuditAction.COMPLIANCE_DOCUMENT_FILE_ATTACHED,
+            action=_attach_action(self._role),
             context=context,
             resource_type=AuditResourceType.COMPLIANCE_DOCUMENT,
             resource_id=command.document_id.value,
@@ -152,11 +192,8 @@ class CreateComplianceDocumentUploadUrlHandler:
         )
         if document is None:
             raise ComplianceDocumentNotFound(command.document_id)
-        if document.status is not ComplianceDocumentStatus.DRAFT:
-            raise ComplianceDocumentValidationError(
-                "Files can be uploaded only for draft documents."
-            )
-        _validate_content_type(command.content_type)
+        _ensure_accepts(document, self._role)
+        _validate_content_type(command.content_type, self._role)
         _validate_size(command.size_bytes, self._max_upload_bytes)
         upload_id = str(uuid4())
         safe = _sanitize_filename(command.filename)
@@ -192,18 +229,20 @@ class ConfirmComplianceDocumentFileHandler:
         storage: StorageContract,
         clock: ClockContract,
         audit: AdministrativeAuditRecorder,
+        role: DocumentFileRole = DocumentFileRole.WORKING,
     ) -> None:
         self._unit_of_work = unit_of_work
         self._storage = storage
         self._clock = clock
         self._audit = audit
+        self._role = role
 
     def handle(
         self, command: ConfirmComplianceDocumentFileCommand
     ) -> ComplianceDocumentWithContext:
         context = require_audit_context(command.audit_context)
         failure_spec = AuditRecordSpec(
-            action=AuditAction.COMPLIANCE_DOCUMENT_FILE_ATTACHED,
+            action=_attach_action(self._role),
             context=context,
             resource_type=AuditResourceType.COMPLIANCE_DOCUMENT,
             resource_id=command.document_id.value,
@@ -216,10 +255,7 @@ class ConfirmComplianceDocumentFileHandler:
             )
             if document is None:
                 raise ComplianceDocumentNotFound(command.document_id)
-            if document.status is not ComplianceDocumentStatus.DRAFT:
-                raise ComplianceDocumentValidationError(
-                    "Files can be confirmed only for draft documents."
-                )
+            _ensure_accepts(document, self._role)
             document_type = self._unit_of_work.document_types.get(
                 document.organization_id, document.document_type_id
             )
@@ -228,8 +264,7 @@ class ConfirmComplianceDocumentFileHandler:
             # Bucket is implicit — the server names the owned one; the client
             # cannot steer confirmation at another bucket.
             owned_bucket = self._storage.bucket
-            if command.content_type not in ALLOWED_CONTENT_TYPES:
-                raise ComplianceDocumentFileTypeNotAllowed(command.content_type)
+            _validate_content_type(command.content_type, self._role)
             key_prefix = (
                 f"{command.organization_id.value}/compliance_document/"
                 f"{command.document_id.value}/"
@@ -273,8 +308,14 @@ class ConfirmComplianceDocumentFileHandler:
                 original_filename=command.original_filename,
                 uploaded_at=self._clock.now(),
                 uploaded_by=command.actor_id,
+                role=self._role,
             )
-            attached = document.attach_file(
+            attach = (
+                document.attach_signed_scan
+                if self._role is DocumentFileRole.SIGNED_SCAN
+                else document.attach_file
+            )
+            attached = attach(
                 file=file,
                 at=self._clock.now(),
                 actor_id=command.actor_id,
@@ -289,10 +330,9 @@ class ConfirmComplianceDocumentFileHandler:
             self._unit_of_work.compliance_documents.save(
                 attached, expected_version=attached.version - 1
             )
-            current = attached.current_file
-            assert current is not None
+            current = attached.files[-1]
             return AuditRecordSpec(
-                action=AuditAction.COMPLIANCE_DOCUMENT_FILE_ATTACHED,
+                action=_attach_action(self._role),
                 context=context,
                 resource_type=AuditResourceType.COMPLIANCE_DOCUMENT,
                 resource_id=attached.id.value,
@@ -341,11 +381,13 @@ class GetComplianceDocumentDownloadUrlHandler:
         storage: StorageContract,
         clock: ClockContract,
         presign_ttl_seconds: int,
+        role: DocumentFileRole = DocumentFileRole.WORKING,
     ) -> None:
         self._unit_of_work = unit_of_work
         self._storage = storage
         self._clock = clock
         self._presign_ttl_seconds = presign_ttl_seconds
+        self._role = role
 
     def handle(
         self, query: GetComplianceDocumentQuery
@@ -355,25 +397,69 @@ class GetComplianceDocumentDownloadUrlHandler:
         )
         if document is None:
             raise ComplianceDocumentNotFound(query.document_id)
-        current = document.current_file
+        current = (
+            document.current_signed_scan
+            if self._role is DocumentFileRole.SIGNED_SCAN
+            else document.current_file
+        )
         if current is None:
             raise ComplianceDocumentFileNotFound(document.id)
-        ttl = timedelta(seconds=self._presign_ttl_seconds)
-        try:
-            url = self._storage.create_download_url(
-                bucket=current.bucket,
-                key=current.key,
-                ttl=ttl,
-                filename=current.original_filename,
-                content_type=current.content_type,
-            )
-        except StorageRequestRejectedError as error:
-            raise ComplianceDocumentValidationError(str(error)) from error
-        return ComplianceDocumentDownloadDescriptor(
-            url=url,
-            expires_at=self._clock.now() + ttl,
-            file=current,
+        return _sign(
+            self._storage, self._clock, self._presign_ttl_seconds, current, "attachment"
         )
+
+
+def _sign(
+    storage: StorageContract,
+    clock: ClockContract,
+    ttl_seconds: int,
+    file: DocumentFile,
+    disposition: Disposition,
+) -> ComplianceDocumentDownloadDescriptor:
+    ttl = timedelta(seconds=ttl_seconds)
+    try:
+        url = storage.create_download_url(
+            bucket=file.bucket,
+            key=file.key,
+            ttl=ttl,
+            filename=file.original_filename,
+            content_type=file.content_type,
+            disposition=disposition,
+        )
+    except StorageRequestRejectedError as error:
+        raise ComplianceDocumentValidationError(str(error)) from error
+    return ComplianceDocumentDownloadDescriptor(
+        url=url, expires_at=clock.now() + ttl, file=file
+    )
+
+
+class GetComplianceDocumentFileViewUrlHandler:
+    """Sign an ``inline`` GET for any file of a document, for in-browser viewing (A4)."""
+
+    def __init__(
+        self,
+        unit_of_work: UnitOfWorkContract,
+        storage: StorageContract,
+        clock: ClockContract,
+        presign_ttl_seconds: int,
+    ) -> None:
+        self._unit_of_work = unit_of_work
+        self._storage = storage
+        self._clock = clock
+        self._presign_ttl_seconds = presign_ttl_seconds
+
+    def handle(
+        self, query: GetComplianceDocumentQuery, file_id: DocumentFileId
+    ) -> ComplianceDocumentDownloadDescriptor:
+        document = self._unit_of_work.compliance_documents.get(
+            query.organization_id, query.document_id
+        )
+        if document is None:
+            raise ComplianceDocumentNotFound(query.document_id)
+        file = next((item for item in document.files if item.id == file_id), None)
+        if file is None:
+            raise ComplianceDocumentFileNotFound(document.id)
+        return _sign(self._storage, self._clock, self._presign_ttl_seconds, file, "inline")
 
 
 class ListComplianceDocumentFilesHandler:
