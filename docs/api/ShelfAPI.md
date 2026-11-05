@@ -110,6 +110,9 @@ Actions: `develop_document`, `link_document`, `exclude`, `restore`, `confirm_app
 | Link | `{document_id, version}` |
 | Develop | `{document_type_code?, version}` |
 
+`legal_basis.source_url` must be an absolute `http` or `https` URL of at most 2048
+characters (it is shown as a link); blank means none.
+
 Search: `q` is 1–100 characters and is a case-insensitive substring of `code`, `title` or
 `short_title`. `limit` defaults to 50, at most 100. Results are in code order and include
 excluded places.

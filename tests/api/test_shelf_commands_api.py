@@ -430,3 +430,17 @@ def test_patch_on_a_foreign_place_is_404(shelf: ShelfClient) -> None:
     response = shelf.patch(f"/slots/{foreign.id.value}", {"version": 1, "notes": "x"})
 
     assert_error_envelope(response, status_code=404, code="shelf_slot_not_found")
+
+
+@pytest.mark.parametrize("url", ["javascript:alert(1)", "data:text/html,x", "ftp://x.org/a"])
+def test_create_and_update_reject_non_http_source_urls(shelf: ShelfClient, url: str) -> None:
+    section = shelf.seed_section()
+    slot = shelf.seed_slot(section)
+
+    created = shelf.post("/slots", _create_payload(legal_basis={"source_url": url}))
+    updated = shelf.patch(
+        f"/slots/{slot.id.value}", {"version": 1, "legal_basis": {"source_url": url}}
+    )
+
+    assert_error_envelope(created, status_code=422, code="request_validation_error")
+    assert_error_envelope(updated, status_code=422, code="request_validation_error")

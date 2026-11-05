@@ -6,12 +6,13 @@ from datetime import date, datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from backend.api.schemas.compliance_documents import (
     ComplianceDocumentStatusValue,
     SafetyDomainValue,
 )
+from backend.core.domain.value_objects.shelf_values import normalize_source_url
 
 SlotKeptOnValue = Literal["organization", "facility", "event", "employee", "asset", "profession"]
 SlotObligationLevelValue = Literal["mandatory", "conditional", "recommended"]
@@ -157,6 +158,11 @@ class SlotLegalBasisPayload(BaseModel):
     quote: str = ""
     source_url: str | None = None
     confidence: LegalBasisConfidenceValue = "none"
+
+    @field_validator("source_url")
+    @classmethod
+    def require_http_url(cls, value: str | None) -> str | None:
+        return normalize_source_url(value)
 
 
 class ShelfSlotExclusionResponse(BaseModel):

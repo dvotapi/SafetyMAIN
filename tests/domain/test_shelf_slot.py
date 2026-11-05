@@ -337,3 +337,30 @@ def test_commands_check_version() -> None:
         )
     with pytest.raises(ShelfSlotVersionConflict):
         slot.update_details(at=LATER, actor_id=actor, expected_version=3, notes="x")
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "javascript:alert(1)",
+        "data:text/html,<script>alert(1)</script>",
+        "ftp://example.org/doc",
+        "//example.org/doc",
+        "example.org/doc",
+        "https://" + "a" * 2048,
+    ],
+)
+def test_legal_basis_rejects_unsafe_source_urls(url: str) -> None:
+    from backend.core.domain.value_objects.shelf_values import SlotLegalBasis
+
+    with pytest.raises(ValueError):
+        SlotLegalBasis(source_url=url)
+
+
+def test_legal_basis_keeps_http_urls_and_clears_blank_ones() -> None:
+    from backend.core.domain.value_objects.shelf_values import SlotLegalBasis
+
+    assert SlotLegalBasis(source_url=" https://pravo.gov.ru/doc ").source_url == (
+        "https://pravo.gov.ru/doc"
+    )
+    assert SlotLegalBasis(source_url="  ").source_url is None
