@@ -47,6 +47,9 @@ with resource type `SHELF_PLACE`.
 unknown fields. Every command takes the place's current `version` (optimistic
 concurrency).
 
+`import_fingerprint` and `last_imported_at` are set only by the workbook import
+(`docs/guides/ShelfImport.md`) and are not part of the API.
+
 Sections and subsections have no endpoints yet. They are created by the phase 3 workbook
 import through the application handlers `CreateShelfSection`, `RenameShelfSection`,
 `AddShelfSubsection` and `RenameShelfSubsection`.

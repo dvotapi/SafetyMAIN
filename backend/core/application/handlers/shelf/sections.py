@@ -27,7 +27,7 @@ from backend.core.domain.value_objects.audit_resource_type import AuditResourceT
 from backend.core.domain.value_objects.safety_ids import ShelfSectionId
 
 
-def _section_spec(
+def section_spec(
     action: AuditAction,
     context: AuditContext,
     section: ShelfSection,
@@ -94,7 +94,7 @@ class _SectionHandlerBase:
             updated = mutate(existing)
             self._unit_of_work.shelf_sections.save(updated, expected_version=existing.version)
             return updated, (
-                _section_spec(
+                section_spec(
                     AuditAction.COMPLIANCE_SECTION_UPDATED,
                     context,
                     updated,
@@ -137,7 +137,7 @@ class CreateShelfSectionHandler(_SectionHandlerBase):
                 )
             self._unit_of_work.shelf_sections.add(section)
             return section, (
-                _section_spec(AuditAction.COMPLIANCE_SECTION_CREATED, context, section),
+                section_spec(AuditAction.COMPLIANCE_SECTION_CREATED, context, section),
             )
 
         return run_shelf_command(

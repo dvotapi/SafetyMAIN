@@ -135,9 +135,37 @@ places and sections are never deleted.
 Resource types `SHELF_PLACE` and `SHELF_SECTION` (and `SHELF` for the import), subject
 domain `SHELF`. The events are listed in `docs/architecture/AuditTaxonomy.md`.
 
-## Import contract (phase 3)
+## Workbook import (phase 3)
 
-The workbook import upserts sections, subsections and places by code. It fills
-`import_fingerprint` and `last_imported_at`. It never overwrites fields edited in SafetyMAIN
-since the previous import (D3) and emits `compliance.shelf.imported` once per run. Phase 2
-reserves the fields and the audit descriptor; nothing sets them yet.
+`scripts/import_shelf_workbook.py` (guide: `docs/guides/ShelfImport.md`) reads sheet
+«Полка» through `infrastructure/importing/shelf_workbook_reader.py`, the only `openpyxl`
+code. `application/services/shelf_import_mapping.py` maps the rows (vocabularies, short
+titles, fingerprints) as pure functions. `ImportShelfWorkbookHandler` applies them in one
+unit of work.
+
+- **Fingerprint** = SHA-256 of the mapped place values; the status of an excluded place
+  counts as `excluded`. It is stored in `import_fingerprint` with `last_imported_at`. Only
+  the new domain method `ShelfSlot.apply_import` (or `create(import_fingerprint=…)`) sets
+  them; `update_details` cannot.
+- **D3:** a stored place is edited in SafetyMAIN when the fingerprint of its current values
+  differs from the stored one. Each workbook row then falls into one of four cases:
+
+  | Case | Result |
+  |---|---|
+  | row fingerprint equals the stored one | `unchanged` |
+  | changed row, place not edited | `updated` |
+  | changed row, place edited | `conflict`: reported with field differences, not applied |
+  | place created in SafetyMAIN (no fingerprint) whose code is in the workbook | `conflict` |
+
+  Linking documents does not change the fingerprint. This replaces the TASK wording
+  («`updated_at` after `last_imported_at` by a non-import actor»), which could not tell
+  the import from the same curator editing in the UI (plan phase 3, Q1).
+- «Не применимо» → `create` + `exclude(not_applicable)` with `status_before = to_clarify`.
+  Later imports exclude or restore untouched places when the status changes.
+- Sections and subsections are created, or renamed when their titles change, without
+  conflict tracking (they have no SafetyMAIN edit path yet). A changed number or domain is
+  rejected.
+- Any rejected row blocks the whole real run. Places missing from the workbook are only
+  reported.
+- A real run records `compliance.shelf.imported` (counts and `file_sha256`) in addition to
+  the place and section events. A dry run writes and records nothing.
