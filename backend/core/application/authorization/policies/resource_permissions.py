@@ -92,3 +92,5 @@ COMPLIANCE_DOCUMENT_ACTIVATE = Permission.from_system_permission(
 COMPLIANCE_DOCUMENT_ARCHIVE = Permission.from_system_permission(
     SystemPermission.COMPLIANCE_DOCUMENT_ARCHIVE
 )
+SHELF_READ = Permission.from_system_permission(SystemPermission.SHELF_READ)
+SHELF_CURATE = Permission.from_system_permission(SystemPermission.SHELF_CURATE)

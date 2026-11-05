@@ -209,3 +209,11 @@ document has no attached file. 404 `compliance_document_not_found` for cross-ten
 Permission: `compliance_document:read`. Returns every file ever attached, oldest first.
 Phase 5 only writes files on `draft`, so most documents have one entry; the endpoint is
 in place for future supersession-with-reupload workflows.
+
+## Created from a shelf place (TASK-P11-012)
+
+`POST /api/v1/shelf/slots/{slot_id}/develop` creates a `draft` document through the same
+code path as `POST /compliance-documents` (`build_compliance_document`), with `code` and
+`title` taken from the place and source `manual`. It links the document to the place in
+the same transaction and records `compliance.document.created` and
+`compliance.place.linked`. Behaviour of this API is unchanged. See `docs/api/ShelfAPI.md`.

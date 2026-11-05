@@ -108,6 +108,20 @@ CONFIRM_COMPLIANCE_DOCUMENT_FILE = "confirm_compliance_document_file"
 GET_COMPLIANCE_DOCUMENT_DOWNLOAD_URL = "get_compliance_document_download_url"
 LIST_COMPLIANCE_DOCUMENT_FILE_VERSIONS = "list_compliance_document_file_versions"
 
+GET_SHELF_OVERVIEW = "get_shelf_overview"
+LIST_SHELF_SECTION_SLOTS = "list_shelf_section_slots"
+SEARCH_SHELF_SLOTS = "search_shelf_slots"
+GET_SHELF_SLOT = "get_shelf_slot"
+CREATE_SHELF_SLOT = "create_shelf_slot"
+UPDATE_SHELF_SLOT = "update_shelf_slot"
+EXCLUDE_SHELF_SLOT = "exclude_shelf_slot"
+RESTORE_SHELF_SLOT = "restore_shelf_slot"
+BULK_EXCLUDE_SHELF_SLOTS = "bulk_exclude_shelf_slots"
+CONFIRM_SHELF_SLOT_APPLICABLE = "confirm_shelf_slot_applicable"
+LINK_SHELF_SLOT_DOCUMENT = "link_shelf_slot_document"
+UNLINK_SHELF_SLOT_DOCUMENT = "unlink_shelf_slot_document"
+DEVELOP_SHELF_SLOT_DOCUMENT = "develop_shelf_slot_document"
+
 STABLE_OPERATION_IDS: frozenset[str] = frozenset(
     {
         HEALTH,
@@ -190,6 +204,19 @@ STABLE_OPERATION_IDS: frozenset[str] = frozenset(
         CONFIRM_COMPLIANCE_DOCUMENT_FILE,
         GET_COMPLIANCE_DOCUMENT_DOWNLOAD_URL,
         LIST_COMPLIANCE_DOCUMENT_FILE_VERSIONS,
+        GET_SHELF_OVERVIEW,
+        LIST_SHELF_SECTION_SLOTS,
+        SEARCH_SHELF_SLOTS,
+        GET_SHELF_SLOT,
+        CREATE_SHELF_SLOT,
+        UPDATE_SHELF_SLOT,
+        EXCLUDE_SHELF_SLOT,
+        RESTORE_SHELF_SLOT,
+        BULK_EXCLUDE_SHELF_SLOTS,
+        CONFIRM_SHELF_SLOT_APPLICABLE,
+        LINK_SHELF_SLOT_DOCUMENT,
+        UNLINK_SHELF_SLOT_DOCUMENT,
+        DEVELOP_SHELF_SLOT_DOCUMENT,
         CREATE_KNOWLEDGE_OBJECT,
         SEARCH_KNOWLEDGE_OBJECTS,
         GET_KNOWLEDGE_OBJECT,

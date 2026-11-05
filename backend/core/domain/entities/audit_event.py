@@ -64,6 +64,12 @@ ALLOWED_METADATA_KEYS = frozenset(
         "file_id",
         "file_size_bytes",
         "file_sha256",
+        "slot_id",
+        "slot_code",
+        "section_id",
+        "section_code",
+        "subsection_code",
+        "comment",
     }
 )
 

@@ -26,6 +26,7 @@ SYSTEM_ROLE_PERMISSIONS: dict[SystemRole, frozenset[SystemPermission]] = {
             SystemPermission.COMPLIANCE_DOCUMENT_READ,
             SystemPermission.COMPLIANCE_DOCUMENT_CREATE,
             SystemPermission.COMPLIANCE_DOCUMENT_UPDATE,
+            SystemPermission.SHELF_READ,
         }
     ),
     SystemRole.AUDITOR: frozenset(
@@ -40,6 +41,7 @@ SYSTEM_ROLE_PERMISSIONS: dict[SystemRole, frozenset[SystemPermission]] = {
             SystemPermission.RISK_READ,
             SystemPermission.RISK_CONTROL_READ,
             SystemPermission.COMPLIANCE_DOCUMENT_READ,
+            SystemPermission.SHELF_READ,
         }
     ),
 }

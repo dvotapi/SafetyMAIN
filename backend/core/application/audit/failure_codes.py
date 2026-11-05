@@ -59,6 +59,22 @@ from backend.core.domain.exceptions.risk_control import (
     RiskControlVersionConflict,
 )
 
+from backend.core.domain.exceptions.shelf import (
+    DuplicateShelfSectionCode,
+    DuplicateShelfSectionNumber,
+    DuplicateShelfSlotCode,
+    ShelfSectionVersionConflict,
+    ShelfSlotAlreadyExcluded,
+    ShelfSlotCodeMismatch,
+    ShelfSlotDocumentAlreadyLinked,
+    ShelfSlotDocumentSubjectNotSupported,
+    ShelfSlotNotExcluded,
+    ShelfSlotNotToClarify,
+    ShelfSlotVersionConflict,
+    ShelfSlotsAlreadyExcluded,
+    ShelfSlotsVersionConflict,
+)
+
 DUPLICATE_USER_EMAIL = "duplicate_user_email"
 USER_ALREADY_ACTIVE = "user_already_active"
 USER_ALREADY_DEACTIVATED = "user_already_deactivated"
@@ -105,6 +121,17 @@ INVALID_COMPLIANCE_DOCUMENT_TRANSITION = "invalid_compliance_document_transition
 COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED = "compliance_document_cannot_be_modified"
 COMPLIANCE_DOCUMENT_FILE_TOO_LARGE = "compliance_document_file_too_large"
 COMPLIANCE_DOCUMENT_FILE_TYPE_NOT_ALLOWED = "compliance_document_file_type_not_allowed"
+DUPLICATE_SHELF_SECTION_CODE = "duplicate_shelf_section_code"
+DUPLICATE_SHELF_SECTION_NUMBER = "duplicate_shelf_section_number"
+SHELF_SECTION_VERSION_CONFLICT = "shelf_section_version_conflict"
+DUPLICATE_SHELF_SLOT_CODE = "duplicate_shelf_slot_code"
+SHELF_SLOT_CODE_MISMATCH = "shelf_slot_code_mismatch"
+SHELF_SLOT_VERSION_CONFLICT = "shelf_slot_version_conflict"
+SHELF_SLOT_ALREADY_EXCLUDED = "already_excluded"
+SHELF_SLOT_NOT_EXCLUDED = "not_excluded"
+SHELF_SLOT_NOT_TO_CLARIFY = "not_to_clarify"
+SHELF_SLOT_ALREADY_LINKED_ACTIVE_DOCUMENT = "already_linked_active_document"
+SHELF_SLOT_DOCUMENT_SUBJECT_NOT_SUPPORTED = "document_subject_not_supported"
 
 AUDITABLE_ADMIN_FAILURES: dict[type[Exception], str] = {
     DuplicateUserEmail: DUPLICATE_USER_EMAIL,
@@ -153,4 +180,17 @@ AUDITABLE_ADMIN_FAILURES: dict[type[Exception], str] = {
     ComplianceDocumentCannotBeModified: COMPLIANCE_DOCUMENT_CANNOT_BE_MODIFIED,
     ComplianceDocumentFileTooLarge: COMPLIANCE_DOCUMENT_FILE_TOO_LARGE,
     ComplianceDocumentFileTypeNotAllowed: COMPLIANCE_DOCUMENT_FILE_TYPE_NOT_ALLOWED,
+    DuplicateShelfSectionCode: DUPLICATE_SHELF_SECTION_CODE,
+    DuplicateShelfSectionNumber: DUPLICATE_SHELF_SECTION_NUMBER,
+    ShelfSectionVersionConflict: SHELF_SECTION_VERSION_CONFLICT,
+    DuplicateShelfSlotCode: DUPLICATE_SHELF_SLOT_CODE,
+    ShelfSlotCodeMismatch: SHELF_SLOT_CODE_MISMATCH,
+    ShelfSlotVersionConflict: SHELF_SLOT_VERSION_CONFLICT,
+    ShelfSlotsVersionConflict: SHELF_SLOT_VERSION_CONFLICT,
+    ShelfSlotAlreadyExcluded: SHELF_SLOT_ALREADY_EXCLUDED,
+    ShelfSlotsAlreadyExcluded: SHELF_SLOT_ALREADY_EXCLUDED,
+    ShelfSlotNotExcluded: SHELF_SLOT_NOT_EXCLUDED,
+    ShelfSlotNotToClarify: SHELF_SLOT_NOT_TO_CLARIFY,
+    ShelfSlotDocumentAlreadyLinked: SHELF_SLOT_ALREADY_LINKED_ACTIVE_DOCUMENT,
+    ShelfSlotDocumentSubjectNotSupported: SHELF_SLOT_DOCUMENT_SUBJECT_NOT_SUPPORTED,
 }

@@ -252,11 +252,14 @@ def register_exception_handlers(app: FastAPI) -> None:
             )
 
         status_code, code, message = resolved
+        # Bulk commands name the affected resources (e.g. ``conflicting_slot_ids``).
+        public_details = getattr(exc, "public_details", None)
         return _json_error(
             status_code=status_code,
             code=code,
             message=message,
             request=request,
+            details=public_details() if callable(public_details) else None,
         )
 
     @app.exception_handler(RequestValidationError)

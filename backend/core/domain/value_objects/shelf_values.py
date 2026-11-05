@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -34,6 +35,23 @@ SHELF_DOCUMENT_KINDS: tuple[str, ...] = (
 
 EXCLUSION_COMMENT_MIN_LENGTH = 5
 EXCLUSION_COMMENT_MAX_LENGTH = 1000
+SOURCE_URL_MAX_LENGTH = 2048
+_SOURCE_URL_SCHEMES = frozenset({"http", "https"})
+
+
+def normalize_source_url(value: str | None) -> str | None:
+    """Blank → None; otherwise an absolute http(s) URL (it is rendered as a link)."""
+    if value is None:
+        return None
+    url = value.strip()
+    if not url:
+        return None
+    if len(url) > SOURCE_URL_MAX_LENGTH:
+        raise ValueError(f"Source URL must have at most {SOURCE_URL_MAX_LENGTH} characters.")
+    parts = urlsplit(url)
+    if parts.scheme.lower() not in _SOURCE_URL_SCHEMES or not parts.netloc:
+        raise ValueError("Source URL must be an absolute http or https URL.")
+    return url
 
 
 class SlotLegalBasis(BaseModel):
@@ -55,9 +73,7 @@ class SlotLegalBasis(BaseModel):
     @field_validator("source_url")
     @classmethod
     def normalize_url(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        return value.strip() or None
+        return normalize_source_url(value)
 
 
 class SlotExclusion(BaseModel):

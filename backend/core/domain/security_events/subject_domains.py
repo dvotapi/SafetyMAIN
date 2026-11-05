@@ -20,3 +20,4 @@ class SecurityEventSubjectDomain(str, Enum):
     RISK = "RISK"
     RISK_CONTROL = "RISK_CONTROL"
     COMPLIANCE_DOCUMENT = "COMPLIANCE_DOCUMENT"
+    SHELF = "SHELF"
