@@ -183,3 +183,41 @@ Skip reasons:
 If a step fails, the script reports the step and continues with the next place. The failed
 place keeps its linked draft (or approved) document; nothing is deleted. A re-run skips it
 (`has_document`); finish it in the shelf with «Открыть проект».
+
+### Signed editions approved by one order
+
+The scans may be named by place code (`ТрБ.01.02 ИОТ для водителя.pdf`) and approved by
+one order that is itself a place (`ТрБ.01.01 Приказ о введении инструкций.pdf`). In that
+case use `--match-by-code` and `--approval-order`:
+
+```bash
+python -m scripts.attach_shelf_scans --organization-id <uuid> --root "<folder>" --actor-email <admin> --match-by-code --approval-order ТрБ.01.01 --order-note "№ … от …" --report signed.json
+```
+
+- Every `*.pdf` directly in the folder whose name starts with a place code is that place's
+  file; «Где лежит сейчас» is ignored.
+- The order goes first: it is created, uploaded, approved and put in force. If that fails,
+  nothing else is touched. On a later run an order already in force on its place is
+  reused.
+- Every document of a type that requires an approval order is linked to the order, then
+  approved and put in force.
+- Places with «Есть», «В работе (проект)» or «Есть — нужен пересмотр» are taken.
+- Each PDF is stored as the working file and, after approval, as the signed scan, so the
+  shelf shows «Скан подписанной редакции». Pass `--no-signed-scan` to skip the second copy.
+- The place type («Тип в SafetyMAIN») must be `order` for the order and an active type
+  (e.g. `iot_profession`, `iot_work_type`) for the others.
+
+More skip reasons in this mode:
+
+| Reason | Meaning |
+|---|---|
+| `unknown_code` | there is no place with that code |
+| `no_code_in_name` | the file name does not start with a place code |
+| `ambiguous` | several files for one code |
+| `order_type_mismatch` | the order's place type is not `order` |
+| `order_file_not_found` | there is no file of the order in the folder |
+| `order_not_in_force` | no order is in force, so documents that need one are skipped |
+| `order_failed` | putting the order in force failed in this run |
+
+Add `--apply --effective-from YYYY-MM-DD` to write; try `--limit 2` first (the limit
+applies to the documents after the order).

@@ -50,6 +50,8 @@ from backend.core.contracts.clock import ClockContract
 from backend.core.contracts.storage import PresignedUpload, StorageContract
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
 from backend.core.domain.value_objects import OrganizationId, UserId
+from backend.core.domain.value_objects.compliance_enums import DocumentFileRole
+from backend.core.domain.value_objects.safety_ids import ComplianceDocumentId
 
 PDF_CONTENT_TYPE = "application/pdf"
 
@@ -89,7 +91,12 @@ class AttachShelfScanHandler:
         organization_id: OrganizationId,
         actor_id: UserId,
         effective_from: date,
+        approved_by_document_id: ComplianceDocumentId | None = None,
+        notes: str | None = None,
+        attach_signed_scan: bool = False,
     ) -> AttachOutcome:
+        """``approved_by_document_id`` links the approving order (signed editions mode);
+        ``attach_signed_scan`` also stores the same PDF as the signed scan after approval."""
         slot = candidate.slot
         code = slot.code.value
         context = AuditContext(actor_user_id=actor_id, authorization_organization_id=organization_id)
@@ -119,6 +126,12 @@ class AttachShelfScanHandler:
                         actor_id=actor_id,
                         expected_version=document.version,
                         effective_from=effective_from,
+                        **(
+                            {"approved_by_document_id": approved_by_document_id}
+                            if approved_by_document_id is not None
+                            else {}
+                        ),
+                        **({"notes": notes} if notes else {}),
                         audit_context=context,
                     )
                 )
@@ -175,6 +188,50 @@ class AttachShelfScanHandler:
                         audit_context=context,
                     )
                 ).document
+
+            if attach_signed_scan:
+                step = "signed_scan"
+                with self._uow_factory() as uow:
+                    scan = CreateComplianceDocumentUploadUrlHandler(
+                        uow,
+                        self._storage,
+                        self._max_upload_bytes,
+                        self._audit,
+                        role=DocumentFileRole.SIGNED_SCAN,
+                    ).handle(
+                        CreateComplianceDocumentUploadUrlCommand(
+                            organization_id=organization_id,
+                            document_id=document.id,
+                            actor_id=actor_id,
+                            filename=filename,
+                            content_type=PDF_CONTENT_TYPE,
+                            size_bytes=len(data),
+                            sha256=sha256,
+                            audit_context=context,
+                        )
+                    )
+                self._put(scan.presigned, data)
+                with self._uow_factory() as uow:
+                    document = ConfirmComplianceDocumentFileHandler(
+                        uow,
+                        self._storage,
+                        self._clock,
+                        self._audit,
+                        role=DocumentFileRole.SIGNED_SCAN,
+                    ).handle(
+                        ConfirmComplianceDocumentFileCommand(
+                            organization_id=organization_id,
+                            document_id=document.id,
+                            actor_id=actor_id,
+                            expected_version=document.version,
+                            key=scan.key,
+                            size_bytes=len(data),
+                            sha256=sha256,
+                            content_type=PDF_CONTENT_TYPE,
+                            original_filename=filename,
+                            audit_context=context,
+                        )
+                    ).document
 
             step = "activate"
             with self._uow_factory() as uow:

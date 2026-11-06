@@ -59,13 +59,18 @@ from backend.core.application.services.shelf_scan_attachment import (
     SkippedPlace,
     SkipReason,
     plan_attachments,
+    plan_by_code,
 )
 from backend.core.contracts.clock import ClockContract
 from backend.core.contracts.storage import PresignedUpload, StorageContract
 from backend.core.contracts.unit_of_work import UnitOfWorkContract
+from backend.core.domain.entities.document_type import DocumentType
+from backend.core.domain.entities.shelf_slot import ShelfSlot
 from backend.core.domain.entities.user import UserStatus
 from backend.core.domain.exceptions.organization import OrganizationNotFound
 from backend.core.domain.value_objects import OrganizationId, UserId
+from backend.core.domain.value_objects.compliance_enums import ComplianceDocumentStatus
+from backend.core.domain.value_objects.safety_ids import ComplianceDocumentId
 
 EXIT_OK = 0
 EXIT_FAILED = 1
@@ -184,7 +189,13 @@ def run_attach(
     effective_from: date | None,
     limit: int | None = None,
     put: Callable[[PresignedUpload, bytes], None] = http_put,
+    match_by_code: bool = False,
+    approval_order: str | None = None,
+    order_note: str | None = None,
+    signed_scan: bool = True,
 ) -> AttachReport:
+    if approval_order and not match_by_code:
+        raise AttachRefused("--approval-order needs --match-by-code.")
     if not root.is_dir():
         raise AttachRefused(f"Root is not a directory: {root}.")
     if apply and effective_from is None:
@@ -195,6 +206,25 @@ def run_attach(
     with uow_factory() as unit_of_work:
         slots = unit_of_work.shelf_slots.list_all(organization_id)
         types = {item.code: item for item in unit_of_work.document_types.list(organization_id)}
+    if match_by_code:
+        return _run_signed_editions(
+            uow_factory=uow_factory,
+            clock=clock,
+            storage=storage,
+            max_upload_bytes=max_upload_bytes,
+            organization_id=organization_id,
+            actor=actor,
+            slots=slots,
+            types=types,
+            root=root,
+            apply=apply,
+            effective_from=effective_from,
+            limit=limit,
+            put=put,
+            approval_order=approval_order,
+            order_note=order_note,
+            signed_scan=signed_scan,
+        )
     plan = plan_attachments(slots, types, make_locator(root, max_upload_bytes))
     candidates = plan.candidates[:limit] if limit else plan.candidates
     report = AttachReport(
@@ -225,6 +255,129 @@ def run_attach(
     return report
 
 
+def list_code_files(
+    root: Path, max_bytes: int
+) -> tuple[list[LocatedFile], list[SkippedPlace]]:
+    """PDFs directly in ``root`` (not recursive), checked like ``make_locator``."""
+    files: list[LocatedFile] = []
+    rejected: list[SkippedPlace] = []
+    locate = make_locator(root, max_bytes)
+    for entry in sorted(root.iterdir()):
+        if not entry.is_file() or entry.suffix.lower() != ".pdf":
+            continue
+        result = locate(entry.name)
+        if result.file is None:
+            reason = (result.reason or SkipReason.FILE_NOT_FOUND).value
+            rejected.append(SkippedPlace(code="", reason=reason, detail=entry.name))
+        else:
+            files.append(result.file)
+    return files, rejected
+
+
+def _existing_order_id(
+    uow_factory: Callable[[], UnitOfWorkContract],
+    organization_id: OrganizationId,
+    slot: ShelfSlot,
+) -> ComplianceDocumentId | None:
+    """On a re-run the order may already be in force on its place."""
+    with uow_factory() as unit_of_work:
+        documents = unit_of_work.compliance_documents.list_by_ids(
+            organization_id, slot.linked_document_ids
+        )
+    in_force = (ComplianceDocumentStatus.ACTIVE, ComplianceDocumentStatus.UNDER_REVIEW)
+    return next((item.id for item in documents if item.status in in_force), None)
+
+
+def _run_signed_editions(
+    *,
+    uow_factory: Callable[[], UnitOfWorkContract],
+    clock: ClockContract,
+    storage: StorageContract,
+    max_upload_bytes: int,
+    organization_id: OrganizationId,
+    actor: UserId,
+    slots: Sequence[ShelfSlot],
+    types: dict[str, DocumentType],
+    root: Path,
+    apply: bool,
+    effective_from: date | None,
+    limit: int | None,
+    put: Callable[[PresignedUpload, bytes], None],
+    approval_order: str | None,
+    order_note: str | None,
+    signed_scan: bool,
+) -> AttachReport:
+    """Signed editions named by place code; the approving order goes first (plan E1–E5)."""
+    files, rejected = list_code_files(root, max_upload_bytes)
+    plan = plan_by_code(slots, types, files, order_code=approval_order)
+    skipped = [*rejected, *plan.skipped]
+    order_id: ComplianceDocumentId | None = None
+    if approval_order and plan.order is None:
+        order_slot = next((slot for slot in slots if slot.code.value == approval_order), None)
+        if order_slot is not None and order_slot.linked_document_ids:
+            order_id = _existing_order_id(uow_factory, organization_id, order_slot)
+            if order_id is not None:
+                skipped = [item for item in skipped if item.code != approval_order]
+    candidates = list(plan.candidates[:limit] if limit else plan.candidates)
+    if approval_order and plan.order is None and order_id is None:
+        blocked = [item for item in candidates if item.document_type.requires_approval_order]
+        skipped.extend(
+            SkippedPlace(code=item.slot.code.value, reason="order_not_in_force") for item in blocked
+        )
+        candidates = [item for item in candidates if item not in blocked]
+    report = AttachReport(
+        applied=apply,
+        candidates=([plan.order.slot.code.value] if plan.order else [])
+        + [item.slot.code.value for item in candidates],
+        skipped=skipped,
+    )
+    if not apply:
+        return report
+    assert effective_from is not None
+    handler = AttachShelfScanHandler(
+        uow_factory,
+        clock,
+        AdministrativeAuditRecorder(clock, uow_factory),
+        storage,
+        max_upload_bytes,
+        read_bytes=lambda path: Path(path).read_bytes(),
+        put=put,
+    )
+    if plan.order is not None:
+        outcome = handler.handle(
+            plan.order,
+            organization_id=organization_id,
+            actor_id=actor,
+            effective_from=effective_from,
+            notes=order_note,
+            attach_signed_scan=signed_scan,
+        )
+        if not outcome.attached:
+            # Nothing else is touched when the order cannot be put in force (plan E2).
+            report.failed.append(outcome)
+            report.skipped.extend(
+                SkippedPlace(code=item.slot.code.value, reason="order_failed")
+                for item in candidates
+            )
+            return report
+        report.attached.append(outcome)
+        assert outcome.document_id is not None
+        order_id = ComplianceDocumentId(value=UUID(outcome.document_id))
+    for candidate in candidates:
+        outcome = handler.handle(
+            candidate,
+            organization_id=organization_id,
+            actor_id=actor,
+            effective_from=effective_from,
+            approved_by_document_id=(
+                order_id if candidate.document_type.requires_approval_order else None
+            ),
+            attach_signed_scan=signed_scan,
+        )
+        (report.attached if outcome.attached else report.failed).append(outcome)
+    return report
+
+
 def format_report(report: AttachReport) -> str:
     mode = "APPLIED" if report.applied else "DRY RUN — nothing written"
     lines = [
@@ -247,7 +400,11 @@ def format_report(report: AttachReport) -> str:
     for item in report.skipped:
         reasons.setdefault(item.reason, []).append(item.code)
     for reason, codes in sorted(reasons.items()):
-        lines.append(f"  skipped {reason} ({len(codes)}): " + ", ".join(codes))
+        shown = [code or "?" for code in codes]
+        lines.append(f"  skipped {reason} ({len(codes)}): " + ", ".join(shown))
+    for item in report.skipped:
+        if not item.code and item.detail:
+            lines.append(f"    file «{item.detail}»: {item.reason}")
     return "\n".join(lines)
 
 
@@ -268,6 +425,21 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     )
     parser.add_argument("--effective-from", type=date.fromisoformat)
     parser.add_argument("--limit", type=int)
+    parser.add_argument(
+        "--match-by-code",
+        action="store_true",
+        help="Files in --root are named «<place code> <title>.pdf» (signed editions).",
+    )
+    parser.add_argument(
+        "--approval-order",
+        help="Place code of the approving order in --root; it is put in force first.",
+    )
+    parser.add_argument("--order-note", help="Notes for the order, e.g. its number and date.")
+    parser.add_argument(
+        "--no-signed-scan",
+        action="store_true",
+        help="Do not also store the PDF as the signed scan (signed editions mode).",
+    )
     parser.add_argument("--report", type=Path)
     return parser.parse_args(argv)
 
@@ -297,6 +469,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             apply=args.apply and not args.dry_run,
             effective_from=args.effective_from,
             limit=args.limit,
+            match_by_code=args.match_by_code,
+            approval_order=args.approval_order,
+            order_note=args.order_note,
+            signed_scan=not args.no_signed_scan,
         )
     except AttachRefused as error:
         print(f"Attachment refused: {error}", file=sys.stderr)

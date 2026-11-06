@@ -394,3 +394,115 @@ def test_attach_against_postgresql(sqlalchemy_session_factory: Any, tmp_path: Pa
         assert stored is not None
         document = check.compliance_documents.get(organization_id, stored.linked_document_ids[0])
         assert document is not None and document.status is ComplianceDocumentStatus.ACTIVE
+
+
+# ---- signed editions approved by one order (plan 2026-11-06-p11-012-attach-signed-editions) ----
+
+
+def _signed_world(world: _World) -> None:
+    world.types.add(make_document_type(organization_id=world.organization_id, code="order"))
+    world.types.add(
+        make_document_type(
+            organization_id=world.organization_id,
+            code="iot_profession",
+            requires_approval_order=True,
+        )
+    )
+    world.slot("ТрБ.01.01", document_type_code="order")
+    world.slot("ТрБ.01.02", document_type_code="iot_profession")
+    world.slot(
+        "ТрБ.01.03",
+        document_type_code="iot_profession",
+        curated_status=CuratedSlotStatus.IN_PROGRESS,
+    )
+    world.file("ТрБ.01.01 Приказ о введении инструкций.pdf")
+    world.file("ТрБ.01.02 ИОТ для водителя.pdf")
+    world.file("ТрБ.01.03 ИОТ для взрывника.pdf")
+
+
+def _document_of(world: _World, code: str) -> Any:
+    slot = world.slots.get_by_code(world.organization_id, code)
+    assert slot is not None and slot.linked_document_ids
+    return world.documents.get(world.organization_id, slot.linked_document_ids[-1])
+
+
+def test_order_first_then_instructions_approved_by_it(world: _World) -> None:
+    _signed_world(world)
+
+    report = world.run(
+        match_by_code=True, approval_order="ТрБ.01.01", order_note="№ 7-ТЕСТ от 01.02.2026"
+    )
+
+    assert [item.code for item in report.attached] == ["ТрБ.01.01", "ТрБ.01.02", "ТрБ.01.03"]
+    order = _document_of(world, "ТрБ.01.01")
+    assert order.status is ComplianceDocumentStatus.ACTIVE
+    assert order.notes == "№ 7-ТЕСТ от 01.02.2026"
+    for code in ("ТрБ.01.02", "ТрБ.01.03"):
+        document = _document_of(world, code)
+        assert document.status is ComplianceDocumentStatus.ACTIVE
+        assert document.approved_by_document_id == order.id
+        assert document.effective_from == EFFECTIVE
+        assert document.current_signed_scan is not None
+        assert document.current_file is not None
+
+    again = world.run(match_by_code=True, approval_order="ТрБ.01.01")
+    assert again.attached == [] and again.failed == []
+    assert {item.code: item.reason for item in again.skipped} == {
+        "ТрБ.01.02": "has_document",
+        "ТрБ.01.03": "has_document",
+    }
+
+
+def test_existing_order_is_reused_on_a_later_run(world: _World) -> None:
+    _signed_world(world)
+    world.run(match_by_code=True, approval_order="ТрБ.01.01", limit=1)
+    order = _document_of(world, "ТрБ.01.01")
+
+    report = world.run(match_by_code=True, approval_order="ТрБ.01.01")
+
+    assert [item.code for item in report.attached] == ["ТрБ.01.03"]
+    assert _document_of(world, "ТрБ.01.03").approved_by_document_id == order.id
+
+
+def test_order_failure_stops_the_run(world: _World) -> None:
+    _signed_world(world)
+    world.put = lambda presigned, data: None  # type: ignore[method-assign,assignment]
+
+    report = world.run(match_by_code=True, approval_order="ТрБ.01.01")
+
+    assert [(item.code, item.failed_step) for item in report.failed] == [("ТрБ.01.01", "confirm")]
+    assert report.attached == []
+    assert {item.reason for item in report.skipped} == {"order_failed"}
+    for code in ("ТрБ.01.02", "ТрБ.01.03"):
+        slot = world.slots.get_by_code(world.organization_id, code)
+        assert slot is not None and slot.linked_document_ids == ()
+
+
+def test_code_matching_reports_unknown_ambiguous_and_missing_order(world: _World) -> None:
+    _signed_world(world)
+    world.file("ТрБ.01.02 ИОТ для водителя (копия).pdf")
+    world.file("ТрБ.03.09 Лишний.pdf")
+    world.file("Без кода.pdf")
+
+    report = world.run(apply=False, effective_from=None, match_by_code=True, approval_order="ТрБ.09.09")
+
+    reasons = {(item.code or item.detail): item.reason for item in report.skipped}
+    assert reasons["ТрБ.01.02"] == "ambiguous"
+    assert reasons["ТрБ.03.09"] == "unknown_code"
+    assert reasons["Без кода.pdf"] == "no_code_in_name"
+    assert reasons["ТрБ.09.09"] == "order_file_not_found"
+    assert reasons["ТрБ.01.03"] == "order_not_in_force"
+    assert report.candidates == ["ТрБ.01.01"]
+    assert world.documents.snapshot() == {}
+
+
+def test_without_an_order_types_that_need_one_are_skipped(world: _World) -> None:
+    _signed_world(world)
+
+    report = world.run(apply=False, effective_from=None, match_by_code=True)
+
+    assert report.candidates == ["ТрБ.01.01"]
+    assert {item.code: item.reason for item in report.skipped} == {
+        "ТрБ.01.02": "type_requires_approval_order",
+        "ТрБ.01.03": "type_requires_approval_order",
+    }
