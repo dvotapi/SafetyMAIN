@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import {
   Alert,
@@ -46,6 +46,8 @@ export function ShelfExclusionForm({
   onCancel: () => void;
 }) {
   const id = useId();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => headingRef.current?.focus(), []);
   const [reason, setReason] = useState<SlotExclusionReason>(defaultReason);
   const [comment, setComment] = useState("");
   const [touched, setTouched] = useState(false);
@@ -68,7 +70,12 @@ export function ShelfExclusionForm({
         onSubmit({ reason, comment: comment.trim() });
       }}
     >
-      <h3 id={`${id}-title`} className={styles.panelHeading}>
+      <h3
+        id={`${id}-title`}
+        ref={headingRef}
+        className={styles.panelHeading}
+        tabIndex={-1}
+      >
         {title}
       </h3>
       <Text as="p" className={styles.mono}>

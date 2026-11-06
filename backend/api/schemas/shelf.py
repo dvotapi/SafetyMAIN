@@ -122,6 +122,8 @@ class ShelfSlotSummaryResponse(BaseModel):
     group: ShelfStatusGroupValue
     has_acknowledgement_gap: bool
     """Always ``false`` until phase 5 (acknowledgement coverage)."""
+    version: int
+    """Current place version; bulk commands send it back (optimistic concurrency)."""
 
 
 class ShelfSlotListResponse(BaseModel):
@@ -240,7 +242,6 @@ class ShelfSlotDetailResponse(ShelfSlotSummaryResponse):
     primary_action: ShelfActionValue | None
     acknowledgement: None = None
     """Phase 5; always ``null`` now."""
-    version: int
 
 
 class DevelopShelfSlotResponse(BaseModel):

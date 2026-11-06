@@ -100,7 +100,18 @@ The optional `scripts/attach_shelf_scans.py` (§4.5) is **not** in this plan. It
 ## Implementation notes (4c)
 
 - `pdfjs-dist` is pinned to **4.10.38**: 5.x requires Node ≥ 22.13, while the production image builds on Node 20.11.
-- The bulk request needs `{slot_id, version}`, but `ShelfSlotSummaryDto` has no version (TASK §2.5). The page reads each selected place's detail first, so the backend needs no change. Undo restores at freshly read versions as well.
+- The bulk request needs `{slot_id, version}`, but `ShelfSlotSummaryDto` had no version (TASK §2.5).
+  - First the page read each detail just before the request. The independent review showed that this bypasses optimistic concurrency.
+  - `version` was then added to the summary DTO (product owner, 2026-11-06), and the page sends the versions the user saw.
+  - Undo restores each place at its freshly read version and reports the places it could not restore.
+- Review fixes (PR 4c):
+  - the PDF viewer cancels a superseded render;
+  - the viewer reloads only when the file changes, not on a new presigned URL;
+  - after an upload the whole shelf refreshes;
+  - the upload step shows loading and error states;
+  - Escape in a field or in the search box does not close the panel;
+  - focus moves into an opened form and back to its trigger;
+  - action buttons are disabled while a command runs.
 - `open_project` links to the linked edition in `draft`/`approved` (from `editions`); `start_review` links to the document page, where the existing lifecycle actions live.
 - `ComplianceDocumentUploadDialog` takes `document` as `Pick<…, "id" | "code" | "version">` and the new props `target` and `onUploaded`. The shelf reads `id`, `code` and `version` of the document through its own API module.
 - The phone sheet is the panel with fixed full-screen positioning (Escape and the close button close it), not a Radix dialog.

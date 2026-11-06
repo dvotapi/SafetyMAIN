@@ -133,6 +133,7 @@ def _summary_fields(view: ShelfSlotView | ShelfSlotDetailView) -> dict[str, Any]
         "effective_status": view.evaluation.effective_status.value,
         "group": view.evaluation.group.value,
         "has_acknowledgement_gap": False,
+        "version": slot.version,
     }
 
 
@@ -246,7 +247,6 @@ def to_slot_detail_response(view: ShelfSlotDetailView) -> ShelfSlotDetailRespons
         available_actions=[action.value for action in view.actions.all],
         primary_action=view.actions.primary.value if view.actions.primary else None,
         acknowledgement=None,
-        version=slot.version,
     )
 
 

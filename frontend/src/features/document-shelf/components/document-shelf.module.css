@@ -650,3 +650,7 @@
 .searchOption[aria-selected="true"] {
   background: var(--sm-color-interactive-muted);
 }
+
+.undoError {
+  color: var(--sm-color-danger-fg);
+}

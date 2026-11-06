@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Alert, Button, Input, Label, Text } from "@/components";
 
@@ -21,6 +21,8 @@ export function ShelfLinkPicker({
   onCancel: () => void;
 }) {
   const id = useId();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => headingRef.current?.focus(), []);
   const [draft, setDraft] = useState("");
   const [search, setSearch] = useState("");
   useEffect(() => {
@@ -31,7 +33,12 @@ export function ShelfLinkPicker({
 
   return (
     <section className={styles.panelBlock} aria-labelledby={`${id}-title`}>
-      <h3 id={`${id}-title`} className={styles.panelHeading}>
+      <h3
+        id={`${id}-title`}
+        ref={headingRef}
+        className={styles.panelHeading}
+        tabIndex={-1}
+      >
         Привязать документ
       </h3>
       <div className={styles.field}>

@@ -57,6 +57,7 @@ export function ShelfScanBlock({ document }: { document: CurrentDocument }) {
       ) : (
         <PdfViewer
           url={viewUrl.data?.url ?? null}
+          sourceKey={file.file_id}
           contentType={file.content_type}
           title={title}
           onDownload={() => void download()}
@@ -85,6 +86,7 @@ export function ShelfScanBlock({ document }: { document: CurrentDocument }) {
           <DialogBody>
             <PdfViewer
               url={viewUrl.data?.url ?? null}
+              sourceKey={file.file_id}
               contentType={file.content_type}
               title={title}
               onDownload={() => void download()}

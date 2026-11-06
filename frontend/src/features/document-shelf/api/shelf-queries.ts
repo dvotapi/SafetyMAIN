@@ -59,17 +59,21 @@ export function useShelfFileViewUrlQuery(
 ) {
   const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: [
-      ...shelfKeys.all(organizationId),
-      "view-url",
-      documentId,
-      fileId,
-    ],
+    queryKey: shelfKeys.fileViewUrl(
+      organizationId,
+      documentId ?? "",
+      fileId ?? "",
+    ),
     queryFn: ({ signal }) =>
       getFileViewUrl(documentId ?? "", fileId ?? "", signal),
     enabled: Boolean(organizationId && documentId && fileId),
-    // Presigned URLs expire; refetch rather than reuse an old one.
-    staleTime: 60_000,
+    // Reuse the URL until shortly before it expires; never refetch on focus.
+    staleTime: (query) => {
+      const expiresAt = query.state.data?.expires_at;
+      if (!expiresAt) return 5 * 60_000;
+      return Math.max(0, Date.parse(expiresAt) - Date.now() - 60_000);
+    },
+    refetchOnWindowFocus: false,
   });
 }
 

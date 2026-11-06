@@ -19,6 +19,7 @@ import { ShelfSummary } from "@/features/document-shelf/components/shelf-summary
 import { useShelfPermissions } from "@/features/document-shelf/hooks/use-shelf-permissions";
 import { useShelfUrlState } from "@/features/document-shelf/hooks/use-shelf-url-state";
 import {
+  BULK_EXCLUDE_MAX_ITEMS,
   useBulkExcludeShelfSlotsMutation,
   useRestoreShelfSlotsMutation,
 } from "@/features/document-shelf/api/shelf-mutations";
@@ -36,13 +37,16 @@ export function ShelfPage() {
   const overview = useShelfOverviewQuery(capabilities.canRead);
   const section = useShelfSectionSlotsQuery(state.section);
   const [selectionMode, setSelectionMode] = useState(false);
-  const [selected, setSelected] = useState<Map<string, string>>(new Map());
+  const [selected, setSelected] = useState<
+    Map<string, { code: string; version: number }>
+  >(new Map());
   const [bulkForm, setBulkForm] = useState(false);
   const [bulkError, setBulkError] = useState<string | null>(null);
   const [undo, setUndo] = useState<{
     codes: string[];
     slotIds: string[];
   } | null>(null);
+  const [undoError, setUndoError] = useState<string | null>(null);
   const bulkExclude = useBulkExcludeShelfSlotsMutation();
   const restoreMany = useRestoreShelfSlotsMutation();
 
@@ -81,8 +85,17 @@ export function ShelfPage() {
   useEffect(() => {
     if (!state.slot) return undefined;
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape" && !document.querySelector("[role=dialog]"))
-        closePanel();
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      if (document.querySelector("[role=dialog]")) return;
+      // Escape inside a field or the search box belongs to that control.
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest(
+          "input, textarea, select, [role=combobox], [role=listbox]",
+        )
+      )
+        return;
+      closePanel();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -178,16 +191,41 @@ export function ShelfPage() {
           </span>
           <TextButton
             disabled={restoreMany.isPending}
-            onClick={() =>
-              void restoreMany.mutateAsync(undo.slotIds).then(
-                () => setUndo(null),
-                (cause: unknown) => setBulkError(shelfErrorMessage(cause)),
-              )
-            }
+            onClick={() => {
+              setUndoError(null);
+              void restoreMany
+                .mutateAsync(undo.slotIds)
+                .then(({ failed, firstError }) => {
+                  if (failed.length === 0) {
+                    setUndo(null);
+                    return;
+                  }
+                  const remaining = new Set(failed);
+                  setUndo({
+                    slotIds: undo.slotIds.filter((id) => remaining.has(id)),
+                    codes: undo.codes.filter((_, index) =>
+                      remaining.has(undo.slotIds[index]!),
+                    ),
+                  });
+                  setUndoError(shelfErrorMessage(firstError));
+                });
+            }}
           >
             Отменить
           </TextButton>
-          <TextButton onClick={() => setUndo(null)}>Скрыть</TextButton>
+          <TextButton
+            onClick={() => {
+              setUndo(null);
+              setUndoError(null);
+            }}
+          >
+            Скрыть
+          </TextButton>
+          {undoError ? (
+            <span role="alert" className={styles.undoError}>
+              Не удалось вернуть: {undoError}
+            </span>
+          ) : null}
         </div>
       ) : null}
       <div
@@ -234,7 +272,11 @@ export function ShelfPage() {
                 setSelected((current) => {
                   const next = new Map(current);
                   if (next.has(slot.id)) next.delete(slot.id);
-                  else next.set(slot.id, slot.code);
+                  else if (next.size < BULK_EXCLUDE_MAX_ITEMS)
+                    next.set(slot.id, {
+                      code: slot.code,
+                      version: slot.version,
+                    });
                   return next;
                 });
               }}
@@ -243,7 +285,7 @@ export function ShelfPage() {
           {selectionMode && bulkForm ? (
             <div className={styles.panel}>
               <ShelfExclusionForm
-                codes={[...selected.values()]}
+                codes={[...selected.values()].map((item) => item.code)}
                 hasLinkedDocuments={false}
                 submitting={bulkExclude.isPending}
                 serverError={bulkError}
@@ -251,8 +293,12 @@ export function ShelfPage() {
                 onSubmit={(input) => {
                   setBulkError(null);
                   const slotIds = [...selected.keys()];
-                  const codes = [...selected.values()];
-                  bulkExclude.mutateAsync({ slotIds, ...input }).then(
+                  const codes = [...selected.values()].map((item) => item.code);
+                  const items = [...selected].map(([slot_id, item]) => ({
+                    slot_id,
+                    version: item.version,
+                  }));
+                  bulkExclude.mutateAsync({ items, ...input }).then(
                     () => {
                       resetSelection();
                       setUndo({ codes, slotIds });
@@ -271,6 +317,9 @@ export function ShelfPage() {
             >
               <span>
                 Выбрано {selected.size} {pluralPlaces(selected.size)}
+                {selected.size >= BULK_EXCLUDE_MAX_ITEMS
+                  ? ` (не больше ${BULK_EXCLUDE_MAX_ITEMS} за раз)`
+                  : ""}
               </span>
               <Button
                 variant="danger"

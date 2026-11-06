@@ -76,7 +76,8 @@ by_group, readiness_percent, strip[{code, group}]`. Sections are ordered by `num
 Places in `strip` are in code order. `mandatory_total` counts excluded places too.
 
 `ShelfSlotSummaryDto`: `id, code, subsection_code, short_title, title, document_kind,
-kept_on, obligation_level, effective_status, group, has_acknowledgement_gap`.
+kept_on, obligation_level, effective_status, group, has_acknowledgement_gap, version`.
+`version` lets bulk commands send the version the user saw.
 `has_acknowledgement_gap` is always `false` until phase 5.
 
 `ShelfSectionSlotsDto`: `section {code, number, title}`,

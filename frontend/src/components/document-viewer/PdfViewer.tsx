@@ -23,7 +23,23 @@ interface PdfPageProxy {
   render(options: {
     canvasContext: CanvasRenderingContext2D;
     viewport: { width: number; height: number };
-  }): { promise: Promise<unknown> };
+  }): RenderTask;
+}
+
+interface RenderTask {
+  promise: Promise<unknown>;
+  cancel(): void;
+}
+
+/** Lets an effect cancel the render it started (pdf.js forbids two renders on one canvas). */
+interface RenderGuard {
+  cancelled: boolean;
+  task: RenderTask | null;
+}
+
+function cancelRender(guard: RenderGuard): void {
+  guard.cancelled = true;
+  guard.task?.cancel();
 }
 
 interface PdfDocumentProxy {
@@ -53,19 +69,28 @@ async function renderPage(
   pageNumber: number,
   canvas: HTMLCanvasElement,
   scaleFor: (page: PdfPageProxy) => number,
+  guard: RenderGuard,
 ): Promise<void> {
   const page = await pdf.getPage(pageNumber);
+  if (guard.cancelled) return;
   const viewport = page.getViewport({ scale: scaleFor(page) });
   const context = canvas.getContext("2d");
   if (!context) return;
   canvas.width = Math.floor(viewport.width);
   canvas.height = Math.floor(viewport.height);
-  await page.render({ canvasContext: context, viewport }).promise;
+  guard.task = page.render({ canvasContext: context, viewport });
+  await guard.task.promise;
 }
 
 export interface PdfViewerProps {
   /** Inline (presigned) URL of the file; `null` while it is being issued. */
   url: string | null;
+  /**
+   * Stable identity of the file (e.g. its id). A presigned URL changes its
+   * signature on every refresh; the document is reloaded only when this key
+   * changes, so the reader keeps their page.
+   */
+  sourceKey?: string;
   contentType: string;
   title: string;
   onDownload?: () => void;
@@ -75,6 +100,7 @@ export interface PdfViewerProps {
 
 export function PdfViewer({
   url,
+  sourceKey,
   contentType,
   title,
   onDownload,
@@ -88,15 +114,19 @@ export function PdfViewer({
   const [zoomIndex, setZoomIndex] = useState(2);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const thumbRefs = useRef<Array<HTMLCanvasElement | null>>([]);
+  const urlRef = useRef(url);
+  urlRef.current = url;
+  const loadKey = url ? (sourceKey ?? url) : null;
 
   useEffect(() => {
-    if (!isPdf || !url) return undefined;
+    const target = urlRef.current;
+    if (!isPdf || !loadKey || !target) return undefined;
     let cancelled = false;
     let loaded: PdfDocumentProxy | null = null;
     setPdf(null);
     setError(null);
     setPage(1);
-    loadPdf(url)
+    loadPdf(target)
       .then((document) => {
         loaded = document;
         if (cancelled) void document.destroy();
@@ -109,31 +139,49 @@ export function PdfViewer({
       cancelled = true;
       if (loaded) void loaded.destroy();
     };
-  }, [isPdf, url]);
+  }, [isPdf, loadKey]);
 
   const zoom = ZOOM_STEPS[zoomIndex] ?? 1;
 
   useEffect(() => {
-    if (!pdf || !canvasRef.current) return;
+    if (!pdf || !canvasRef.current) return undefined;
+    const guard: RenderGuard = { cancelled: false, task: null };
     renderPage(
       pdf,
       page,
       canvasRef.current,
       () => zoom * (full ? 1.5 : 1),
-    ).catch(() => setError("Не удалось показать страницу."));
+      guard,
+    ).then(
+      () => {
+        if (!guard.cancelled) setError(null);
+      },
+      () => {
+        // A cancelled render (page change, zoom, unmount) is not an error.
+        if (!guard.cancelled) setError("Не удалось показать страницу.");
+      },
+    );
+    return () => cancelRender(guard);
   }, [pdf, page, zoom, full]);
 
   useEffect(() => {
-    if (!pdf) return;
+    if (!pdf) return undefined;
+    const guards: RenderGuard[] = [];
     const count = Math.min(pdf.numPages, MAX_THUMBS);
     for (let index = 0; index < count; index += 1) {
       const canvas = thumbRefs.current[index];
       if (!canvas) continue;
-      void renderPage(pdf, index + 1, canvas, (proxy) => {
-        const base = proxy.getViewport({ scale: 1 });
-        return THUMB_WIDTH / base.width;
-      }).catch(() => undefined);
+      const guard: RenderGuard = { cancelled: false, task: null };
+      guards.push(guard);
+      void renderPage(
+        pdf,
+        index + 1,
+        canvas,
+        (proxy) => THUMB_WIDTH / proxy.getViewport({ scale: 1 }).width,
+        guard,
+      ).catch(() => undefined);
     }
+    return () => guards.forEach(cancelRender);
   }, [pdf]);
 
   const pages = pdf?.numPages ?? 0;

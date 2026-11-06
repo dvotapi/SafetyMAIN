@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Alert, Button, Label, Select, Text } from "@/components";
 
@@ -22,6 +22,8 @@ export function ShelfDevelopForm({
   onCancel: () => void;
 }) {
   const id = useId();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => headingRef.current?.focus(), []);
   const types = useActiveDocumentTypesQuery(true);
   const [code, setCode] = useState("");
   return (
@@ -33,7 +35,12 @@ export function ShelfDevelopForm({
         if (code) onSubmit(code);
       }}
     >
-      <h3 id={`${id}-title`} className={styles.panelHeading}>
+      <h3
+        id={`${id}-title`}
+        ref={headingRef}
+        className={styles.panelHeading}
+        tabIndex={-1}
+      >
         Тип документа
       </h3>
       <Text as="p" tone="muted">

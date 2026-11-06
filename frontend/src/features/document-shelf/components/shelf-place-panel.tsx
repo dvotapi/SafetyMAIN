@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Alert,
@@ -19,6 +19,7 @@ import {
   useDevelopShelfSlotMutation,
   useExcludeShelfSlotMutation,
   useLinkShelfSlotDocumentMutation,
+  useRefreshShelf,
   useRestoreShelfSlotMutation,
 } from "@/features/document-shelf/api/shelf-mutations";
 import {
@@ -90,6 +91,23 @@ export function ShelfPlacePanel({
   const link = useLinkShelfSlotDocumentMutation();
   const uploadTarget = mode.kind === "upload" ? mode.documentId : null;
   const uploadDocument = useShelfDocumentQuery(uploadTarget);
+  const refreshShelf = useRefreshShelf();
+  const panelRef = useRef<HTMLElement>(null);
+  const lastTrigger = useRef<string | null>(null);
+  const busy =
+    develop.isPending ||
+    confirm.isPending ||
+    restore.isPending ||
+    link.isPending;
+
+  // Forms focus their own heading; on return, focus goes back to the trigger (WCAG 2.4.3).
+  useEffect(() => {
+    if (mode.kind !== "view" || !lastTrigger.current) return;
+    panelRef.current
+      ?.querySelector<HTMLElement>(`[data-action="${lastTrigger.current}"]`)
+      ?.focus();
+    lastTrigger.current = null;
+  }, [mode.kind]);
 
   if (query.isPending) {
     return (
@@ -160,6 +178,7 @@ export function ShelfPlacePanel({
   };
 
   const handle = (action: ShelfAction) => {
+    lastTrigger.current = action;
     switch (action) {
       case "develop_document":
         void startDevelop("edit");
@@ -215,6 +234,7 @@ export function ShelfPlacePanel({
         <Link
           key={action}
           href={href}
+          data-action={action}
           className={primary ? styles.primaryLink : styles.secondaryLink}
         >
           {label}
@@ -223,7 +243,13 @@ export function ShelfPlacePanel({
     }
     if (action === "exclude") {
       return (
-        <TextButton key={action} tone="danger" onClick={() => handle(action)}>
+        <TextButton
+          key={action}
+          tone="danger"
+          data-action={action}
+          disabled={busy}
+          onClick={() => handle(action)}
+        >
           {label}
         </TextButton>
       );
@@ -234,10 +260,9 @@ export function ShelfPlacePanel({
         key={action}
         variant={primary ? "primary" : "secondary"}
         size="sm"
-        loading={
-          primary &&
-          (develop.isPending || confirm.isPending || restore.isPending)
-        }
+        data-action={action}
+        loading={primary && busy}
+        disabled={busy}
         onClick={() => handle(action)}
       >
         {label}
@@ -255,7 +280,11 @@ export function ShelfPlacePanel({
   );
 
   return (
-    <aside className={styles.panel} aria-labelledby="shelf-panel-title">
+    <aside
+      ref={panelRef}
+      className={styles.panel}
+      aria-labelledby="shelf-panel-title"
+    >
       <div className={styles.panelTop}>
         <span className={styles.mono}>{slot.code}</span>
         <ShelfStatusBadge group={slot.group} status={slot.effective_status} />
@@ -450,12 +479,39 @@ export function ShelfPlacePanel({
         </>
       ) : null}
 
-      {mode.kind === "upload" && uploadDocument.data ? (
+      {mode.kind === "upload" && uploadDocument.isError ? (
+        <Alert tone="danger" title="Не удалось открыть загрузку">
+          {shelfErrorMessage(uploadDocument.error)}{" "}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void uploadDocument.refetch()}
+          >
+            Повторить
+          </Button>{" "}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMode({ kind: "view" })}
+          >
+            Назад
+          </Button>
+        </Alert>
+      ) : null}
+      {mode.kind === "upload" &&
+      !uploadDocument.isError &&
+      (uploadDocument.isFetching || !uploadDocument.data) ? (
+        <Skeleton height="120px" aria-label="Подготовка загрузки" />
+      ) : null}
+      {/* Opened only with a fresh version: confirm sends it as expected_version. */}
+      {mode.kind === "upload" &&
+      uploadDocument.data &&
+      !uploadDocument.isFetching ? (
         <ComplianceDocumentUploadDialog
           open
           document={uploadDocument.data}
           target={mode.target}
-          onUploaded={() => void query.refetch()}
+          onUploaded={() => void refreshShelf()}
           onOpenChange={(open) => {
             if (!open) setMode({ kind: "view" });
           }}

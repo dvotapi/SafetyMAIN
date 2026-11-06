@@ -43,7 +43,7 @@ export function ShelfSearch({
         id={`${id}-input`}
         role="combobox"
         aria-expanded={expanded}
-        aria-controls={`${id}-list`}
+        aria-controls={expanded ? `${id}-list` : undefined}
         aria-autocomplete="list"
         aria-activedescendant={
           expanded && items[active] ? `${id}-opt-${active}` : undefined
@@ -56,7 +56,8 @@ export function ShelfSearch({
           setActive(0);
           setOpen(true);
         }}
-        onBlur={() => window.setTimeout(() => setOpen(false), 150)}
+        // Options are chosen on mousedown (focus stays here), so blur may close at once.
+        onBlur={() => setOpen(false)}
         onKeyDown={(event) => {
           if (event.key === "ArrowDown") {
             event.preventDefault();
@@ -69,7 +70,10 @@ export function ShelfSearch({
           } else if (event.key === "Enter" && expanded && items[active]) {
             event.preventDefault();
             choose(items[active]!);
-          } else if (event.key === "Escape") {
+          } else if (event.key === "Escape" && expanded) {
+            // Close only the list; the page must not also close the panel.
+            event.preventDefault();
+            event.stopPropagation();
             setOpen(false);
           }
         }}

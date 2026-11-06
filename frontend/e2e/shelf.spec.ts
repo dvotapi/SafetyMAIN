@@ -60,6 +60,7 @@ function summary(code: string, n: number, over: Record<string, unknown> = {}) {
     effective_status: "missing",
     group: "missing",
     has_acknowledgement_gap: false,
+    version: 2,
     ...over,
   };
 }

@@ -62,7 +62,7 @@ vi.mock("pdfjs-dist", () => ({
           width: 600 * scale,
           height: 800 * scale,
         }),
-        render: () => ({ promise: Promise.resolve() }),
+        render: () => ({ promise: Promise.resolve(), cancel: () => undefined }),
       }),
     }),
   }),
@@ -353,7 +353,7 @@ describe("place panel", () => {
 });
 
 describe("bulk exclusion", () => {
-  it("selects several places, reads their versions and excludes them at once", async () => {
+  it("selects several places and excludes them with the versions shown on the shelf", async () => {
     navigation.params = new URLSearchParams("section=ТрБ");
     renderPage();
     await userEvent.click(
@@ -386,13 +386,22 @@ describe("bulk exclusion", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(
       "Исключено 2 места: ТрБ.01.01, ТрБ.01.02",
     );
+    // No detail is read just before the request: a concurrent edit must conflict.
+    expect(
+      requests.filter(
+        (item) =>
+          item.method === "GET" &&
+          item.path.startsWith("/api/v1/shelf/slots/") &&
+          !item.path.includes("?"),
+      ),
+    ).toHaveLength(0);
     const call = requests.find(
       (item) => item.path === "/api/v1/shelf/slots/bulk-exclude",
     );
     expect(call?.body).toEqual({
       items: [
-        { slot_id: slotSummary("ТрБ.01.01").id, version: 7 },
-        { slot_id: slotSummary("ТрБ.01.02").id, version: 3 },
+        { slot_id: slotSummary("ТрБ.01.01").id, version: 2 },
+        { slot_id: slotSummary("ТрБ.01.02").id, version: 2 },
       ],
       reason: "not_applicable",
       comment: "Не применяется",
@@ -416,5 +425,131 @@ describe("search", () => {
       "/shelf?section=%D0%A2%D1%80%D0%91&slot=%D0%A2%D1%80%D0%91.02.01",
       { scroll: false },
     );
+  });
+});
+
+describe("review fixes", () => {
+  it("Escape in the search box closes only the list, not the panel", async () => {
+    renderPage();
+    await panel();
+    const box = screen.getByRole("combobox", { name: "Поиск по полке" });
+    await userEvent.type(box, "найд");
+    await screen.findByRole("option", { name: /Найденное место/ });
+
+    await userEvent.keyboard("{Escape}");
+
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(navigation.push).not.toHaveBeenCalled();
+  });
+
+  it("Escape in the exclusion comment keeps the panel and the text", async () => {
+    renderPage();
+    const view = await panel();
+    await userEvent.click(
+      view.getByRole("button", { name: "Исключить с полки" }),
+    );
+    const comment = view.getByLabelText(/Комментарий/);
+    await userEvent.type(comment, "Черновик причины");
+
+    await userEvent.keyboard("{Escape}");
+
+    expect(navigation.push).not.toHaveBeenCalled();
+    expect(comment).toHaveValue("Черновик причины");
+  });
+
+  it("moves focus into an opened form and back to its trigger", async () => {
+    renderPage();
+    const view = await panel();
+    await userEvent.click(
+      view.getByRole("button", { name: "Исключить с полки" }),
+    );
+
+    expect(
+      view.getByRole("heading", { name: "Исключить место с полки" }),
+    ).toHaveFocus();
+    await userEvent.click(view.getByRole("button", { name: "Отмена" }));
+    await waitFor(() =>
+      expect(
+        view.getByRole("button", { name: "Исключить с полки" }),
+      ).toHaveFocus(),
+    );
+  });
+
+  it("shows an undo failure and keeps only the places still excluded", async () => {
+    renderPage();
+    const view = await panel();
+    await userEvent.click(
+      view.getByRole("button", { name: "Исключить с полки" }),
+    );
+    await userEvent.type(
+      view.getByLabelText(/Комментарий/),
+      "Есть такой же в ОТ",
+    );
+    await userEvent.click(view.getByRole("button", { name: "Исключить" }));
+    const status = await screen.findByRole("status");
+    vi.mocked(apiClient.request).mockImplementation(async (options) => {
+      const request = options as ApiRequestOptions;
+      if (request.path.endsWith("/restore")) {
+        throw normalizeApiError({
+          status: 409,
+          body: {
+            error: { code: "shelf_slot_version_conflict", message: "conflict" },
+          },
+        });
+      }
+      return respond(request);
+    });
+
+    await userEvent.click(
+      within(status).getByRole("button", { name: "Отменить" }),
+    );
+
+    expect(await within(status).findByRole("alert")).toHaveTextContent(
+      "Не удалось вернуть",
+    );
+    expect(status).toHaveTextContent("ТрБ.01.02");
+  });
+
+  it("explains a failed upload preparation and lets the user go back", async () => {
+    detail = slotDetail("ТрБ.01.02", {
+      effective_status: "present",
+      group: "present",
+      current_document: {
+        id: DOCUMENT_ID,
+        code: "ПОТБ-1",
+        title: "План",
+        status: "active",
+        effective_from: null,
+        next_review_at: null,
+        approved_by_order: null,
+        signed_scan: null,
+        working_file: null,
+      },
+      available_actions: ["open_document", "upload_signed_scan", "exclude"],
+      primary_action: "open_document",
+    });
+    vi.mocked(apiClient.request).mockImplementation(async (options) => {
+      const request = options as ApiRequestOptions;
+      if (request.path === `/api/v1/compliance-documents/${DOCUMENT_ID}`) {
+        throw normalizeApiError({
+          status: 404,
+          body: { error: { code: "compliance_document_not_found" } },
+        });
+      }
+      return respond(request);
+    });
+    renderPage();
+    const view = await panel();
+
+    await userEvent.click(
+      view.getByRole("button", { name: "Загрузить подписанный скан" }),
+    );
+    expect(
+      await view.findByText("Не удалось открыть загрузку"),
+    ).toBeInTheDocument();
+    await userEvent.click(view.getByRole("button", { name: "Назад" }));
+    expect(
+      await view.findByRole("button", { name: "Загрузить подписанный скан" }),
+    ).toHaveFocus();
   });
 });

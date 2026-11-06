@@ -62,39 +62,43 @@ export function useExcludeShelfSlotMutation() {
   );
 }
 
+/** Upper bound of one bulk request (docs/api/ShelfAPI.md). */
+export const BULK_EXCLUDE_MAX_ITEMS = 200;
+
 /**
- * Bulk exclusion needs each place's current version, which the summaries do
- * not carry; it is read from the place detail just before the request.
+ * Sends the versions the user saw on the shelf, so a place changed in the
+ * meantime is a 409 conflict rather than silently excluded.
  */
 export function useBulkExcludeShelfSlotsMutation() {
   return useShelfMutation(
-    async (input: {
-      slotIds: string[];
+    (input: {
+      items: Array<{ slot_id: string; version: number }>;
       reason: SlotExclusionReason;
       comment: string;
-    }) => {
-      const details = await Promise.all(
-        input.slotIds.map((id) => getShelfSlot(id)),
-      );
-      return bulkExcludeShelfSlots({
-        items: details.map((detail) => ({
-          slot_id: detail.id,
-          version: detail.version,
-        })),
-        reason: input.reason,
-        comment: input.comment,
-      });
-    },
+    }) => bulkExcludeShelfSlots(input),
   );
 }
 
-/** Undo after exclusion: restore each place at its current version. */
+/**
+ * Undo after exclusion: restore each place at its current version. Places are
+ * restored independently; the result names the ones that failed, so a retry
+ * touches only those.
+ */
 export function useRestoreShelfSlotsMutation() {
   return useShelfMutation(async (slotIds: string[]) => {
-    const details = await Promise.all(slotIds.map((id) => getShelfSlot(id)));
-    return Promise.all(
-      details.map((detail) => restoreShelfSlot(detail.id, detail.version)),
+    const results = await Promise.allSettled(
+      slotIds.map(async (id) => {
+        const detail = await getShelfSlot(id);
+        return restoreShelfSlot(detail.id, detail.version);
+      }),
     );
+    const failed = slotIds.filter(
+      (_, index) => results[index]?.status === "rejected",
+    );
+    const firstError = results.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    )?.reason as unknown;
+    return { failed, firstError };
   });
 }
 
@@ -127,4 +131,12 @@ export function useDevelopShelfSlotMutation() {
           : {}),
       }),
   );
+}
+
+/** After a file upload elsewhere (the reused compliance dialog), refresh the whole shelf. */
+export function useRefreshShelf() {
+  const queryClient = useQueryClient();
+  const { organizationId } = useOrganization();
+  return () =>
+    queryClient.invalidateQueries({ queryKey: shelfKeys.all(organizationId) });
 }

@@ -131,6 +131,7 @@ export const shelfSlotSummarySchema = z
     effective_status: shelfEffectiveStatusSchema,
     group: shelfStatusGroupSchema,
     has_acknowledgement_gap: z.boolean(),
+    version: z.number().int().positive(),
   })
   .passthrough();
 
@@ -227,7 +228,6 @@ export const shelfSlotDetailSchema = shelfSlotSummarySchema
     available_actions: z.array(shelfActionSchema),
     primary_action: shelfActionSchema.nullable(),
     acknowledgement: z.unknown().nullable(),
-    version: z.number().int().positive(),
   })
   .passthrough();
 
@@ -264,6 +264,7 @@ export const shelfDocumentPageSchema = z
 export const shelfFileUrlSchema = z
   .object({
     url: z.string(),
+    expires_at: z.string().optional(),
     filename: z.string(),
     content_type: z.string(),
   })

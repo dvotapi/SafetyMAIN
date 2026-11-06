@@ -23,7 +23,10 @@ const pdfjs = vi.hoisted(() => {
             width: 600 * scale,
             height: 800 * scale,
           }),
-          render: () => ({ promise: Promise.resolve() }),
+          render: () => ({
+            promise: Promise.resolve(),
+            cancel: () => undefined,
+          }),
         })),
       }),
     }),
@@ -133,5 +136,81 @@ describe("PdfViewer", () => {
     render(<PdfViewer url={null} contentType="application/pdf" title="X" />);
 
     expect(pdfjs.getDocument).not.toHaveBeenCalled();
+  });
+
+  it("keeps the document and page when only the presigned URL changes", async () => {
+    const { rerender } = render(
+      <PdfViewer
+        url="https://storage.test/scan.pdf?sig=1"
+        sourceKey="file-1"
+        contentType="application/pdf"
+        title="Скан"
+      />,
+    );
+    await screen.findByText("Страница 1 из 3");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Следующая страница" }),
+    );
+
+    rerender(
+      <PdfViewer
+        url="https://storage.test/scan.pdf?sig=2"
+        sourceKey="file-1"
+        contentType="application/pdf"
+        title="Скан"
+      />,
+    );
+
+    expect(screen.getByText("Страница 2 из 3")).toBeInTheDocument();
+    expect(pdfjs.getDocument).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancels a running render on fast paging and shows no error", async () => {
+    const cancel = vi.fn();
+    let finish: () => void = () => undefined;
+    pdfjs.getDocument.mockImplementationOnce((options) => ({
+      url: options.url,
+      promise: Promise.resolve({
+        numPages: 3,
+        destroy: vi.fn(),
+        getPage: vi.fn(async () => ({
+          getViewport: ({ scale }: { scale: number }) => ({
+            width: 600 * scale,
+            height: 800 * scale,
+          }),
+          render: () => ({
+            promise: new Promise<void>((_resolve, reject) => {
+              finish = () => reject(new Error("RenderingCancelledException"));
+            }),
+            cancel: () => {
+              cancel();
+              finish();
+            },
+          }),
+        })),
+      }),
+    }));
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockReturnValue({} as CanvasRenderingContext2D);
+    render(
+      <PdfViewer
+        url="https://storage.test/x.pdf"
+        contentType="application/pdf"
+        title="X"
+      />,
+    );
+    await screen.findByText("Страница 1 из 3");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Следующая страница" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Следующая страница" }),
+    );
+
+    await waitFor(() => expect(cancel).toHaveBeenCalled());
+    expect(screen.queryByText("Не удалось показать страницу.")).toBeNull();
+    getContext.mockRestore();
   });
 });

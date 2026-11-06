@@ -35,6 +35,7 @@ export function slotSummary(
     effective_status: "missing",
     group: "missing",
     has_acknowledgement_gap: false,
+    version: 2,
     ...over,
   };
 }
