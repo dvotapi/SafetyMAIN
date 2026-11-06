@@ -141,6 +141,7 @@ def test_section_slots_are_grouped_by_subsection_with_cyrillic_path(
     assert first["effective_status"] == "present"
     assert first["group"] == "present"
     assert first["has_acknowledgement_gap"] is False
+    assert first["version"] == 2
     excluded = body["subsections"][1]["slots"][1]
     assert excluded["effective_status"] == "excluded"
 

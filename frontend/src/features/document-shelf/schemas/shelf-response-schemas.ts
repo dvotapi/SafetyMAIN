@@ -131,6 +131,7 @@ export const shelfSlotSummarySchema = z
     effective_status: shelfEffectiveStatusSchema,
     group: shelfStatusGroupSchema,
     has_acknowledgement_gap: z.boolean(),
+    version: z.number().int().positive(),
   })
   .passthrough();
 
@@ -227,7 +228,6 @@ export const shelfSlotDetailSchema = shelfSlotSummarySchema
     available_actions: z.array(shelfActionSchema),
     primary_action: shelfActionSchema.nullable(),
     acknowledgement: z.unknown().nullable(),
-    version: z.number().int().positive(),
   })
   .passthrough();
 
@@ -241,3 +241,52 @@ export type ShelfSlotSummaryDto = z.infer<typeof shelfSlotSummarySchema>;
 export type ShelfSlotListDto = z.infer<typeof shelfSlotListSchema>;
 export type ShelfSectionSlotsDto = z.infer<typeof shelfSectionSlotsSchema>;
 export type ShelfSlotDetailDto = z.infer<typeof shelfSlotDetailSchema>;
+
+export const developShelfSlotSchema = z
+  .object({ document_id: z.string().uuid(), slot: shelfSlotDetailSchema })
+  .passthrough();
+
+/** Fields the shelf reads from compliance endpoints (only these are parsed). */
+export const shelfDocumentRefSchema = z
+  .object({
+    id: z.string().uuid(),
+    code: z.string(),
+    title: z.string(),
+    status: z.string(),
+    version: z.number().int().positive(),
+  })
+  .passthrough();
+
+export const shelfDocumentPageSchema = z
+  .object({ items: z.array(shelfDocumentRefSchema) })
+  .passthrough();
+
+export const shelfFileUrlSchema = z
+  .object({
+    url: z.string(),
+    expires_at: z.string().optional(),
+    filename: z.string(),
+    content_type: z.string(),
+  })
+  .passthrough();
+
+export const shelfDocumentTypesSchema = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          code: z.string(),
+          title_ru: z.string(),
+          subject_kind: z.string(),
+          is_active: z.boolean(),
+        })
+        .passthrough(),
+    ),
+  })
+  .passthrough();
+
+export type DevelopShelfSlotDto = z.infer<typeof developShelfSlotSchema>;
+export type ShelfDocumentRefDto = z.infer<typeof shelfDocumentRefSchema>;
+export type ShelfFileUrlDto = z.infer<typeof shelfFileUrlSchema>;
+export type ShelfDocumentTypesDto = z.infer<typeof shelfDocumentTypesSchema>;
+export type SlotExclusionReason = z.infer<typeof slotExclusionReasonSchema>;

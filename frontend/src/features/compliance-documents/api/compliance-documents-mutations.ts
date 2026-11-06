@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
+  type ComplianceDocumentFileTarget,
   confirmComplianceDocumentFile,
   createComplianceDocument,
   createComplianceDocumentUploadUrl,
@@ -137,19 +138,23 @@ export function useUpdateComplianceDocumentMutation(documentId: string) {
 
 export function useCreateComplianceDocumentUploadUrlMutation(
   documentId: string,
+  target: ComplianceDocumentFileTarget = "working",
 ) {
   return useMutation({
     mutationFn: (body: ComplianceDocumentUploadUrlRequest) =>
-      createComplianceDocumentUploadUrl(documentId, body),
+      createComplianceDocumentUploadUrl(documentId, body, target),
   });
 }
 
-export function useConfirmComplianceDocumentFileMutation(documentId: string) {
+export function useConfirmComplianceDocumentFileMutation(
+  documentId: string,
+  target: ComplianceDocumentFileTarget = "working",
+) {
   const queryClient = useQueryClient();
   const { organizationId } = useOrganization();
   return useMutation({
     mutationFn: (body: ConfirmComplianceDocumentFileRequest) =>
-      confirmComplianceDocumentFile(documentId, body),
+      confirmComplianceDocumentFile(documentId, body, target),
     onSuccess: (document) => {
       queryClient.setQueryData(
         complianceDocumentKeys.detail(organizationId, document.id),

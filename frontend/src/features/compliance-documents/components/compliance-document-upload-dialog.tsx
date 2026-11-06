@@ -20,6 +20,7 @@ import {
   useConfirmComplianceDocumentFileMutation,
   useCreateComplianceDocumentUploadUrlMutation,
 } from "@/features/compliance-documents/api/compliance-documents-mutations";
+import type { ComplianceDocumentFileTarget } from "@/features/compliance-documents/api/compliance-documents-api";
 import type {
   ComplianceDocumentDto,
   ComplianceDocumentUploadUrlDto,
@@ -38,7 +39,15 @@ export type AllowedUploadMimeType = (typeof ALLOWED_UPLOAD_MIME_TYPES)[number];
 
 export const DEFAULT_MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
+/** A signed scan is a PDF, JPEG or PNG (TASK-P11-012 D1). */
+export const SIGNED_SCAN_MIME_TYPES = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+] as const;
+
 const ACCEPT = ALLOWED_UPLOAD_MIME_TYPES.join(",");
+const SIGNED_SCAN_ACCEPT = SIGNED_SCAN_MIME_TYPES.join(",");
 
 export async function computeSha256(file: Blob): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -51,8 +60,15 @@ export async function computeSha256(file: Blob): Promise<string> {
   return out;
 }
 
-function isAllowedType(type: string): type is AllowedUploadMimeType {
-  return (ALLOWED_UPLOAD_MIME_TYPES as readonly string[]).includes(type);
+function isAllowedType(
+  type: string,
+  target: ComplianceDocumentFileTarget,
+): type is AllowedUploadMimeType {
+  const allowed: readonly string[] =
+    target === "signed_scan"
+      ? SIGNED_SCAN_MIME_TYPES
+      : ALLOWED_UPLOAD_MIME_TYPES;
+  return allowed.includes(type);
 }
 
 type Phase = "idle" | "hashing" | "requesting" | "uploading" | "confirming";
@@ -90,12 +106,22 @@ export function ComplianceDocumentUploadDialog({
   onOpenChange,
   document,
   maxBytes = DEFAULT_MAX_UPLOAD_BYTES,
+  target = "working",
+  onUploaded,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  document: ComplianceDocumentDto;
+  /** Only the identity and version are needed (the shelf passes a summary). */
+  document: Pick<ComplianceDocumentDto, "id" | "code" | "version">;
   maxBytes?: number;
+  /** `signed_scan` uploads the scan of the signed edition (approved/active/under review). */
+  target?: ComplianceDocumentFileTarget;
+  onUploaded?: () => void;
 }) {
+  const signedScan = target === "signed_scan";
+  const allowedLabel = signedScan
+    ? "PDF, PNG, JPEG"
+    : "PDF, DOCX, XLSX, PNG, JPEG";
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -105,8 +131,12 @@ export function ComplianceDocumentUploadDialog({
 
   const uploadUrlMutation = useCreateComplianceDocumentUploadUrlMutation(
     document.id,
+    target,
   );
-  const confirmMutation = useConfirmComplianceDocumentFileMutation(document.id);
+  const confirmMutation = useConfirmComplianceDocumentFileMutation(
+    document.id,
+    target,
+  );
 
   const reset = useCallback(() => {
     setFile(null);
@@ -128,8 +158,8 @@ export function ComplianceDocumentUploadDialog({
       setFile(null);
       return;
     }
-    if (!isAllowedType(next.type)) {
-      setError("Недопустимый тип файла. Разрешены PDF, DOCX, XLSX, PNG, JPEG.");
+    if (!isAllowedType(next.type, target)) {
+      setError(`Недопустимый тип файла. Разрешены ${allowedLabel}.`);
       setFile(null);
       return;
     }
@@ -178,6 +208,7 @@ export function ComplianceDocumentUploadDialog({
         title: "Файл загружен",
         description: file.name,
       });
+      onUploaded?.();
       onOpenChange(false);
     } catch (cause) {
       setError(toUserSafeMessage(cause));
@@ -197,8 +228,8 @@ export function ComplianceDocumentUploadDialog({
     <Dialog open={open} onOpenChange={busy ? () => undefined : onOpenChange}>
       <DialogContent>
         <DialogHeader
-          title="Загрузить файл"
-          description={`Документ ${document.code}. Разрешены PDF, DOCX, XLSX, PNG, JPEG.`}
+          title={signedScan ? "Загрузить подписанный скан" : "Загрузить файл"}
+          description={`Документ ${document.code}. Разрешены ${allowedLabel}.`}
         />
         <DialogBody>
           <div style={{ display: "grid", gap: "var(--sm-space-3)" }}>
@@ -207,7 +238,7 @@ export function ComplianceDocumentUploadDialog({
               id="compliance-document-upload-input"
               ref={inputRef}
               type="file"
-              accept={ACCEPT}
+              accept={signedScan ? SIGNED_SCAN_ACCEPT : ACCEPT}
               disabled={busy}
               onChange={(event) => pickFile(event.target.files?.[0] ?? null)}
               data-testid="compliance-document-upload-input"

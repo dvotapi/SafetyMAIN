@@ -34,6 +34,10 @@ export function OpenedShelf({
   filter,
   excludedHidden,
   onSelect,
+  canCurate = false,
+  selectionMode = false,
+  selectedIds = new Set<string>(),
+  onSelectionModeChange,
 }: {
   summary: ShelfSectionSummaryDto;
   data: ShelfSectionSlotsDto | undefined;
@@ -44,6 +48,10 @@ export function OpenedShelf({
   filter: ShelfFilter;
   excludedHidden: boolean;
   onSelect: (slot: ShelfSlotSummaryDto) => void;
+  canCurate?: boolean;
+  selectionMode?: boolean;
+  selectedIds?: ReadonlySet<string>;
+  onSelectionModeChange?: (on: boolean) => void;
 }) {
   return (
     <section
@@ -65,6 +73,16 @@ export function OpenedShelf({
           {summary.mandatory_total} обязательных · исключено{" "}
           {summary.by_group.excluded}
         </span>
+        {canCurate && onSelectionModeChange ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-pressed={selectionMode}
+            onClick={() => onSelectionModeChange(!selectionMode)}
+          >
+            {selectionMode ? "Готово" : "Выбрать несколько"}
+          </Button>
+        ) : null}
       </div>
       <ul className={styles.legend} aria-label="Обозначения">
         {LEGEND.map((group) => (
@@ -121,6 +139,8 @@ export function OpenedShelf({
                       selected={slot.code === selectedSlot}
                       dimmed={!slotMatches(slot, filter)}
                       onSelect={onSelect}
+                      selectionMode={selectionMode}
+                      checked={selectedIds.has(slot.id)}
                     />
                   ))}
                 </div>

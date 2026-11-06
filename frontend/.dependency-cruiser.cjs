@@ -80,6 +80,23 @@ module.exports = {
       to: { path: "^src/services/api/client" },
     },
     {
+      name: "document-shelf-api-no-components",
+      severity: "error",
+      comment: "Document shelf API modules must not import React components.",
+      from: { path: "^src/features/document-shelf/api" },
+      to: {
+        path: "^src/components|^src/features/document-shelf/components|^src/features/document-shelf/pages",
+      },
+    },
+    {
+      name: "document-shelf-presentation-no-fetch",
+      severity: "error",
+      comment:
+        "Document shelf presentation must go through the feature API layer, never the raw client.",
+      from: { path: "^src/features/document-shelf/(components|pages)" },
+      to: { path: "^src/services/api/client" },
+    },
+    {
       name: "features-no-cross-feature-internals",
       severity: "error",
       comment: "Features must not import another feature's internals.",

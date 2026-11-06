@@ -17,18 +17,24 @@ export function ShelfSpine({
   selected,
   dimmed,
   onSelect,
+  selectionMode = false,
+  checked = false,
 }: {
   slot: ShelfSlotSummaryDto;
   subsectionTitle: string;
   selected: boolean;
   dimmed: boolean;
   onSelect: (slot: ShelfSlotSummaryDto) => void;
+  /** Bulk selection: a click toggles the checkbox instead of opening the panel. */
+  selectionMode?: boolean;
+  checked?: boolean;
 }) {
   const [tipOpen, setTipOpen] = useState(false);
   const tipId = useId();
   const excluded = slot.group === "excluded";
   const size = spineSize(slot.document_kind, slot.obligation_level, excluded);
   const status = STATUS_LABELS[slot.effective_status];
+  const selectable = selectionMode && !excluded;
   return (
     <div className={clsx(styles.spineWrap, dimmed && styles.dimmed)}>
       {slot.has_acknowledgement_gap ? (
@@ -44,7 +50,9 @@ export function ShelfSpine({
         style={{ width: size.width, height: size.height }}
         aria-label={`${slot.code} ${slot.title}. ${status}`}
         aria-describedby={tipOpen ? tipId : undefined}
-        aria-current={selected ? "true" : undefined}
+        aria-current={!selectionMode && selected ? "true" : undefined}
+        aria-pressed={selectable ? checked : undefined}
+        disabled={selectionMode && excluded}
         data-code={slot.code}
         onClick={() => onSelect(slot)}
         onMouseEnter={() => setTipOpen(true)}
@@ -60,8 +68,17 @@ export function ShelfSpine({
             {slot.short_title}
           </span>
         )}
+        {selectable ? (
+          <span
+            className={styles.spineCheck}
+            data-checked={checked}
+            aria-hidden="true"
+          />
+        ) : null}
       </button>
-      {selected ? <span className={styles.caret} aria-hidden="true" /> : null}
+      {selected && !selectionMode ? (
+        <span className={styles.caret} aria-hidden="true" />
+      ) : null}
       {tipOpen ? (
         <div id={tipId} role="tooltip" className={styles.tooltip}>
           <p className={styles.mono}>{slot.code}</p>
