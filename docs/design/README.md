@@ -31,6 +31,7 @@ It does **not** ship React components or a running application. It defines the l
 | [WorkflowPattern.md](WorkflowPattern.md)           | Lifecycle-oriented workflow UI                  |
 | [DashboardPattern.md](DashboardPattern.md)         | Attention-first dashboards                      |
 | [RegistryPattern.md](RegistryPattern.md)           | Large-data registries / grids                   |
+| [ShelfPattern.md](ShelfPattern.md)                 | Document shelf «Полка»: strips, spines, panel   |
 | [Forms.md](Forms.md)                               | Form layout, validation, progressive disclosure |
 | [TimelineAndActivity.md](TimelineAndActivity.md)   | Timeline and activity feed                      |
 | [ComponentCatalog.md](ComponentCatalog.md)         | Shared component inventory                      |

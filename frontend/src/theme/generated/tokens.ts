@@ -82,6 +82,42 @@ export const tokens = {
         "800": "#12304E",
         "900": "#0B1F33"
       },
+      "paper": {
+        "50": "#FFFDF9",
+        "100": "#F7F4EE",
+        "150": "#F5F3EC",
+        "200": "#E4DED2",
+        "300": "#CFC8BA",
+        "400": "#B4B0A6",
+        "500": "#6B665C",
+        "600": "#4A4740",
+        "700": "#3A3D38",
+        "800": "#262925",
+        "900": "#1F2220"
+      },
+      "graphite": {
+        "400": "#6E6E6E",
+        "600": "#3B3B3B"
+      },
+      "forest": {
+        "500": "#417760",
+        "800": "#213C30"
+      },
+      "ochre": {
+        "100": "#F3E3C3",
+        "200": "#E9D6A8",
+        "300": "#E0C27E",
+        "400": "#C9A45E",
+        "600": "#A47A2C",
+        "800": "#5A4316",
+        "900": "#5A3F0E"
+      },
+      "brick": {
+        "100": "#EADBD5",
+        "500": "#CA372D",
+        "700": "#87251E",
+        "900": "#342522"
+      },
       "white": "#FFFFFF",
       "black": "#000000"
     },
@@ -272,7 +308,24 @@ export const tokens = {
         "status-cancelled-border": "#D0D7DE",
         "status-superseded-fg": "#303B45",
         "status-superseded-bg": "#E8ECF0",
-        "status-superseded-border": "#7A8896"
+        "status-superseded-border": "#7A8896",
+        "shelf-page-bg": "#F7F4EE",
+        "shelf-ink": "#6B665C",
+        "shelf-card-bg": "#FFFDF9",
+        "shelf-card-border": "#E4DED2",
+        "shelf-plank": "#CFC8BA",
+        "shelf-present-bg": "#3B3B3B",
+        "shelf-progress-bg": "#213C30",
+        "shelf-spine-fg": "#F5F3EC",
+        "shelf-progress-ribbon": "#C9A45E",
+        "shelf-review-bg": "#E9D6A8",
+        "shelf-review-border": "#C9A45E",
+        "shelf-review-fg": "#5A3F0E",
+        "shelf-missing-border": "#87251E",
+        "shelf-missing-bg": "#EADBD5",
+        "shelf-clarify-border": "#7A8896",
+        "shelf-excluded-border": "#CFC8BA",
+        "shelf-ack-dot": "#87251E"
       }
     },
     "dark": {
@@ -356,7 +409,24 @@ export const tokens = {
         "status-cancelled-border": "#44515C",
         "status-superseded-fg": "#D0D7DE",
         "status-superseded-bg": "#303B45",
-        "status-superseded-border": "#7A8896"
+        "status-superseded-border": "#7A8896",
+        "shelf-page-bg": "#1F2220",
+        "shelf-ink": "#B4B0A6",
+        "shelf-card-bg": "#262925",
+        "shelf-card-border": "#3A3D38",
+        "shelf-plank": "#4A4740",
+        "shelf-present-bg": "#6E6E6E",
+        "shelf-progress-bg": "#417760",
+        "shelf-spine-fg": "#F5F3EC",
+        "shelf-progress-ribbon": "#E0C27E",
+        "shelf-review-bg": "#5A4316",
+        "shelf-review-border": "#A47A2C",
+        "shelf-review-fg": "#F3E3C3",
+        "shelf-missing-border": "#CA372D",
+        "shelf-missing-bg": "#342522",
+        "shelf-clarify-border": "#7A8896",
+        "shelf-excluded-border": "#4A4740",
+        "shelf-ack-dot": "#CA372D"
       }
     }
   }
