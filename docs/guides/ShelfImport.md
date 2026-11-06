@@ -135,3 +135,51 @@ conflict.
 The backend image does not include the `import` extra. Run the import from a machine that
 has the repository with `pip install -e ".[import]"` and the production `DATABASE_URL` (the
 database lives on a separate server), or install the extra into a one-off container.
+
+## 7. Attaching scans (optional)
+
+`scripts/attach_shelf_scans.py` fills places marked «Есть» that have no document in
+SafetyMAIN with the scans you already have. A place is taken when all of these hold:
+
+- the curated status is «Есть», it is not excluded and has no linked document;
+- it names an active document type («Тип в SafetyMAIN») that does not require an approval
+  order;
+- «Где лежит сейчас» (relative to `--root`) points at a PDF file, or at a folder that holds
+  exactly one PDF.
+
+For each such place the script creates a draft (code and title from the place), sets the
+effective date, uploads the PDF as the working file, approves and activates it, and links
+it to the place. All steps are audited in the curator's name. Source files are only read.
+
+```bash
+DATABASE_URL=… python -m scripts.attach_shelf_scans --organization-id <uuid> --root "/path/to/scans" --actor-email curator@example.com --report scans.json
+```
+
+That is a dry run: it lists the places it would attach and why the others are skipped.
+To write, add `--apply --effective-from YYYY-MM-DD` (the same date for every attached
+document, e.g. the date the scans were checked). Try `--limit 5` first.
+
+The actor needs `shelf:curate` and `compliance_document:create`, `update`, `approve`,
+`activate`. The storage settings (`STORAGE_*`) must point at the real bucket, because the
+file goes to storage through a presigned upload, exactly as in the browser.
+
+Skip reasons:
+
+| Reason | Meaning |
+|---|---|
+| `not_present` | the curated status is not «Есть» |
+| `excluded` | the place is excluded |
+| `has_document` | a document is already linked |
+| `no_document_type` | the place names no document type |
+| `type_not_found` | the type is not in the active catalog |
+| `type_requires_approval_order` | the type requires an approval order; finish the place in the shelf |
+| `no_location` | «Где лежит сейчас» is empty |
+| `file_not_found` | there is no such file, or the folder has no PDF |
+| `ambiguous` | the folder has several PDFs |
+| `not_pdf` | the file is not a PDF |
+| `outside_root` | the path leaves `--root` |
+| `too_large` | the file is larger than the upload limit |
+
+If a step fails, the script reports the step and continues with the next place. The failed
+place keeps its linked draft (or approved) document; nothing is deleted. A re-run skips it
+(`has_document`); finish it in the shelf with «Открыть проект».
