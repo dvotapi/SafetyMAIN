@@ -173,3 +173,17 @@ unit of work.
   reported.
 - A real run records `compliance.shelf.imported` (counts and `file_sha256`) in addition to
   the place and section events. A dry run writes and records nothing.
+
+## Scan attachment (§4.5)
+
+`scripts/attach_shelf_scans.py` turns «Есть» places without a document into places with an
+active document. `application/services/shelf_scan_attachment.py` decides which places it
+takes, without I/O. `AttachShelfScanHandler` (`application/handlers/shelf/attach_scan.py`)
+runs the existing handlers: develop, set `effective_from`, upload URL and confirm, approve,
+activate. Each step is its own unit of work, and a failure leaves the place with its linked
+draft; there is no rollback by deletion.
+
+The script uploads the file with a presigned PUT, so the file bytes never pass through the
+API, as in the browser (ADR-0006). Paths are resolved strictly inside `--root`. Plan:
+`docs/superpowers/plans/2026-11-06-p11-012-attach-shelf-scans.md`; guide:
+`docs/guides/ShelfImport.md` §7.

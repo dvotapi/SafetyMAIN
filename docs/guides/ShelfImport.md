@@ -135,3 +135,89 @@ conflict.
 The backend image does not include the `import` extra. Run the import from a machine that
 has the repository with `pip install -e ".[import]"` and the production `DATABASE_URL` (the
 database lives on a separate server), or install the extra into a one-off container.
+
+## 7. Attaching scans (optional)
+
+`scripts/attach_shelf_scans.py` fills places marked «Есть» that have no document in
+SafetyMAIN with the scans you already have. A place is taken when all of these hold:
+
+- the curated status is «Есть», it is not excluded and has no linked document;
+- it names an active document type («Тип в SafetyMAIN») that does not require an approval
+  order;
+- «Где лежит сейчас» (relative to `--root`) points at a PDF file, or at a folder that holds
+  exactly one PDF.
+
+For each such place the script creates a draft (code and title from the place), sets the
+effective date, uploads the PDF as the working file, approves and activates it, and links
+it to the place. All steps are audited in the curator's name. Source files are only read.
+
+```bash
+DATABASE_URL=… python -m scripts.attach_shelf_scans --organization-id <uuid> --root "/path/to/scans" --actor-email curator@example.com --report scans.json
+```
+
+That is a dry run: it lists the places it would attach and why the others are skipped.
+To write, add `--apply --effective-from YYYY-MM-DD` (the same date for every attached
+document, e.g. the date the scans were checked). Try `--limit 5` first.
+
+The actor needs `shelf:curate` and `compliance_document:create`, `update`, `approve`,
+`activate`. The storage settings (`STORAGE_*`) must point at the real bucket, because the
+file goes to storage through a presigned upload, exactly as in the browser.
+
+Skip reasons:
+
+| Reason | Meaning |
+|---|---|
+| `not_present` | the curated status is not «Есть» |
+| `excluded` | the place is excluded |
+| `has_document` | a document is already linked |
+| `no_document_type` | the place names no document type |
+| `type_not_found` | the type is not in the active catalog |
+| `type_requires_approval_order` | the type requires an approval order; finish the place in the shelf |
+| `no_location` | «Где лежит сейчас» is empty |
+| `file_not_found` | there is no such file, or the folder has no PDF |
+| `ambiguous` | the folder has several PDFs |
+| `not_pdf` | the file is not a PDF |
+| `outside_root` | the path leaves `--root` |
+| `too_large` | the file is larger than the upload limit |
+
+If a step fails, the script reports the step and continues with the next place. The failed
+place keeps its linked draft (or approved) document; nothing is deleted. A re-run skips it
+(`has_document`); finish it in the shelf with «Открыть проект».
+
+### Signed editions approved by one order
+
+The scans may be named by place code (`ТрБ.01.02 ИОТ для водителя.pdf`) and approved by
+one order that is itself a place (`ТрБ.01.01 Приказ о введении инструкций.pdf`). In that
+case use `--match-by-code` and `--approval-order`:
+
+```bash
+python -m scripts.attach_shelf_scans --organization-id <uuid> --root "<folder>" --actor-email <admin> --match-by-code --approval-order ТрБ.01.01 --order-note "№ … от …" --report signed.json
+```
+
+- Every `*.pdf` directly in the folder whose name starts with a place code is that place's
+  file; «Где лежит сейчас» is ignored.
+- The order goes first: it is created, uploaded, approved and put in force. If that fails,
+  nothing else is touched. On a later run an order already in force on its place is
+  reused.
+- Every document of a type that requires an approval order is linked to the order, then
+  approved and put in force.
+- Places with «Есть», «В работе (проект)» or «Есть — нужен пересмотр» are taken.
+- Each PDF is stored as the working file and, after approval, as the signed scan, so the
+  shelf shows «Скан подписанной редакции». Pass `--no-signed-scan` to skip the second copy.
+- The place type («Тип в SafetyMAIN») must be `order` for the order and an active type
+  (e.g. `iot_profession`, `iot_work_type`) for the others.
+
+More skip reasons in this mode:
+
+| Reason | Meaning |
+|---|---|
+| `unknown_code` | there is no place with that code |
+| `no_code_in_name` | the file name does not start with a place code |
+| `ambiguous` | several files for one code |
+| `order_type_mismatch` | the order's place type is not `order` |
+| `order_file_not_found` | there is no file of the order in the folder |
+| `order_not_in_force` | no order is in force, so documents that need one are skipped |
+| `order_failed` | putting the order in force failed in this run |
+
+Add `--apply --effective-from YYYY-MM-DD` to write; try `--limit 2` first (the limit
+applies to the documents after the order).
