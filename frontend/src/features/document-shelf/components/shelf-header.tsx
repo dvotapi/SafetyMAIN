@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import styles from "@/features/document-shelf/components/document-shelf.module.css";
 import type { ShelfOverviewDto } from "@/features/document-shelf/types/shelf-dto";
 import {
@@ -21,12 +23,14 @@ export function ShelfHeader({
   excludedHidden,
   onFilterChange,
   onExcludedHiddenChange,
+  search,
 }: {
   overview: ShelfOverviewDto;
   filter: ShelfFilter;
   excludedHidden: boolean;
   onFilterChange: (filter: ShelfFilter) => void;
   onExcludedHiddenChange: (hidden: boolean) => void;
+  search?: ReactNode;
 }) {
   const places = overview.totals.places;
   const sections = overview.sections.length;
@@ -45,6 +49,7 @@ export function ShelfHeader({
         </p>
       </div>
       <div className={styles.controls}>
+        {search}
         <div className={styles.controls} role="group" aria-label="Фильтр мест">
           {FILTERS.map((item) => (
             <button

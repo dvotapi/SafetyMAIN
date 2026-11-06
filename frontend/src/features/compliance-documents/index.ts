@@ -2,3 +2,5 @@ export { ComplianceDocumentRegistryPage } from "@/features/compliance-documents/
 export { ComplianceDocumentObjectPage } from "@/features/compliance-documents/pages/compliance-document-object-page";
 export { ComplianceDocumentCreatePage } from "@/features/compliance-documents/pages/compliance-document-create-page";
 export { ComplianceDocumentEditPage } from "@/features/compliance-documents/pages/compliance-document-edit-page";
+// Reused by the document shelf (P11-001 amendment A5).
+export { ComplianceDocumentUploadDialog } from "@/features/compliance-documents/components/compliance-document-upload-dialog";

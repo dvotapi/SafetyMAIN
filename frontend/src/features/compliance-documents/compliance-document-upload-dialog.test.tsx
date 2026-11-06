@@ -346,4 +346,62 @@ describe("ComplianceDocumentUploadDialog", () => {
     });
     expect(onOpenChange).not.toHaveBeenCalled();
   });
+
+  it("uploads a signed scan through the signed-scan endpoints (TASK-P11-012 D1)", async () => {
+    const onUploaded = vi.fn();
+    const paths: string[] = [];
+    installApiClientMock((options) => {
+      paths.push(options.path ?? "");
+      if (options.path?.includes("/signed-scan/upload-url")) {
+        return Promise.resolve({
+          upload_id: "u2",
+          bucket: "b",
+          key: "org-1/compliance_document/doc/u2/scan.pdf",
+          url: "https://example.test/signed",
+          method: "PUT",
+          headers: { "Content-Type": "application/pdf" },
+          expires_at: "2030-01-01T00:00:00Z",
+        });
+      }
+      return Promise.resolve(buildDocument({ status: "active", version: 6 }));
+    });
+    render(
+      <Wrapper>
+        <ComplianceDocumentUploadDialog
+          open
+          onOpenChange={() => undefined}
+          document={{ id: DOCUMENT_ID, code: "CD-001", version: 5 }}
+          target="signed_scan"
+          onUploaded={onUploaded}
+        />
+      </Wrapper>,
+    );
+    expect(screen.getByText("Загрузить подписанный скан")).toBeInTheDocument();
+    const input = screen.getByTestId(
+      "compliance-document-upload-input",
+    ) as HTMLInputElement;
+    const docx = await fileFromBytes(
+      "act.docx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      new Uint8Array([1]),
+    );
+    fireEvent.change(input, { target: { files: [docx] } });
+    expect(
+      await screen.findByText(/Недопустимый тип файла/),
+    ).toBeInTheDocument();
+
+    const scan = await fileFromBytes(
+      "scan.pdf",
+      "application/pdf",
+      new Uint8Array([1, 2]),
+    );
+    fireEvent.change(input, { target: { files: [scan] } });
+    fireEvent.click(screen.getByRole("button", { name: "Загрузить" }));
+
+    await waitFor(() => expect(onUploaded).toHaveBeenCalled());
+    expect(paths).toEqual([
+      `/api/v1/compliance-documents/${DOCUMENT_ID}/signed-scan/upload-url`,
+      `/api/v1/compliance-documents/${DOCUMENT_ID}/signed-scan/confirm`,
+    ]);
+  });
 });

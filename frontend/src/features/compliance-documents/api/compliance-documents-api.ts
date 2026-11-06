@@ -131,14 +131,25 @@ export async function updateComplianceDocument(
   );
 }
 
+/** `working` files go to `/files/*`; signed scans to `/signed-scan/*` (TASK-P11-012 D1). */
+export type ComplianceDocumentFileTarget = "working" | "signed_scan";
+
+function filePath(
+  target: ComplianceDocumentFileTarget,
+  step: "upload-url" | "confirm",
+) {
+  return target === "signed_scan" ? `signed-scan/${step}` : `files/${step}`;
+}
+
 export async function createComplianceDocumentUploadUrl(
   documentId: string,
   body: ComplianceDocumentUploadUrlRequest,
+  target: ComplianceDocumentFileTarget = "working",
 ): Promise<ComplianceDocumentUploadUrlDto> {
   const id = assertComplianceDocumentId(documentId);
   const dto = await apiClient.request<unknown>({
     method: "POST",
-    path: `${BASE_PATH}/${id}/files/upload-url`,
+    path: `${BASE_PATH}/${id}/${filePath(target, "upload-url")}`,
     body,
   });
   return complianceDocumentUploadUrlSchema.parse(
@@ -149,11 +160,12 @@ export async function createComplianceDocumentUploadUrl(
 export async function confirmComplianceDocumentFile(
   documentId: string,
   body: ConfirmComplianceDocumentFileRequest,
+  target: ComplianceDocumentFileTarget = "working",
 ): Promise<ComplianceDocumentDto> {
   const id = assertComplianceDocumentId(documentId);
   const dto = await apiClient.request<unknown>({
     method: "POST",
-    path: `${BASE_PATH}/${id}/files/confirm`,
+    path: `${BASE_PATH}/${id}/${filePath(target, "confirm")}`,
     body,
   });
   return complianceDocumentSchema.parse(

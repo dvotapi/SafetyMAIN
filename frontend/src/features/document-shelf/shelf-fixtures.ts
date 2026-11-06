@@ -2,6 +2,7 @@
 import type {
   ShelfOverviewDto,
   ShelfSectionSlotsDto,
+  ShelfSlotDetailDto,
   ShelfSlotSummaryDto,
 } from "@/features/document-shelf/types/shelf-dto";
 
@@ -125,3 +126,43 @@ export function transportSectionFixture(): ShelfSectionSlotsDto {
     ],
   };
 }
+
+export function slotDetail(
+  code: string,
+  over: Partial<ShelfSlotDetailDto> = {},
+): ShelfSlotDetailDto {
+  return {
+    ...slotSummary(code),
+    section_code: code.split(".")[0]!,
+    legal_basis: {
+      regulation: "16-ФЗ",
+      clause: "ст. 9",
+      quote: "",
+      source_url: "https://pravo.gov.ru/doc",
+      confidence: "verified",
+    },
+    applicability_condition: "",
+    review_cycle_text: "5 лет",
+    review_period_months: 60,
+    review_date: null,
+    curated_status: "missing",
+    document_type_code: "transport_plan",
+    proposed_document_type: "",
+    responsible_text: "",
+    legacy_location: "",
+    notes: "",
+    package_code: "",
+    legacy_code: "",
+    exclusion: null,
+    current_document: null,
+    editions: [],
+    available_actions: ["develop_document", "link_document", "exclude"],
+    primary_action: "develop_document",
+    acknowledgement: null,
+    version: 3,
+    ...over,
+  };
+}
+
+export const DOCUMENT_ID = "11111111-2222-4333-8444-555555555555";
+export const FILE_ID = "99999999-8888-4777-8666-555555555555";

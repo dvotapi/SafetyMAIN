@@ -22,3 +22,4 @@ export * from "@/components/activity";
 export * from "@/components/object-page";
 export * from "@/components/registry";
 export * from "@/components/dashboard";
+export * from "@/components/document-viewer";

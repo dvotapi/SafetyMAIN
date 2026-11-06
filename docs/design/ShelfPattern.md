@@ -24,7 +24,17 @@ Statuses, counts, readiness and actions come from the shelf API: the UI only dis
    - a caret under the selected spine;
    - a 6 px lift on hover and focus (none with `prefers-reduced-motion`);
    - a tooltip on hover **and** keyboard focus (`role="tooltip"`, `aria-describedby`).
-6. **Place panel, exclusion, search:** PR 4c.
+6. **Place panel** (`<aside>`, global tokens):
+   - header: code, status badge (same swatch language as the spines), title, «подраздел · вид · обязательность»;
+   - scan block: signed scan, else the working file labelled «Рабочий файл (без подписи)», shown by the shared `components/document-viewer/PdfViewer` (thumbnails, zoom, keyboard paging; «Открыть на весь экран», «Скачать»);
+   - empty states, the exclusion details (reason, comment, who and when), the legal basis, review, edition, approval order and editions;
+   - buttons only from `primary_action` / `available_actions`; «Исключить с полки» is a danger text button.
+
+   Escape closes the panel and focus returns to the spine. At ≥ 1200 px the panel is the right column; on phones it is a full-screen sheet.
+7. **Exclusion form** (in the panel, no modal): reasons, a required comment with the inline error «Напишите, почему место не нужно: это увидят при проверке.» (the backend `comment_too_short` shows the same text). A linked document adds a warning. After success, a `role="status"` line «Исключено N мест: …» offers «Отменить» (restore at the current versions).
+8. **Bulk:** «Выбрать несколько» (curators) turns spines into toggles (excluded ones are disabled); the bar «Выбрано N мест · Исключить выбранные · Снять выбор» opens the same form. The request reads each place's current version first, because the summaries carry none.
+9. **Other actions:** «Разработать» (asks for a type when the place has none, then opens `/compliance-documents/{id}/edit`), «Загрузить скан» (develop, then upload a working file), «Загрузить подписанный скан» (the reused `ComplianceDocumentUploadDialog` with `target="signed_scan"`), «Привязать документ» (search over organization documents), «Применимо — нужен документ», «Вернуть на полку».
+10. **Search:** a combobox over `GET /shelf/slots?q=` in the header; a choice opens its section and place.
 
 ## Filters
 

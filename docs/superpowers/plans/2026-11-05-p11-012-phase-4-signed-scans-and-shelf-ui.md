@@ -97,6 +97,15 @@ The optional `scripts/attach_shelf_scans.py` (§4.5) is **not** in this plan. It
 - Storybook cannot render feature components that import `next/link` (`process is not defined`, existing configuration). Screenshots were taken in the running app with a synthetic workbook imported by the phase 3 script.
 - The app shell is wider than a 375 px viewport on every page (pre-existing; not part of this phase).
 
+## Implementation notes (4c)
+
+- `pdfjs-dist` is pinned to **4.10.38**: 5.x requires Node ≥ 22.13, while the production image builds on Node 20.11.
+- The bulk request needs `{slot_id, version}`, but `ShelfSlotSummaryDto` has no version (TASK §2.5). The page reads each selected place's detail first, so the backend needs no change. Undo restores at freshly read versions as well.
+- `open_project` links to the linked edition in `draft`/`approved` (from `editions`); `start_review` links to the document page, where the existing lifecycle actions live.
+- `ComplianceDocumentUploadDialog` takes `document` as `Pick<…, "id" | "code" | "version">` and the new props `target` and `onUploaded`. The shelf reads `id`, `code` and `version` of the document through its own API module.
+- The phone sheet is the panel with fixed full-screen positioning (Escape and the close button close it), not a Radix dialog.
+- dependency-cruiser gains `document-shelf-api-no-components` and `document-shelf-presentation-no-fetch`, mirroring the compliance rules.
+
 ## Affected files (by PR)
 
 4a — Create: `alembic/versions/0016_document_file_role.py`; tests `tests/domain/test_compliance_document_signed_scan.py`, `tests/api/test_compliance_document_signed_scan_api.py`, `tests/infrastructure/test_document_file_role_migration.py`. Modify:

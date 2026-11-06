@@ -54,3 +54,21 @@ export function pluralSections(count: number): string {
   if (mod10 === 1 && mod100 !== 11) return "разделе";
   return "разделах";
 }
+
+export const DOCUMENT_STATUS_LABELS: Record<string, string> = {
+  draft: "черновик",
+  approved: "утверждён",
+  active: "действует",
+  under_review: "на пересмотре",
+  superseded: "заменён",
+  archived: "в архиве",
+};
+
+export const KEPT_ON_LABELS: Record<string, string> = {
+  organization: "организация",
+  facility: "ОПО / объект",
+  event: "событие",
+  employee: "работник",
+  asset: "ТС / техника",
+  profession: "профессия / вид работ",
+};

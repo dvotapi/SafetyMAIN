@@ -43,6 +43,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.514.0",
     "next": "15.3.5",
+    "pdfjs-dist": "4.10.38",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.57.0",

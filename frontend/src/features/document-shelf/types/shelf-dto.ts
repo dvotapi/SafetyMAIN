@@ -1,4 +1,9 @@
 export type {
+  DevelopShelfSlotDto,
+  ShelfDocumentRefDto,
+  ShelfDocumentTypesDto,
+  ShelfFileUrlDto,
+  SlotExclusionReason,
   ShelfAction,
   ShelfEffectiveStatus,
   ShelfGroupCountsDto,
